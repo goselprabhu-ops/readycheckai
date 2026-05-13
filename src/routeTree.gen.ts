@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
+import { Route as AuthenticatedInterviewRouteImport } from './routes/_authenticated/interview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAssessmentRouteImport } from './routes/_authenticated/assessment'
 
@@ -47,6 +48,11 @@ const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
   path: '/resume',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInterviewRoute = AuthenticatedInterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/interview': typeof AuthenticatedInterviewRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/interview': typeof AuthenticatedInterviewRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/interview': typeof AuthenticatedInterviewRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/assessment'
     | '/dashboard'
+    | '/interview'
     | '/resume'
     | '/roadmap'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/assessment'
     | '/dashboard'
+    | '/interview'
     | '/resume'
     | '/roadmap'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/assessment'
     | '/_authenticated/dashboard'
+    | '/_authenticated/interview'
     | '/_authenticated/resume'
     | '/_authenticated/roadmap'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResumeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/interview': {
+      id: '/_authenticated/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof AuthenticatedInterviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -189,6 +208,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedAssessmentRoute: typeof AuthenticatedAssessmentRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedInterviewRoute: typeof AuthenticatedInterviewRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
 }
@@ -196,6 +216,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAssessmentRoute: AuthenticatedAssessmentRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedInterviewRoute: AuthenticatedInterviewRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
 }
