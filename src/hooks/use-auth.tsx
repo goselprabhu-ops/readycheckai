@@ -1,0 +1,70 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+
+export type AppRole = "student" | "recruiter" | "college_admin" | "institute_admin" | "gov_admin";
+
+interface AuthCtx {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  roles: AppRole[];
+  activeRole: AppRole | null;
+  setActiveRole: (r: AppRole) => void;
+  signOut: () => Promise<void>;
+}
+
+const Ctx = createContext<AuthCtx | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [activeRole, setActiveRoleState] = useState<AppRole | null>(null);
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setRoles([]);
+      setActiveRoleState(null);
+      return;
+    }
+    supabase.from("user_roles").select("role").then(({ data }) => {
+      const r = (data ?? []).map((d) => d.role as AppRole);
+      setRoles(r);
+      const stored = localStorage.getItem("activeRole") as AppRole | null;
+      setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
+    });
+  }, [session?.user?.id]);
+
+  const setActiveRole = (r: AppRole) => {
+    localStorage.setItem("activeRole", r);
+    setActiveRoleState(r);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <Ctx.Provider value={{ user: session?.user ?? null, session, loading, roles, activeRole, setActiveRole, signOut }}>
+      {children}
+    </Ctx.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
+}
