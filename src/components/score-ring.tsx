@@ -17,7 +17,7 @@ export function ScoreRing({ value, label, size = 140 }: ScoreRingProps) {
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="hsl(var(--muted))"
+          stroke="var(--muted)"
           strokeWidth="8"
           fill="none"
         />
@@ -35,8 +35,8 @@ export function ScoreRing({ value, label, size = 140 }: ScoreRingProps) {
         />
         <defs>
           <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--primary))" />
-            <stop offset="100%" stopColor="hsl(var(--accent))" />
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--accent)" />
           </linearGradient>
         </defs>
       </svg>
