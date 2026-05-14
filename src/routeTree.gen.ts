@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SolutionsRouteImport } from './routes/solutions'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -39,6 +40,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
   '/_authenticated/college': typeof AuthenticatedCollegeRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/unsubscribe'
+    | '/verify-email'
     | '/admin'
     | '/assessment'
     | '/college'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/unsubscribe'
+    | '/verify-email'
     | '/admin'
     | '/assessment'
     | '/college'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/unsubscribe'
+    | '/verify-email'
     | '/_authenticated/admin'
     | '/_authenticated/assessment'
     | '/_authenticated/college'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolutionsRoute: typeof SolutionsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -397,6 +410,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/unsubscribe': {
       id: '/unsubscribe'
       path: '/unsubscribe'
@@ -646,6 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolutionsRoute: SolutionsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
