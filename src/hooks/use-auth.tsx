@@ -1,8 +1,29 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "student" | "recruiter" | "college_admin" | "institute_admin" | "gov_admin";
+export type AppRole =
+  | "student"
+  | "recruiter"
+  | "college_admin"
+  | "institute_admin"
+  | "gov_admin"
+  | "admin";
+
+type RoleLookupError = {
+  code?: string;
+  status?: number;
+  message?: string;
+};
+
+function isForbiddenAuthError(error: RoleLookupError) {
+  return (
+    error.code === "PGRST301" ||
+    error.status === 403 ||
+    /JWT|denied|forbidden/i.test(error.message ?? "")
+  );
+}
 
 interface AuthCtx {
   user: User | null;
@@ -21,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [activeRole, setActiveRoleState] = useState<AppRole | null>(null);
+  const userId = session?.user?.id;
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
@@ -30,7 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.auth.signOut().catch(() => {});
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: userData, error } = await supabase.auth.getUser();
+      if (error || !userData.user || userData.user.id !== data.session.user.id) {
+        await supabase.auth.signOut().catch(() => {});
+        setSession(null);
+        setRoles([]);
+        setActiveRoleState(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(data.session);
       setLoading(false);
     });
@@ -38,31 +76,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!session?.user) {
+    if (!userId) {
       setRoles([]);
       setActiveRoleState(null);
       return;
     }
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .then(({ data, error }) => {
-        if (error) {
-          // Stale/revoked token → 403. Sign out to recover.
-          if ((error as any).code === "PGRST301" || (error as any).status === 403 || /JWT|denied|forbidden/i.test(error.message)) {
-            supabase.auth.signOut().catch(() => {});
-          }
+
+    let cancelled = false;
+    const loadRoles = async () => {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (cancelled) return;
+
+      if (userError || !userData.user || userData.user.id !== userId) {
+        await supabase.auth.signOut().catch(() => {});
+        if (!cancelled) {
           setRoles([]);
           setActiveRoleState(null);
-          return;
         }
-        const r = (data ?? []).map((d) => d.role as AppRole);
-        setRoles(r);
-        const stored = localStorage.getItem("activeRole") as AppRole | null;
-        setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
-      });
-  }, [session?.user?.id]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      if (cancelled) return;
+
+      if (error) {
+        // Stale/revoked token → 403. Sign out to recover.
+        if (isForbiddenAuthError(error)) {
+          supabase.auth.signOut().catch(() => {});
+        }
+        setRoles([]);
+        setActiveRoleState(null);
+        return;
+      }
+      const r = (data ?? []).map((d) => d.role as AppRole);
+      setRoles(r);
+      const stored = localStorage.getItem("activeRole") as AppRole | null;
+      setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
+    };
+
+    loadRoles();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const setActiveRole = (r: AppRole) => {
     localStorage.setItem("activeRole", r);
@@ -74,7 +134,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ user: session?.user ?? null, session, loading, roles, activeRole, setActiveRole, signOut }}>
+    <Ctx.Provider
+      value={{
+        user: session?.user ?? null,
+        session,
+        loading,
+        roles,
+        activeRole,
+        setActiveRole,
+        signOut,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );
