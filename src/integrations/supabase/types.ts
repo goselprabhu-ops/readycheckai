@@ -783,7 +783,14 @@ export type Database = {
         | "institute_admin"
         | "gov_admin"
         | "admin"
-      assessment_category: "sql" | "python" | "resume"
+      assessment_category:
+        | "sql"
+        | "python"
+        | "resume"
+        | "power_bi"
+        | "tableau"
+        | "excel"
+        | "statistics"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -919,7 +926,15 @@ export const Constants = {
         "gov_admin",
         "admin",
       ],
-      assessment_category: ["sql", "python", "resume"],
+      assessment_category: [
+        "sql",
+        "python",
+        "resume",
+        "power_bi",
+        "tableau",
+        "excel",
+        "statistics",
+      ],
     },
   },
 } as const
