@@ -7,6 +7,9 @@ import {
   Landmark, LineChart, Network, ShieldCheck, Sparkles, Target, TrendingUp, Users,
 } from "lucide-react";
 import heroImg from "@/assets/hero-readiness.jpg";
+import studentsImg from "@/assets/students-learning.jpg";
+import analyticsImg from "@/assets/analytics-dashboard.jpg";
+import networkImg from "@/assets/ai-network.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -124,7 +127,12 @@ function Index() {
 
       {/* Vision + Mission */}
       <section className="bg-secondary/40 border-y border-border">
-        <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10">
+        <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10 items-center">
+          <div className="relative rounded-2xl overflow-hidden border border-border shadow-lg">
+            <img src={studentsImg} alt="Students collaborating with AI readiness dashboards" loading="lazy" width={1024} height={1024} className="w-full h-auto block" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.18_0.08_265)/0.5] via-transparent to-transparent" />
+          </div>
+          <div className="space-y-6">
           <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
             <span className="text-xs font-semibold tracking-wider text-primary">CORE VISION</span>
             <h3 className="font-display font-bold text-2xl mt-3 leading-snug">
@@ -142,6 +150,7 @@ function Index() {
                 <li key={m} className="flex gap-2"><span className="text-primary">→</span>{m}</li>
               ))}
             </ul>
+          </div>
           </div>
         </div>
       </section>
@@ -168,8 +177,10 @@ function Index() {
       </section>
 
       {/* Positioning */}
-      <section className="bg-[oklch(0.18_0.08_265)] text-white">
-        <div className="max-w-7xl mx-auto px-6 py-20">
+      <section className="relative bg-[oklch(0.18_0.08_265)] text-white overflow-hidden">
+        <img src={networkImg} alt="" aria-hidden loading="lazy" width={1024} height={1024} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.18_0.08_265)/0.85] via-[oklch(0.18_0.08_265)/0.7] to-[oklch(0.18_0.08_265)]" />
+        <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-semibold tracking-wider text-[oklch(0.78_0.18_245)]">POSITIONING</span>
             <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">At the intersection of five disciplines</h2>
@@ -188,15 +199,18 @@ function Index() {
       {/* Future Scope */}
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
+          <div className="order-2 lg:order-1">
             <span className="text-xs font-semibold tracking-wider text-primary">FUTURE SCOPE</span>
             <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">Built to expand with you</h2>
             <p className="text-muted-foreground mt-4">
               The platform grows with the readiness ecosystem — from individual learners
               to institutions, employers, and governments.
             </p>
+            <div className="mt-6 rounded-2xl overflow-hidden border border-border shadow-md">
+              <img src={analyticsImg} alt="Analytics dashboard preview" loading="lazy" width={1024} height={1024} className="w-full h-auto block" />
+            </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3 order-1 lg:order-2">
             {futureScope.map((s, i) => (
               <div key={s} className="flex items-start gap-3 bg-card border border-border rounded-lg p-4">
                 <span className="font-mono text-xs text-primary mt-0.5">{String(i + 1).padStart(2, "0")}</span>

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingShell } from "@/components/marketing-shell";
 import { Target, Compass, Heart, Sparkles } from "lucide-react";
+import teamImg from "@/assets/team-collaboration.jpg";
+import studentsImg from "@/assets/students-learning.jpg";
 
 export const Route = createFileRoute("/about")({
   head: () => ({ meta: [
@@ -25,6 +27,9 @@ function AboutPage() {
       intro="ReadyCheck Lab is an AI-powered readiness intelligence platform built to help learners, educators, institutions, and organizations grow with precision."
     >
       <section className="max-w-5xl mx-auto px-6 py-20 space-y-12">
+        <div className="rounded-2xl overflow-hidden border border-border shadow-lg">
+          <img src={teamImg} alt="ReadyCheck Lab team collaborating" loading="lazy" width={1024} height={1024} className="w-full h-auto block max-h-[440px] object-cover" />
+        </div>
         <div>
           <span className="text-xs font-semibold tracking-wider text-primary">CORE VISION</span>
           <p className="font-display font-semibold text-2xl md:text-3xl mt-3 leading-snug">
@@ -32,10 +37,14 @@ function AboutPage() {
             their readiness, improve with precision, and grow with confidence.
           </p>
         </div>
-        <div>
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="rounded-2xl overflow-hidden border border-border shadow-md order-2 md:order-1">
+            <img src={studentsImg} alt="Learners using readiness intelligence" loading="lazy" width={1024} height={1024} className="w-full h-auto block" />
+          </div>
+          <div className="order-1 md:order-2">
           <span className="text-xs font-semibold tracking-wider text-primary">CORE MISSION</span>
           <p className="text-muted-foreground mt-3">We develop intelligent systems that:</p>
-          <ul className="mt-4 grid sm:grid-cols-2 gap-3">
+          <ul className="mt-4 grid gap-3">
             {["Measure learning and skill readiness",
               "Personalize improvement pathways",
               "Deliver actionable educational insights",
@@ -43,6 +52,7 @@ function AboutPage() {
               <li key={m} className="bg-card border border-border rounded-lg p-4 text-sm">{m}</li>
             ))}
           </ul>
+          </div>
         </div>
         <div>
           <span className="text-xs font-semibold tracking-wider text-primary">BRAND PHILOSOPHY</span>

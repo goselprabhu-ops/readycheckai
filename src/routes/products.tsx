@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketingShell } from "@/components/marketing-shell";
 import { Button } from "@/components/ui/button";
 import { FileText, Brain, Map, MessageSquare, BarChart3, ShieldCheck, ArrowRight } from "lucide-react";
+import analyticsImg from "@/assets/analytics-dashboard.jpg";
+import interviewImg from "@/assets/interview-prep.jpg";
+import networkImg from "@/assets/ai-network.jpg";
 
 export const Route = createFileRoute("/products")({
   head: () => ({ meta: [
@@ -27,6 +30,19 @@ function ProductsPage() {
       title={<>Six products. <span className="text-[oklch(0.72_0.2_250)]">One readiness loop.</span></>}
       intro="Every ReadyCheck Lab product feeds the same closed-loop intelligence: measure, learn, improve."
     >
+      <section className="max-w-7xl mx-auto px-6 pt-16">
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="rounded-2xl overflow-hidden border border-border shadow-md aspect-[4/3]">
+            <img src={analyticsImg} alt="Analytics dashboards" loading="lazy" width={1024} height={1024} className="w-full h-full object-cover" />
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-border shadow-md aspect-[4/3]">
+            <img src={interviewImg} alt="AI mock interviews" loading="lazy" width={1024} height={1024} className="w-full h-full object-cover" />
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-border shadow-md aspect-[4/3]">
+            <img src={networkImg} alt="Connected intelligence" loading="lazy" width={1024} height={1024} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      </section>
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((p, i) => (
           <div key={p.name} className="relative bg-card border border-border rounded-2xl p-7 overflow-hidden">
