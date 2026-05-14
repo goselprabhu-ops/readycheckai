@@ -86,7 +86,13 @@ function RoadmapPage() {
           {items.map((it, i) => (
             <Card key={it.id}>
               <CardContent className="p-4 flex items-start gap-3">
-                <button onClick={() => cycle(it)} className="mt-1">
+                <button
+                  onClick={() => cycle(it)}
+                  className="mt-1 min-h-11 min-w-11 inline-flex items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={`Mark "${it.title}" as ${
+                    it.status === "pending" ? "in progress" : it.status === "in_progress" ? "done" : "pending"
+                  }`}
+                >
                   {it.status === "done" ? <CheckCircle2 className="h-5 w-5 text-primary" /> :
                    it.status === "in_progress" ? <Loader2 className="h-5 w-5 text-accent" /> :
                    <Circle className="h-5 w-5 text-muted-foreground" />}

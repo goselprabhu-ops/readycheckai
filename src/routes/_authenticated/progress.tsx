@@ -1,18 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-} from "recharts";
 import {
   TrendingUp,
   TrendingDown,
@@ -31,6 +19,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+
+const ReadinessGrowthChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.ReadinessGrowthChart })),
+);
+const ResumeTrendChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.ResumeTrendChart })),
+);
+const TopicLineChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.TopicLineChart })),
+);
+
+const ChartFallback = ({ h = "h-72" }: { h?: string }) => (
+  <Skeleton className={`${h} w-full rounded-xl`} />
+);
 
 export const Route = createFileRoute("/_authenticated/progress")({
   component: ProgressPage,
@@ -267,27 +269,9 @@ function ProgressPage() {
               ) : readinessSeries.length === 0 ? (
                 <EmptyChart text="Recompute readiness on the dashboard to start tracking history." />
               ) : (
-                <div className="h-72">
-                  <ResponsiveContainer>
-                    <AreaChart data={readinessSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="gReadyP" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
-                          <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                      <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                      <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <ReferenceLine y={70} stroke="oklch(0.7 0.15 150)" strokeDasharray="4 4" label={{ value: "Interview ready", position: "right", fontSize: 10, fill: "var(--muted-foreground)" }} />
-                      <Area type="monotone" dataKey="Readiness" stroke="var(--primary)" strokeWidth={2.5} fill="url(#gReadyP)" />
-                      <Line type="monotone" dataKey="SQL" stroke="oklch(0.6 0.18 250)" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" dataKey="Python" stroke="oklch(0.65 0.18 160)" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" strokeWidth={1.5} dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <Suspense fallback={<ChartFallback />}> 
+                  <ReadinessGrowthChart data={readinessSeries} />
+                </Suspense>
               )}
             </CardContent>
           </GlassCard>
@@ -344,17 +328,9 @@ function ProgressPage() {
                     }
                   />
                 ) : (
-                  <div className="h-56">
-                    <ResponsiveContainer>
-                      <LineChart data={resumeSeries} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                        <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                        <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                        <Tooltip contentStyle={tooltipStyle} />
-                        <Line type="monotone" dataKey="score" stroke="oklch(0.7 0.18 30)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <Suspense fallback={<ChartFallback h="h-56" />}> 
+                    <ResumeTrendChart data={resumeSeries} />
+                  </Suspense>
                 )}
               </CardContent>
             </GlassCard>
@@ -440,12 +416,6 @@ function computeImprovement(series: number[]) {
   if (!first) return last;
   return Math.round(((last - first) / first) * 100);
 }
-
-const tooltipStyle = {
-  borderRadius: 12,
-  border: "1px solid var(--border)",
-  background: "var(--card)",
-};
 
 /* ---------- subcomponents ---------- */
 
@@ -543,18 +513,9 @@ function TopicChart({
               }
             />
           ) : (
-            <div className="h-56">
-              <ResponsiveContainer>
-                <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <ReferenceLine y={70} stroke="oklch(0.7 0.15 150)" strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="score" stroke={color} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <Suspense fallback={<ChartFallback h="h-56" />}> 
+              <TopicLineChart data={data} color={color} />
+            </Suspense>
           )}
         </CardContent>
       </GlassCard>

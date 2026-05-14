@@ -88,5 +88,17 @@ export const regenerateRecommendations = createServerFn({ method: "POST" })
       .upsert(rows, { onConflict: "user_id,rule_key", ignoreDuplicates: false });
     if (error) throw new Error(error.message);
 
+    // Expire stale recommendations: drop pending recs older than 30 days
+    // that the rules engine no longer regenerates this run.
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const keep = rows.map((r) => r.rule_key);
+    await supabase
+      .from("recommendations")
+      .delete()
+      .eq("user_id", userId)
+      .eq("status", "pending")
+      .lt("created_at", cutoff)
+      .not("rule_key", "in", `(${keep.map((k) => `"${k}"`).join(",")})`);
+
     return { count: drafts.length, drafts };
   });

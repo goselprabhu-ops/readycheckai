@@ -227,6 +227,7 @@ function ResumePage() {
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label="Remove file"
                       onClick={(e) => {
                         e.stopPropagation();
                         reset();
