@@ -67,6 +67,14 @@ function ResumePage() {
     maxFiles: 1,
   });
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const handleBrowseClick = () => fileInputRef.current?.click();
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) onDrop([f]);
+    e.target.value = "";
+  };
+
   const reset = () => {
     setFile(null);
     setResult(null);
@@ -200,6 +208,26 @@ function ResumePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={handleFileInputChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBrowseClick}
+                disabled={loading}
+                className="w-full"
+              >
+                <UploadCloud className="h-4 w-4 mr-2" />
+                Upload file
+              </Button>
             </div>
 
             {loading && (
