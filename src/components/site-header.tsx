@@ -19,7 +19,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
   return (
     <header className={`max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4 ${isDark ? "text-white" : ""}`}>
       <Link to="/" className="flex items-center gap-3">
-        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-14 w-auto" />
+        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-[4.55rem] w-auto" />
       </Link>
       <nav className="hidden md:flex items-center gap-7 text-sm">
         {nav.map((n) => (
