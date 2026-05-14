@@ -29,7 +29,6 @@ import {
   Code2,
   Sparkles,
   TrendingUp,
-  ArrowRight,
   Target,
   MessageSquare,
 } from "lucide-react";
@@ -160,15 +159,6 @@ function Dashboard() {
         })),
     [attempts],
   );
-
-  const recommendations = useMemo(() => {
-    const recs: { title: string; desc: string; href: string; tone: string }[] = [];
-    if ((score?.resume_score ?? 0) < 70) recs.push({ title: "Strengthen your resume", desc: "Run a fresh ATS analysis to lift your resume score above 70.", href: "/resume", tone: "from-rose-500/10 to-rose-500/0" });
-    if (sql < 70) recs.push({ title: "Practice SQL fundamentals", desc: "Joins, aggregations, window functions — take the SQL assessment.", href: "/assessment", tone: "from-blue-500/10 to-blue-500/0" });
-    if (python < 70) recs.push({ title: "Sharpen Python for analysis", desc: "Pandas + cleaning workflows — take the Python assessment.", href: "/assessment", tone: "from-emerald-500/10 to-emerald-500/0" });
-    if (recs.length === 0) recs.push({ title: "You're investor-ready", desc: "Keep practicing mock interviews to maintain your edge.", href: "/interview", tone: "from-violet-500/10 to-violet-500/0" });
-    return recs.slice(0, 3);
-  }, [score, sql, python]);
 
   return (
     <div className="min-h-full">
