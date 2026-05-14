@@ -255,7 +255,7 @@ function AssessmentPage() {
                         {meta.icon}
                       </div>
                       <div>
-                        <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{d.category}</Badge>
+                        <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{meta.label}</Badge>
                       </div>
                     </div>
                     <h3 className="font-display text-xl font-semibold mt-4">{d.title}</h3>
@@ -361,7 +361,7 @@ function AssessmentPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{active.category}</Badge>
+          <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{CATEGORY_META[active.category]?.label ?? active.category}</Badge>
           <h1 className="font-display text-2xl font-semibold tracking-tight mt-1 truncate">{active.title}</h1>
         </div>
         <div className={`flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border ${timeLeft < 30 ? "border-destructive text-destructive" : "border-border"}`}>
