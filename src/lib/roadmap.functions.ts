@@ -33,11 +33,25 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       })).min(5).max(10),
     });
 
-    const { output } = await generateText({
-      model,
-      output: Output.object({ schema }),
-      prompt: `Build a 5-10 step adaptive learning roadmap for someone targeting "${data.targetRole}".\n\nCurrent skills (name:level): ${JSON.stringify(skills ?? [])}\nGaps from latest resume: ${JSON.stringify(latest?.[0]?.gaps ?? [])}\nSuggestions: ${JSON.stringify(latest?.[0]?.suggestions ?? [])}\n\nEach step is concrete and time-boxed. Order matters — earlier steps unblock later ones.`,
-    });
+    let output: z.infer<typeof schema>;
+    try {
+      const res = await generateText({
+        model,
+        output: Output.object({ schema }),
+        prompt: `Build a 5-10 step adaptive learning roadmap for someone targeting "${data.targetRole}".\n\nCurrent skills (name:level): ${JSON.stringify(skills ?? [])}\nGaps from latest resume: ${JSON.stringify(latest?.[0]?.gaps ?? [])}\nSuggestions: ${JSON.stringify(latest?.[0]?.suggestions ?? [])}\n\nReturn ONLY a JSON object: { "items": [ { "title": string, "description": string, "est_minutes": number between 15 and 600 } ] } with 5 to 10 items. Each step concrete and time-boxed. Earlier steps unblock later ones.`,
+      });
+      output = res.output;
+    } catch (err: any) {
+      // Fallback: parse raw text if structured output failed validation
+      const raw = err?.text ?? err?.response?.text ?? "";
+      const match = typeof raw === "string" ? raw.match(/\{[\s\S]*\}/) : null;
+      if (!match) throw new Error("AI returned an unparseable roadmap. Please try again.");
+      try {
+        output = schema.parse(JSON.parse(match[0]));
+      } catch {
+        throw new Error("AI returned an invalid roadmap. Please try again.");
+      }
+    }
 
     // wipe + insert fresh roadmap
     await supabase.from("roadmap_items").delete().eq("user_id", userId);
