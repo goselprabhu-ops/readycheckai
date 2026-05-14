@@ -20,6 +20,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
+import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
 import { Route as AuthenticatedInterviewRouteImport } from './routes/_authenticated/interview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -81,6 +82,11 @@ const AuthenticatedResumeRoute = AuthenticatedResumeRouteImport.update({
   path: '/resume',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRecruiterRoute = AuthenticatedRecruiterRouteImport.update({
   id: '/recruiter',
   path: '/recruiter',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
+  '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/interview': typeof AuthenticatedInterviewRoute
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRoute
+  '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
 }
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/interview'
     | '/recruiter'
+    | '/results'
     | '/resume'
     | '/roadmap'
   fileRoutesByTo: FileRoutesByTo
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/interview'
     | '/recruiter'
+    | '/results'
     | '/resume'
     | '/roadmap'
   id:
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/interview'
     | '/_authenticated/recruiter'
+    | '/_authenticated/results'
     | '/_authenticated/resume'
     | '/_authenticated/roadmap'
   fileRoutesById: FileRoutesById
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedResumeRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/results': {
+      id: '/_authenticated/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof AuthenticatedResultsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/recruiter': {
       id: '/_authenticated/recruiter'
       path: '/recruiter'
@@ -369,6 +388,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInterviewRoute: typeof AuthenticatedInterviewRoute
   AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRoute
+  AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
 }
@@ -380,6 +400,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInterviewRoute: AuthenticatedInterviewRoute,
   AuthenticatedRecruiterRoute: AuthenticatedRecruiterRoute,
+  AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
 }
@@ -402,3 +423,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
