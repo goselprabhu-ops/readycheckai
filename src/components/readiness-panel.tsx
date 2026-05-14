@@ -92,7 +92,7 @@ export function ReadinessPanel() {
         <div>
           <CardTitle>Readiness score</CardTitle>
           <p className="text-xs text-muted-foreground mt-1">
-            (SQL + Python + Resume) / 3 — tracked over time
+            Weighted SQL · Python · Resume with completeness & 30-day decay
           </p>
         </div>
         <Button
