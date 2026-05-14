@@ -13,6 +13,31 @@ import networkImg from "@/assets/ai-network.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      { title: "ReadyCheck Lab — AI Career Readiness for Students & Recruiters" },
+      { name: "description", content: "Measure SQL, Python and resume readiness with AI. Personalized roadmaps, mock interviews, and analytics for students, colleges and recruiters." },
+      { property: "og:title", content: "ReadyCheck Lab — AI Career Readiness" },
+      { property: "og:description", content: "Measure SQL, Python and resume readiness with AI. Personalized roadmaps and analytics for students, colleges and recruiters." },
+      { property: "og:url", content: "https://readycheckai.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://readycheckai.lovable.app/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "ReadyCheck Lab",
+          url: "https://readycheckai.lovable.app",
+          description: "AI-powered employability intelligence platform",
+        }),
+      },
+    ],
+  }),
 });
 
 const features = [
