@@ -10,21 +10,58 @@ export interface ReadinessWeights {
   resume: number;
 }
 
-export const DEFAULT_WEIGHTS: ReadinessWeights = { sql: 1, python: 1, resume: 1 };
+/**
+ * Default weights tuned for a Data Analyst target role.
+ * Sum is 1.0 — kept as fractions so callers can pass straight through.
+ */
+export const DEFAULT_WEIGHTS: ReadinessWeights = { sql: 0.35, python: 0.35, resume: 0.30 };
 
 export interface ReadinessInput {
   sql: number;
   python: number;
   resume: number;
+  /** Optional recency hints — ISO strings of the latest evidence per pillar. */
+  sqlAt?: string | null;
+  pythonAt?: string | null;
+  resumeAt?: string | null;
 }
 
 export interface ReadinessResult extends ReadinessInput {
   readiness: number;
   level: ReadinessLevel;
   weights: ReadinessWeights;
+  completeness: number;
+  recency: { sql: number; python: number; resume: number };
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+/**
+ * Half-life decay (default 30 days). Returns a multiplier in [0.5, 1].
+ * Evidence collected today returns 1.0; 30 days old returns ~0.79; 90 days old returns ~0.5.
+ */
+const HALF_LIFE_DAYS = 30;
+const MIN_RECENCY = 0.5;
+function recencyFactor(at?: string | null): number {
+  if (!at) return 1; // no signal => don't penalize twice (completeness already does)
+  const t = new Date(at).getTime();
+  if (!Number.isFinite(t)) return 1;
+  const days = Math.max(0, (Date.now() - t) / 86400000);
+  const factor = Math.pow(0.5, days / (HALF_LIFE_DAYS * 3));
+  return Math.max(MIN_RECENCY, Math.min(1, factor));
+}
+
+/**
+ * Completeness multiplier: full credit when all three pillars have data,
+ * scaled down (to 0.7 at minimum) when one or more pillars are zero/missing.
+ */
+function completenessFactor(input: ReadinessInput): number {
+  const present = [input.sql, input.python, input.resume].filter((v) => v > 0).length;
+  if (present === 3) return 1;
+  if (present === 2) return 0.9;
+  if (present === 1) return 0.78;
+  return 0.7;
+}
 
 export function computeReadiness(
   input: ReadinessInput,
@@ -33,11 +70,36 @@ export function computeReadiness(
   const sql = clamp(input.sql);
   const python = clamp(input.python);
   const resume = clamp(input.resume);
+
+  const recency = {
+    sql: recencyFactor(input.sqlAt),
+    python: recencyFactor(input.pythonAt),
+    resume: recencyFactor(input.resumeAt),
+  };
+
   const totalW = weights.sql + weights.python + weights.resume || 1;
-  const readiness = clamp(
-    (sql * weights.sql + python * weights.python + resume * weights.resume) / totalW,
-  );
-  return { sql, python, resume, readiness, level: levelFor(readiness), weights };
+  const weighted =
+    (sql * recency.sql * weights.sql +
+      python * recency.python * weights.python +
+      resume * recency.resume * weights.resume) /
+    totalW;
+
+  const completeness = completenessFactor(input);
+  const readiness = clamp(weighted * completeness);
+
+  return {
+    sql,
+    python,
+    resume,
+    sqlAt: input.sqlAt,
+    pythonAt: input.pythonAt,
+    resumeAt: input.resumeAt,
+    readiness,
+    level: levelFor(readiness),
+    weights,
+    completeness,
+    recency,
+  };
 }
 
 export function levelFor(readiness: number): ReadinessLevel {
