@@ -13,8 +13,11 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeResumeKeywords, registerResumeUpload } from "@/lib/resume.functions";
-import { extractPdfText } from "@/lib/pdf-extract";
+import {
+  analyzeResumeAuto,
+  registerResumeUpload,
+  extractResumeText,
+} from "@/lib/resume.functions";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -30,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/resume")({
   component: ResumePage,
 });
 
-type AnalysisResult = Awaited<ReturnType<typeof analyzeResumeKeywords>>;
+type AnalysisResult = Awaited<ReturnType<typeof analyzeResumeAuto>>;
 
 function ResumePage() {
   const [role, setRole] = useState("Data Analyst");
@@ -41,8 +44,9 @@ function ResumePage() {
   );
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
-  const analyze = useServerFn(analyzeResumeKeywords);
+  const analyze = useServerFn(analyzeResumeAuto);
   const registerUpload = useServerFn(registerResumeUpload);
+  const extractText = useServerFn(extractResumeText);
 
   const onDrop = useCallback((accepted: File[]) => {
     const f = accepted[0];
@@ -104,11 +108,10 @@ function ResumePage() {
         data: { filePath: path, originalName: file.name },
       });
 
-      // 2. Extract text in browser
+      // 2. Extract text on the server (Worker-compatible parser).
       setStage("extracting");
       setProgress(55);
-      const text = await extractPdfText(file);
-      if (text.length < 20) throw new Error("Could not extract text from PDF");
+      const { text } = await extractText({ data: { filePath: path } });
       setProgress(75);
 
       // 3. Keyword analysis on server (deterministic)
@@ -119,7 +122,12 @@ function ResumePage() {
       setProgress(100);
       setStage("done");
       setResult(r);
-      toast.success(`Resume scored ${r.score}/100`);
+      const score = (r as any).score ?? (r as any).analysis?.ats_score ?? 0;
+      toast.success(
+        r.mode === "fallback"
+          ? `AI unavailable — keyword score ${score}/100`
+          : `Resume scored ${score}/100`,
+      );
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message ?? "Analysis failed");
