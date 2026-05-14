@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessment_attempts: {
+        Row: {
+          assessment_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          max_score: number
+          started_at: string
+          total_score: number
+          user_id: string
+        }
+        Insert: {
+          assessment_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          max_score?: number
+          started_at?: string
+          total_score?: number
+          user_id: string
+        }
+        Update: {
+          assessment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          max_score?: number
+          started_at?: string
+          total_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_attempts_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_definitions: {
+        Row: {
+          category: Database["public"]["Enums"]["assessment_category"]
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          role_id: string
+          title: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["assessment_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          role_id: string
+          title: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["assessment_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          role_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_definitions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "target_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessments: {
         Row: {
           breakdown: Json
@@ -187,6 +266,94 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          assessment_id: string
+          correct_answer: string
+          created_at: string
+          explanation: string | null
+          id: string
+          options: Json
+          order_index: number
+          points: number
+          prompt: string
+        }
+        Insert: {
+          assessment_id: string
+          correct_answer: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          order_index?: number
+          points?: number
+          prompt: string
+        }
+        Update: {
+          assessment_id?: string
+          correct_answer?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          order_index?: number
+          points?: number
+          prompt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recommendations: {
+        Row: {
+          attempt_id: string | null
+          category: Database["public"]["Enums"]["assessment_category"] | null
+          created_at: string
+          description: string | null
+          id: string
+          priority: number
+          resource_url: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          category?: Database["public"]["Enums"]["assessment_category"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: number
+          resource_url?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          category?: Database["public"]["Enums"]["assessment_category"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: number
+          resource_url?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resume_analyses: {
         Row: {
           ats_score: number
@@ -291,6 +458,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scores: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          points_awarded: number
+          question_id: string
+          selected_answer: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_awarded?: number
+          question_id: string
+          selected_answer?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_awarded?: number
+          question_id?: string
+          selected_answer?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scores_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scores_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           id: string
@@ -315,6 +530,33 @@ export type Database = {
           source?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      target_roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
         }
         Relationships: []
       }
@@ -360,6 +602,7 @@ export type Database = {
         | "institute_admin"
         | "gov_admin"
         | "admin"
+      assessment_category: "sql" | "python" | "resume"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -495,6 +738,7 @@ export const Constants = {
         "gov_admin",
         "admin",
       ],
+      assessment_category: ["sql", "python", "resume"],
     },
   },
 } as const
