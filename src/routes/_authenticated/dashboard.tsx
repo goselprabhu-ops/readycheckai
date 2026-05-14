@@ -31,8 +31,10 @@ import {
   TrendingUp,
   Target,
   MessageSquare,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -79,9 +81,17 @@ function Dashboard() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [skills, setSkills] = useState<{ name: string; level: number }[]>([]);
   const [name, setName] = useState<string>("");
+  const [isNewUser, setIsNewUser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const recompute = useServerFn(recomputeEmployability);
+  const nav = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out");
+    nav({ to: "/login" });
+  };
 
   const load = async () => {
     const [{ data: s }, { data: hist }, { data: at }, { data: sk }, { data: u }] =
@@ -114,6 +124,11 @@ function Dashboard() {
     setSkills((sk ?? []) as any);
     const meta = u?.user?.user_metadata as { full_name?: string } | undefined;
     setName(meta?.full_name || u?.user?.email?.split("@")[0] || "there");
+    // Treat as new user if account created within last 5 minutes or no prior sign-in
+    const createdAt = u?.user?.created_at ? new Date(u.user.created_at).getTime() : 0;
+    const lastSignIn = u?.user?.last_sign_in_at ? new Date(u.user.last_sign_in_at).getTime() : 0;
+    const newish = createdAt && Date.now() - createdAt < 5 * 60 * 1000;
+    setIsNewUser(Boolean(newish || !lastSignIn || Math.abs(lastSignIn - createdAt) < 60 * 1000));
     setInitialLoading(false);
   };
 
@@ -178,16 +193,22 @@ function Dashboard() {
             <div>
               <div className="text-xs uppercase tracking-widest text-white/70">ReadyCheck Lab</div>
               <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">
-                Welcome back, {initialLoading ? "…" : name}
+                {initialLoading ? "…" : isNewUser ? `Welcome to ReadyCheck, ${name}` : `Welcome back, ${name}`}
               </h1>
               <p className="text-white/80 mt-2 max-w-xl">
                 Measure. Learn. Improve. Here's where you stand on your Data Analyst readiness today.
               </p>
             </div>
-            <Button onClick={onRecompute} disabled={loading} className="bg-white text-primary hover:bg-white/90 rounded-xl shadow-lg">
-              <Sparkles className="h-4 w-4 mr-2" />
-              {loading ? "Computing…" : "Recompute readiness"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={onRecompute} disabled={loading} className="bg-white text-primary hover:bg-white/90 rounded-xl shadow-lg">
+                <Sparkles className="h-4 w-4 mr-2" />
+                {loading ? "Computing…" : "Recompute readiness"}
+              </Button>
+              <Button onClick={handleSignOut} variant="outline" className="rounded-xl border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </Button>
+            </div>
           </motion.div>
         </div>
       </div>
