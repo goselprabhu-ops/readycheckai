@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useDropzone } from "react-dropzone";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,6 +67,14 @@ function ResumePage() {
     multiple: false,
     maxFiles: 1,
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleBrowseClick = () => fileInputRef.current?.click();
+  const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) onDrop([f]);
+    e.target.value = "";
+  };
 
   const reset = () => {
     setFile(null);
@@ -200,6 +209,26 @@ function ResumePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={handleFileInputChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBrowseClick}
+                disabled={loading}
+                className="w-full"
+              >
+                <UploadCloud className="h-4 w-4 mr-2" />
+                Upload file
+              </Button>
             </div>
 
             {loading && (
