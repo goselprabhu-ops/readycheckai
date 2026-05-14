@@ -244,12 +244,14 @@ export const generateAssessment = createServerFn({ method: "POST" })
       count: z.number().min(3).max(10).default(5),
     }).parse(input)
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
-  });
 
-// NOTE: handler split below — see below.
+    // Enforce per-user daily AI cap.
+    await chargeAiUsage(supabase, userId, "assessment_gen");
+
     const gateway = createLovableAiGatewayProvider(apiKey);
     const model = gateway(DEFAULT_MODEL);
 
