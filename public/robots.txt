@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /assessment
+Disallow: /resume
+Disallow: /results
+Disallow: /roadmap
+Disallow: /interview
+Disallow: /progress
+Disallow: /admin
+
+Sitemap: https://readycheckai.lovable.app/sitemap.xml
