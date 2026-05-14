@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
-import { ReadinessPanel } from "@/components/readiness-panel";
-import { RecommendationsPanel } from "@/components/recommendations-panel";
+const ReadinessPanel = lazy(() =>
+  import("@/components/readiness-panel").then((m) => ({ default: m.ReadinessPanel })),
+);
+const RecommendationsPanel = lazy(() =>
+  import("@/components/recommendations-panel").then((m) => ({ default: m.RecommendationsPanel })),
+);
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
 import {
