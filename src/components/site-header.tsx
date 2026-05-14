@@ -22,7 +22,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
       style={isDark ? { background: "linear-gradient(180deg, oklch(0.16 0.07 265) 0%, oklch(0.18 0.08 265) 60%, transparent 100%)" } : undefined}
     >
       <Link to="/" className="flex items-center gap-3">
-        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-[4.55rem] w-auto" />
+        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-[6.825rem] w-auto" />
       </Link>
       <nav className="hidden md:flex items-center gap-7 text-sm">
         {nav.map((n) => (
