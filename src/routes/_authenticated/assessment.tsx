@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { startAttempt, submitAttempt } from "@/lib/assessment.functions";
 import { toast } from "sonner";
 import {
   Database,
@@ -43,14 +45,21 @@ interface Question {
   id: string;
   prompt: string;
   options: string[];
-  correct_answer: string;
-  explanation: string | null;
-  order_index: number;
   points: number;
 }
 
+interface ReviewItem {
+  questionId: string;
+  selected: string | null;
+  isCorrect: boolean;
+  pointsAwarded: number;
+  prompt: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string | null;
+}
+
 const SECONDS_PER_QUESTION = 45;
-const QUESTIONS_PER_ATTEMPT = 10;
 
 const CATEGORY_META: Record<Category, { icon: React.ReactNode; tone: string; label: string }> = {
   sql: { icon: <Database className="h-5 w-5" />, tone: "from-blue-500/15 to-blue-500/0", label: "SQL" },
@@ -62,15 +71,6 @@ const CATEGORY_META: Record<Category, { icon: React.ReactNode; tone: string; lab
   statistics: { icon: <Sigma className="h-5 w-5" />, tone: "from-rose-500/15 to-rose-500/0", label: "Statistics" },
 };
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
 function AssessmentPage() {
   const [defs, setDefs] = useState<AssessmentDef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,8 +80,12 @@ function AssessmentPage() {
   const [index, setIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ score: number; total: number; correctIds: Set<string> } | null>(null);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number; review: ReviewItem[] } | null>(null);
   const timerRef = useRef<number | null>(null);
+
+  const startAttemptFn = useServerFn(startAttempt);
+  const submitAttemptFn = useServerFn(submitAttempt);
 
   // Load assessment definitions (SQL + Python only per spec) with question counts
   useEffect(() => {
@@ -124,25 +128,21 @@ function AssessmentPage() {
   }, [active, result]);
 
   const start = async (def: AssessmentDef) => {
-    const { data, error } = await supabase
-      .from("questions")
-      .select("id, prompt, options, correct_answer, explanation, order_index, points")
-      .eq("assessment_id", def.id);
-    if (error) return toast.error(error.message);
-    if (!data || data.length === 0) return toast.error("No questions available yet.");
-    // Shuffle question pool, take 10 (or fewer if pool smaller), and shuffle each question's options
-    const pool = data.map((q: any) => ({
-      ...q,
-      options: Array.isArray(q.options) ? q.options : [],
-    })) as Question[];
-    const picked = shuffle(pool).slice(0, Math.min(QUESTIONS_PER_ATTEMPT, pool.length));
-    const qs = picked.map((q) => ({ ...q, options: shuffle(q.options) }));
-    setQuestions(qs);
-    setAnswers({});
-    setIndex(0);
-    setResult(null);
-    setTimeLeft(qs.length * SECONDS_PER_QUESTION);
-    setActive(def);
+    try {
+      const res = await startAttemptFn({ data: { assessmentId: def.id } });
+      setQuestions(res.questions);
+      setAttemptId(res.attemptId);
+      setAnswers({});
+      setIndex(0);
+      setResult(null);
+      // Use server-issued duration; fall back to client estimate if missing
+      const elapsedMs = Date.now() - new Date(res.startedAt).getTime();
+      const remaining = Math.max(1, res.durationSeconds - Math.floor(elapsedMs / 1000));
+      setTimeLeft(remaining);
+      setActive(def);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not start assessment");
+    }
   };
 
   const reset = () => {
@@ -151,68 +151,24 @@ function AssessmentPage() {
     setAnswers({});
     setIndex(0);
     setResult(null);
+    setAttemptId(null);
     if (timerRef.current) window.clearInterval(timerRef.current);
   };
 
   const submit = async (auto = false) => {
-    if (!active || submitting) return;
+    if (!active || submitting || !attemptId) return;
     if (timerRef.current) window.clearInterval(timerRef.current);
     setSubmitting(true);
     try {
-      const { data: u } = await supabase.auth.getUser();
-      const userId = u?.user?.id;
-      if (!userId) throw new Error("Not signed in");
-
-      const correctIds = new Set<string>();
-      let totalPoints = 0;
-      let earned = 0;
-      const scoreRows = questions.map((q) => {
-        totalPoints += q.points;
-        const selected = answers[q.id] ?? null;
-        const isCorrect = selected === q.correct_answer;
-        if (isCorrect) {
-          earned += q.points;
-          correctIds.add(q.id);
-        }
-        return {
-          attempt_id: "", // filled below
-          question_id: q.id,
-          user_id: userId,
-          selected_answer: selected,
-          is_correct: isCorrect,
-          points_awarded: isCorrect ? q.points : 0,
-        };
-      });
-
-      // Insert attempt
-      const { data: att, error: attErr } = await supabase
-        .from("assessment_attempts")
-        .insert({
-          user_id: userId,
-          assessment_id: active.id,
-          total_score: earned,
-          max_score: totalPoints,
-          completed_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      if (attErr) throw attErr;
-
-      // Insert per-question scores
-      const toInsert = scoreRows.map((r) => ({ ...r, attempt_id: att.id }));
-      const { error: scErr } = await supabase.from("scores").insert(toInsert);
-      if (scErr) throw scErr;
-
-      // Mirror to legacy `assessments` table so the existing dashboard chart keeps working
-      await supabase.from("assessments").insert({
-        user_id: userId,
-        topic: `${active.category.toUpperCase()} – ${active.title}`,
-        score: earned,
-        total: totalPoints,
-        breakdown: scoreRows.map((r) => ({ question_id: r.question_id, correct: r.is_correct })),
-      });
-
-      setResult({ score: earned, total: totalPoints, correctIds });
+      const payload = {
+        attemptId,
+        answers: questions.map((q) => ({
+          questionId: q.id,
+          selected: answers[q.id] ?? null,
+        })),
+      };
+      const res = await submitAttemptFn({ data: payload });
+      setResult({ score: res.score, total: res.total, review: res.review });
       if (auto) toast.message("Time's up — auto-submitted");
       else toast.success("Submitted");
     } catch (e: any) {
@@ -305,21 +261,21 @@ function AssessmentPage() {
         <div>
           <h2 className="font-display text-lg font-semibold mb-3">Review</h2>
           <div className="space-y-3">
-            {questions.map((q, qi) => {
-              const picked = answers[q.id];
-              const correct = q.correct_answer;
+            {result.review.map((r, qi) => {
+              const picked = r.selected;
+              const correct = r.correctAnswer;
               return (
-                <Card key={q.id} className="rounded-2xl">
+                <Card key={r.questionId} className="rounded-2xl">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-start gap-2">
-                      {result.correctIds.has(q.id)
+                      {r.isCorrect
                         ? <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         : <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />}
-                      <span>Q{qi + 1}. {q.prompt}</span>
+                      <span>Q{qi + 1}. {r.prompt}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {q.options.map((opt) => {
+                    {r.options.map((opt) => {
                       const isCorrect = opt === correct;
                       const isPicked = opt === picked;
                       return (
@@ -335,9 +291,9 @@ function AssessmentPage() {
                         </div>
                       );
                     })}
-                    {q.explanation && (
+                    {r.explanation && (
                       <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                        <span className="font-medium text-foreground">Why: </span>{q.explanation}
+                        <span className="font-medium text-foreground">Why: </span>{r.explanation}
                       </p>
                     )}
                   </CardContent>
