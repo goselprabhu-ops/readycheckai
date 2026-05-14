@@ -1,19 +1,10 @@
-// Client-side PDF text extraction using pdfjs-dist.
-// Architecture is intentionally isolated so it can be swapped for a
-// server-side extractor (or OpenAI file ingestion) in the future.
-
-export async function extractPdfText(file: File): Promise<string> {
-  const pdfjs: any = await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.mjs" as any);
-  const workerSrc = (await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.worker.mjs?url" as any)).default;
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-
-  const buf = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: buf }).promise;
-  let out = "";
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    out += content.items.map((it: any) => it.str).join(" ") + "\n";
-  }
-  return out.trim();
+// Worker-compatible PDF text extraction using `unpdf`.
+// This module is import-safe in both browser and server bundles, but the
+// canonical caller is the `extractResumeText` server fn — moving extraction
+// off the browser keeps bundles small and removes the pdfjs worker hack.
+export async function extractPdfTextFromBytes(bytes: Uint8Array): Promise<string> {
+  const { extractText, getDocumentProxy } = await import("unpdf");
+  const pdf = await getDocumentProxy(bytes);
+  const { text } = await extractText(pdf, { mergePages: true });
+  return (Array.isArray(text) ? text.join("\n") : text).trim();
 }
