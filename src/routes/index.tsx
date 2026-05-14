@@ -1,8 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, Crosshair, Globe2, Landmark, LineChart, ShieldCheck, Users } from "lucide-react";
-import logo from "@/assets/logo-readycheck.png";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import {
+  ArrowRight, BookOpen, Brain, Crosshair, Globe2, GraduationCap,
+  Landmark, LineChart, Network, ShieldCheck, Sparkles, Target, TrendingUp, Users,
+} from "lucide-react";
+import heroImg from "@/assets/hero-readiness.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -23,45 +27,38 @@ const stats = [
   { icon: Globe2, value: "25+", label: "Countries" },
 ];
 
+const philosophy = [
+  { word: "Measure", color: "oklch(0.78_0.18_245)", desc: "Understand current readiness with precision diagnostics." },
+  { word: "Learn", color: "oklch(0.7_0.2_250)", desc: "Enable intelligent improvement through adaptive pathways." },
+  { word: "Improve", color: "oklch(0.6_0.22_255)", desc: "Achieve measurable growth outcomes that compound over time." },
+];
+
+const positioning = [
+  { icon: Brain, label: "Artificial Intelligence" },
+  { icon: GraduationCap, label: "Educational Technology" },
+  { icon: Target, label: "Readiness Analytics" },
+  { icon: Sparkles, label: "Adaptive Learning" },
+  { icon: TrendingUp, label: "Skill Intelligence" },
+];
+
+const futureScope = [
+  "Student readiness scoring",
+  "AI-powered assessments",
+  "Interview & career readiness",
+  "Institutional analytics",
+  "Government education initiatives",
+  "Workforce readiness intelligence",
+  "Smart learning ecosystems",
+];
+
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero with deep gradient */}
-      <div
-        className="relative text-white"
-        style={{ background: "var(--gradient-hero)" }}
-      >
-        <header className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="ReadyCheck Lab logo" className="h-12 w-auto" />
-            <div className="hidden sm:flex flex-col leading-tight">
-              <span className="font-display font-bold text-xl tracking-tight">
-                ReadyCheck <span className="text-[oklch(0.78_0.18_245)]">Lab</span>
-              </span>
-              <span className="text-[11px] text-white/70 tracking-wide">Measure. Learn. Improve.</span>
-            </div>
-          </Link>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-white/80">
-            <a href="#home" className="text-white border-b-2 border-white/80 pb-0.5">Home</a>
-            <a href="#solutions" className="hover:text-white">Solutions</a>
-            <a href="#products" className="hover:text-white">Products</a>
-            <a href="#research" className="hover:text-white">Research</a>
-            <a href="#about" className="hover:text-white">About Us</a>
-            <a href="#contact" className="hover:text-white">Contact</a>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link to="/login" className="hidden sm:block">
-              <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white">Sign in</Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="rounded-md bg-[oklch(0.6_0.22_255)] hover:bg-[oklch(0.65_0.22_255)] text-white">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        </header>
+      <div className="relative text-white" style={{ background: "var(--gradient-hero)" }}>
+        <SiteHeader variant="dark" />
 
-        <section id="home" className="max-w-7xl mx-auto px-6 pt-10 pb-24 grid lg:grid-cols-2 gap-12 items-center">
+        <section className="max-w-7xl mx-auto px-6 pt-10 pb-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-block px-3 py-1 rounded-md border border-white/20 bg-white/5 text-[11px] font-semibold tracking-wider text-white/90">
               AI-POWERED READINESS INTELLIGENCE
@@ -72,7 +69,9 @@ function Index() {
               <span className="text-[oklch(0.72_0.2_250)]">Improve.</span>
             </h1>
             <p className="mt-6 text-lg text-white/75 max-w-xl">
-              ReadyCheck Lab is an AI-powered platform that measures readiness, drives personalized learning, and delivers actionable insights for continuous improvement.
+              ReadyCheck Lab is an innovation-driven platform transforming how learners,
+              educators, institutions, and organizations measure readiness, identify growth
+              opportunities, and achieve continuous improvement through intelligent technology.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/signup">
@@ -80,36 +79,36 @@ function Index() {
                   Explore Solutions <ArrowRight className="size-4" />
                 </Button>
               </Link>
-              <a href="#features">
+              <Link to="/about">
                 <Button size="lg" variant="outline" className="rounded-md bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white gap-2">
                   Learn More <ArrowRight className="size-4" />
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
 
           <div className="relative hidden lg:block">
-            <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[oklch(0.55_0.22_260)/0.25] to-transparent blur-3xl" />
-            <div className="relative aspect-square rounded-full border border-white/10 bg-[radial-gradient(circle_at_center,oklch(0.45_0.22_260)/0.4,transparent_70%)] flex items-center justify-center">
-              <div className="size-2/3 rounded-full border border-white/15 grid place-items-center">
-                <div className="size-1/2 rounded-full bg-gradient-to-br from-[oklch(0.7_0.2_245)] to-[oklch(0.45_0.22_265)] shadow-[0_0_120px_oklch(0.6_0.22_255)/0.6]" />
-              </div>
-              <div className="absolute top-6 left-6 bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <LineChart className="size-6 text-[oklch(0.78_0.18_245)]" />
-              </div>
-              <div className="absolute bottom-10 right-6 bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <Crosshair className="size-6 text-[oklch(0.78_0.18_245)]" />
-              </div>
-              <div className="absolute top-1/2 right-2 bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
-                <ShieldCheck className="size-6 text-[oklch(0.78_0.18_245)]" />
-              </div>
+            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-[oklch(0.55_0.22_260)/0.35] to-transparent blur-3xl" />
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_30px_120px_-20px_oklch(0.5_0.22_260/0.6)]">
+              <img
+                src={heroImg}
+                alt="AI readiness intelligence visualization"
+                width={1024}
+                height={1024}
+                className="w-full h-auto block"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.18_0.08_265)/0.6] via-transparent to-transparent" />
             </div>
           </div>
         </section>
       </div>
 
       {/* Features */}
-      <section id="features" className="max-w-7xl mx-auto px-6 py-20">
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <span className="text-xs font-semibold tracking-wider text-primary">CAPABILITIES</span>
+          <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">A platform built for readiness</h2>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 md:divide-x divide-border">
           {features.map((f) => (
             <div key={f.title} className="px-2 md:px-6 text-center">
@@ -120,6 +119,91 @@ function Index() {
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Vision + Mission */}
+      <section className="bg-secondary/40 border-y border-border">
+        <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10">
+          <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+            <span className="text-xs font-semibold tracking-wider text-primary">CORE VISION</span>
+            <h3 className="font-display font-bold text-2xl mt-3 leading-snug">
+              A future where every learner and institution understands their readiness, improves with precision, and grows with confidence.
+            </h3>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+            <span className="text-xs font-semibold tracking-wider text-primary">CORE MISSION</span>
+            <h3 className="font-display font-bold text-xl mt-3">Develop intelligent systems that:</h3>
+            <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+              {["Measure learning and skill readiness",
+                "Personalize improvement pathways",
+                "Deliver actionable educational insights",
+                "Support data-driven growth for students and institutions"].map((m) => (
+                <li key={m} className="flex gap-2"><span className="text-primary">→</span>{m}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Brand Philosophy */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="text-xs font-semibold tracking-wider text-primary">BRAND PHILOSOPHY</span>
+          <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">Three words. One operating model.</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {philosophy.map((p, i) => (
+            <div key={p.word} className="relative bg-card border border-border rounded-2xl p-8 overflow-hidden">
+              <div className="absolute -top-4 -right-4 text-[7rem] font-display font-bold text-muted/30 leading-none select-none">
+                {String(i + 1).padStart(2, "0")}
+              </div>
+              <div className="font-display font-bold text-3xl" style={{ color: `oklch(${p.color.replaceAll("_", " ")})` }}>
+                {p.word}
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground relative">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Positioning */}
+      <section className="bg-[oklch(0.18_0.08_265)] text-white">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-semibold tracking-wider text-[oklch(0.78_0.18_245)]">POSITIONING</span>
+            <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">At the intersection of five disciplines</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {positioning.map((p) => (
+              <div key={p.label} className="bg-white/5 border border-white/10 rounded-xl p-5 text-center backdrop-blur-sm">
+                <p.icon className="size-7 mx-auto text-[oklch(0.78_0.18_245)]" strokeWidth={1.8} />
+                <div className="mt-3 text-sm font-medium">{p.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Future Scope */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="text-xs font-semibold tracking-wider text-primary">FUTURE SCOPE</span>
+            <h2 className="font-display font-bold text-3xl md:text-4xl mt-2">Built to expand with you</h2>
+            <p className="text-muted-foreground mt-4">
+              The platform grows with the readiness ecosystem — from individual learners
+              to institutions, employers, and governments.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {futureScope.map((s, i) => (
+              <div key={s} className="flex items-start gap-3 bg-card border border-border rounded-lg p-4">
+                <span className="font-mono text-xs text-primary mt-0.5">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-sm">{s}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -141,9 +225,30 @@ function Index() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} ReadyCheck Lab — Measure. Learn. Improve.
-      </footer>
+      {/* CTA */}
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="rounded-2xl p-10 md:p-14 text-white text-center" style={{ background: "var(--gradient-hero)" }}>
+          <Network className="size-10 mx-auto text-[oklch(0.78_0.18_245)]" />
+          <h2 className="font-display font-bold text-3xl md:text-4xl mt-4">Ready to measure what matters?</h2>
+          <p className="text-white/75 mt-3 max-w-xl mx-auto">
+            Join the readiness intelligence movement. Start with a free assessment today.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link to="/signup">
+              <Button size="lg" className="bg-white text-[oklch(0.18_0.08_265)] hover:bg-white/90 gap-2">
+                Get Started <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+            <Link to="/contact">
+              <Button size="lg" variant="outline" className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white">
+                Talk to us
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }
