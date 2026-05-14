@@ -23,8 +23,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [activeRole, setActiveRoleState] = useState<AppRole | null>(null);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === "TOKEN_REFRESHED" && !s) {
+        // refresh failed — clear stale local session
+        supabase.auth.signOut().catch(() => {});
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -39,12 +43,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActiveRoleState(null);
       return;
     }
-    supabase.from("user_roles").select("role").then(({ data }) => {
-      const r = (data ?? []).map((d) => d.role as AppRole);
-      setRoles(r);
-      const stored = localStorage.getItem("activeRole") as AppRole | null;
-      setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
-    });
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .then(({ data, error }) => {
+        if (error) {
+          // Stale/revoked token → 403. Sign out to recover.
+          if ((error as any).code === "PGRST301" || (error as any).status === 403 || /JWT|denied|forbidden/i.test(error.message)) {
+            supabase.auth.signOut().catch(() => {});
+          }
+          setRoles([]);
+          setActiveRoleState(null);
+          return;
+        }
+        const r = (data ?? []).map((d) => d.role as AppRole);
+        setRoles(r);
+        const stored = localStorage.getItem("activeRole") as AppRole | null;
+        setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
+      });
   }, [session?.user?.id]);
 
   const setActiveRole = (r: AppRole) => {
