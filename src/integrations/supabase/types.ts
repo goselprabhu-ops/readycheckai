@@ -353,34 +353,85 @@ export type Database = {
       }
       profiles: {
         Row: {
+          achievements: Json
           avatar_url: string | null
+          certifications: Json
           college: string | null
           created_at: string
+          dob: string | null
+          education: Json
+          experience: Json
           full_name: string | null
+          gender: string | null
+          github_url: string | null
           headline: string | null
           id: string
+          interests: Json
+          languages: Json
+          linkedin_url: string | null
+          location: string | null
+          onboarded: boolean
+          phone: string | null
+          photo_url: string | null
+          portfolio_url: string | null
+          projects: Json
+          summary: string | null
           target_role: string | null
           updated_at: string
           year: string | null
         }
         Insert: {
+          achievements?: Json
           avatar_url?: string | null
+          certifications?: Json
           college?: string | null
           created_at?: string
+          dob?: string | null
+          education?: Json
+          experience?: Json
           full_name?: string | null
+          gender?: string | null
+          github_url?: string | null
           headline?: string | null
           id: string
+          interests?: Json
+          languages?: Json
+          linkedin_url?: string | null
+          location?: string | null
+          onboarded?: boolean
+          phone?: string | null
+          photo_url?: string | null
+          portfolio_url?: string | null
+          projects?: Json
+          summary?: string | null
           target_role?: string | null
           updated_at?: string
           year?: string | null
         }
         Update: {
+          achievements?: Json
           avatar_url?: string | null
+          certifications?: Json
           college?: string | null
           created_at?: string
+          dob?: string | null
+          education?: Json
+          experience?: Json
           full_name?: string | null
+          gender?: string | null
+          github_url?: string | null
           headline?: string | null
           id?: string
+          interests?: Json
+          languages?: Json
+          linkedin_url?: string | null
+          location?: string | null
+          onboarded?: boolean
+          phone?: string | null
+          photo_url?: string | null
+          portfolio_url?: string | null
+          projects?: Json
+          summary?: string | null
           target_role?: string | null
           updated_at?: string
           year?: string | null

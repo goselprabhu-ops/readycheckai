@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { getMyProfile } from "@/lib/profile.functions";
+import { profileCompletion } from "@/lib/profile-completion";
 const ReadinessPanel = lazy(() =>
   import("@/components/readiness-panel").then((m) => ({ default: m.ReadinessPanel })),
 );
@@ -86,7 +90,9 @@ function Dashboard() {
   const [isNewUser, setIsNewUser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
   const recompute = useServerFn(recomputeEmployability);
+  const fetchProfile = useServerFn(getMyProfile);
   const nav = useNavigate();
 
   const handleSignOut = async () => {
@@ -135,6 +141,18 @@ function Dashboard() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Load profile separately and bounce to onboarding if not done.
+  useEffect(() => {
+    fetchProfile().then(({ profile: p }) => {
+      setProfile(p);
+      if (p && !(p as any).onboarded) {
+        nav({ to: "/onboarding" });
+      }
+    }).catch(() => {});
+  }, []);
+
+  const completion = useMemo(() => profileCompletion(profile), [profile]);
 
   const onRecompute = async () => {
     setLoading(true);
@@ -200,6 +218,26 @@ function Dashboard() {
               <p className="text-white/80 mt-2 max-w-xl">
                 Measure. Learn. Improve. Here's where you stand on your Data Analyst readiness today.
               </p>
+              <div className="mt-4 flex items-center gap-3 max-w-md">
+                <Link to="/profile" aria-label="Edit profile">
+                  <Avatar className="h-14 w-14 ring-2 ring-white/40">
+                    <AvatarImage src={(profile as any)?.photo_url || undefined} alt="Profile photo" />
+                    <AvatarFallback className="bg-white/20 text-white">
+                      {(name || "U").slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between text-xs text-white/80">
+                    <span>Profile completion</span>
+                    <span className="font-semibold">{completion}%</span>
+                  </div>
+                  <Progress value={completion} className="mt-1 h-2 bg-white/20" />
+                  <Link to="/profile" className="text-xs text-white/90 underline-offset-2 hover:underline">
+                    {completion >= 80 ? "Polish your profile" : "Complete your profile →"}
+                  </Link>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={onRecompute} disabled={loading} className="bg-white text-primary hover:bg-white/90 rounded-xl shadow-lg">
