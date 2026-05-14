@@ -1,25 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
-import { ReadinessPanel } from "@/components/readiness-panel";
-import { RecommendationsPanel } from "@/components/recommendations-panel";
+const ReadinessPanel = lazy(() =>
+  import("@/components/readiness-panel").then((m) => ({ default: m.ReadinessPanel })),
+);
+const RecommendationsPanel = lazy(() =>
+  import("@/components/recommendations-panel").then((m) => ({ default: m.RecommendationsPanel })),
+);
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
 import {
@@ -35,6 +28,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+
+const ReadinessAreaChart = lazy(() =>
+  import("@/components/dashboard-charts").then((m) => ({ default: m.ReadinessAreaChart })),
+);
+const AttemptsBarChart = lazy(() =>
+  import("@/components/dashboard-charts").then((m) => ({ default: m.AttemptsBarChart })),
+);
+
+const ChartFallback = () => <Skeleton className="h-56 w-full rounded-xl" />;
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -216,7 +218,9 @@ function Dashboard() {
       <div className="max-w-6xl mx-auto p-6 -mt-10 relative z-10 space-y-6">
         {/* Readiness scoring engine */}
         <motion.div initial="hidden" animate="show" variants={fade}>
-          <ReadinessPanel />
+          <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
+            <ReadinessPanel />
+          </Suspense>
         </motion.div>
 
         {/* Overall + 3 score cards */}
@@ -270,33 +274,9 @@ function Dashboard() {
                 ) : chartData.length === 0 ? (
                   <EmptyState text="Recompute readiness to start tracking history." />
                 ) : (
-                  <div className="h-56">
-                    <ResponsiveContainer>
-                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="gReady" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
-                            <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="gResume" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="oklch(0.7 0.18 30)" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="oklch(0.7 0.18 30)" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="gSkills" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="oklch(0.7 0.18 160)" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="oklch(0.7 0.18 160)" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                        <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                        <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                        <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)" }} />
-                        <Area type="monotone" dataKey="Readiness" stroke="var(--primary)" fill="url(#gReady)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" fill="url(#gResume)" strokeWidth={2} />
-                        <Area type="monotone" dataKey="Skills" stroke="oklch(0.7 0.18 160)" fill="url(#gSkills)" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <Suspense fallback={<ChartFallback />}>
+                    <ReadinessAreaChart data={chartData} />
+                  </Suspense>
                 )}
               </CardContent>
             </GlassCard>
@@ -314,17 +294,9 @@ function Dashboard() {
                 ) : attemptChart.length === 0 ? (
                   <EmptyState text="No attempts yet." />
                 ) : (
-                  <div className="h-56">
-                    <ResponsiveContainer>
-                      <BarChart data={attemptChart} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                        <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                        <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-                        <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)" }} />
-                        <Bar dataKey="score" fill="var(--primary)" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <Suspense fallback={<ChartFallback />}>
+                    <AttemptsBarChart data={attemptChart} />
+                  </Suspense>
                 )}
               </CardContent>
             </GlassCard>
@@ -334,7 +306,9 @@ function Dashboard() {
         {/* Recommendations + Recent attempts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <motion.div custom={6} initial="hidden" animate="show" variants={fade} className="lg:col-span-2">
-            <RecommendationsPanel />
+            <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
+              <RecommendationsPanel />
+            </Suspense>
           </motion.div>
 
           <motion.div custom={7} initial="hidden" animate="show" variants={fade}>
