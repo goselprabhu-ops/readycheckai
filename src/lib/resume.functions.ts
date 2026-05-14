@@ -236,3 +236,55 @@ export const registerResumeUpload = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { resume: row };
   });
+
+// ---------------------------------------------------------------------------
+// Unified analyzer — tries AI first, falls back to deterministic keyword
+// rules on AI failure (rate-limit, gateway error, parsing error). Caps
+// apply only when AI actually runs.
+// ---------------------------------------------------------------------------
+export const analyzeResumeAuto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      text: z.string().min(20).max(100000),
+      targetRole: z.string().min(1).max(120).default("Data Analyst"),
+      resumeId: z.string().uuid().optional(),
+    }).parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    // Try AI path first.
+    try {
+      const ai = await analyzeResume({ data });
+      return { mode: "ai" as const, ...ai };
+    } catch (e: any) {
+      if (e instanceof AiCapError) {
+        // hard cap — surface to the client; don't silently downgrade.
+        throw e;
+      }
+      // Soft fallback to deterministic keyword analyzer.
+      const kw = await analyzeResumeKeywords({ data });
+      return { mode: "fallback" as const, ...kw };
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// Server-side PDF extraction. Accepts a storage object path (already
+// uploaded to the `resumes` bucket) and returns the extracted text. This
+// removes ~1.5 MB of pdfjs from the browser bundle.
+// ---------------------------------------------------------------------------
+export const extractResumeText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ filePath: z.string().min(1).max(500) }).parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: blob, error } = await supabase.storage
+      .from("resumes")
+      .download(data.filePath);
+    if (error || !blob) throw new Error(error?.message ?? "Could not read PDF");
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    const text = await extractPdfTextFromBytes(buf);
+    if (text.length < 20) throw new Error("Could not extract text from PDF");
+    return { text };
+  });
