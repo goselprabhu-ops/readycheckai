@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ function ForgotPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const nav = useNavigate();
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,7 +30,8 @@ function ForgotPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     setSent(true);
-    toast.success("Check your email for the reset link.");
+    toast.success("Check your email for the code or reset link.");
+    nav({ to: "/reset-password" });
   };
 
   return (
