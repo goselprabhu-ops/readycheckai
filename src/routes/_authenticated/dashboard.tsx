@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
+import { ReadinessPanel } from "@/components/readiness-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
 import {
@@ -201,6 +202,11 @@ function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto p-6 -mt-10 relative z-10 space-y-6">
+        {/* Readiness scoring engine */}
+        <motion.div initial="hidden" animate="show" variants={fade}>
+          <ReadinessPanel />
+        </motion.div>
+
         {/* Overall + 3 score cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {initialLoading ? (

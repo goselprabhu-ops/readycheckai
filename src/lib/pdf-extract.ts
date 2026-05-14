@@ -3,8 +3,8 @@
 // server-side extractor (or OpenAI file ingestion) in the future.
 
 export async function extractPdfText(file: File): Promise<string> {
-  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
-  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.mjs?url")).default;
+  const pdfjs: any = await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.mjs" as any);
+  const workerSrc = (await import(/* @vite-ignore */ "pdfjs-dist/build/pdf.worker.mjs?url" as any)).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
   const buf = await file.arrayBuffer();

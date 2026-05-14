@@ -310,6 +310,42 @@ export type Database = {
           },
         ]
       }
+      readiness_history: {
+        Row: {
+          computed_at: string
+          id: string
+          level: string
+          python_score: number
+          readiness: number
+          resume_score: number
+          sql_score: number
+          user_id: string
+          weights: Json
+        }
+        Insert: {
+          computed_at?: string
+          id?: string
+          level?: string
+          python_score?: number
+          readiness?: number
+          resume_score?: number
+          sql_score?: number
+          user_id: string
+          weights?: Json
+        }
+        Update: {
+          computed_at?: string
+          id?: string
+          level?: string
+          python_score?: number
+          readiness?: number
+          resume_score?: number
+          sql_score?: number
+          user_id?: string
+          weights?: Json
+        }
+        Relationships: []
+      }
       recommendations: {
         Row: {
           attempt_id: string | null
