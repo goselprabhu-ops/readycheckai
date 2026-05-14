@@ -19,15 +19,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
   return (
     <header className={`max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4 ${isDark ? "text-white" : ""}`}>
       <Link to="/" className="flex items-center gap-3">
-        <img src={logo} alt="ReadyCheck Lab logo" className="h-12 w-auto" />
-        <div className="hidden sm:flex flex-col leading-tight">
-          <span className="font-display font-bold text-xl tracking-tight">
-            ReadyCheck <span className={isDark ? "text-[oklch(0.78_0.18_245)]" : "text-primary"}>Lab</span>
-          </span>
-          <span className={`text-[11px] tracking-wide ${isDark ? "text-white/70" : "text-muted-foreground"}`}>
-            Measure. Learn. Improve.
-          </span>
-        </div>
+        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-14 w-auto" />
       </Link>
       <nav className="hidden md:flex items-center gap-7 text-sm">
         {nav.map((n) => (
