@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import {
-  ArrowRight, BookOpen, Brain, Briefcase, Crosshair, Globe2, GraduationCap,
+  ArrowRight, BookOpen, Brain, Crosshair, Globe2, GraduationCap,
   Landmark, LineChart, Network, ShieldCheck, Sparkles, Target, TrendingUp, Users,
 } from "lucide-react";
 import heroImg from "@/assets/hero-readiness.jpg";
