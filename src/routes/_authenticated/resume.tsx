@@ -33,7 +33,41 @@ export const Route = createFileRoute("/_authenticated/resume")({
   component: ResumePage,
 });
 
-type AnalysisResult = Awaited<ReturnType<typeof analyzeResumeAuto>>;
+type AnalysisResult = {
+  mode: "ai" | "fallback";
+  score: number;
+  detected_skills: string[];
+  missing_skills: string[];
+  suggestions: string[];
+  breakdown: { reason: string; points: number }[];
+  analysis: any;
+};
+
+function normalize(r: any): AnalysisResult {
+  if (r.mode === "ai") {
+    const skills = (r.detected_skills ?? []).map((s: any) =>
+      typeof s === "string" ? s : s.name,
+    );
+    return {
+      mode: "ai",
+      score: r.analysis?.ats_score ?? 0,
+      detected_skills: skills,
+      missing_skills: (r.analysis?.gaps ?? []) as string[],
+      suggestions: (r.analysis?.suggestions ?? []) as string[],
+      breakdown: [],
+      analysis: r.analysis,
+    };
+  }
+  return {
+    mode: "fallback",
+    score: r.score ?? 0,
+    detected_skills: r.detected_skills ?? [],
+    missing_skills: r.missing_skills ?? [],
+    suggestions: r.suggestions ?? [],
+    breakdown: r.breakdown ?? [],
+    analysis: r.analysis,
+  };
+}
 
 function ResumePage() {
   const [role, setRole] = useState("Data Analyst");
@@ -116,17 +150,17 @@ function ResumePage() {
 
       // 3. Keyword analysis on server (deterministic)
       setStage("analyzing");
-      const r = await analyze({
+      const raw = await analyze({
         data: { text, targetRole: role, resumeId: (resume as any)?.id },
       });
+      const r = normalize(raw);
       setProgress(100);
       setStage("done");
       setResult(r);
-      const score = (r as any).score ?? (r as any).analysis?.ats_score ?? 0;
       toast.success(
         r.mode === "fallback"
-          ? `AI unavailable — keyword score ${score}/100`
-          : `Resume scored ${score}/100`,
+          ? `AI unavailable — keyword score ${r.score}/100`
+          : `Resume scored ${r.score}/100`,
       );
     } catch (e: any) {
       console.error(e);
