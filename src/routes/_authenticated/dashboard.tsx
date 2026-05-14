@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
+import { ReadinessPanel } from "@/components/readiness-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
 import {
