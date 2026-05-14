@@ -13,6 +13,7 @@ import {
   Sparkles,
   ShieldCheck,
   BarChart3,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const studentItems = [
   { title: "Resume", url: "/resume", icon: FileText },
   { title: "Assessment", url: "/assessment", icon: Brain },
   { title: "Results", url: "/results", icon: BarChart3 },
+  { title: "Progress", url: "/progress", icon: TrendingUp },
   { title: "Roadmap", url: "/roadmap", icon: Target },
   { title: "Mock Interview", url: "/interview", icon: MessageSquare },
 ];
