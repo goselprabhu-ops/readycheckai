@@ -19,13 +19,17 @@ import {
   ArrowRight,
   RotateCcw,
   Trophy,
+  BarChart3,
+  PieChart,
+  Table as TableIcon,
+  Sigma,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/assessment")({
   component: AssessmentPage,
 });
 
-type Category = "sql" | "python" | "resume";
+type Category = "sql" | "python" | "resume" | "power_bi" | "tableau" | "excel" | "statistics";
 
 interface AssessmentDef {
   id: string;
@@ -46,12 +50,26 @@ interface Question {
 }
 
 const SECONDS_PER_QUESTION = 45;
+const QUESTIONS_PER_ATTEMPT = 10;
 
-const CATEGORY_META: Record<Category, { icon: React.ReactNode; tone: string }> = {
-  sql: { icon: <Database className="h-5 w-5" />, tone: "from-blue-500/15 to-blue-500/0" },
-  python: { icon: <Code2 className="h-5 w-5" />, tone: "from-emerald-500/15 to-emerald-500/0" },
-  resume: { icon: <FileText className="h-5 w-5" />, tone: "from-amber-500/15 to-amber-500/0" },
+const CATEGORY_META: Record<Category, { icon: React.ReactNode; tone: string; label: string }> = {
+  sql: { icon: <Database className="h-5 w-5" />, tone: "from-blue-500/15 to-blue-500/0", label: "SQL" },
+  python: { icon: <Code2 className="h-5 w-5" />, tone: "from-emerald-500/15 to-emerald-500/0", label: "Python" },
+  resume: { icon: <FileText className="h-5 w-5" />, tone: "from-amber-500/15 to-amber-500/0", label: "Resume" },
+  power_bi: { icon: <BarChart3 className="h-5 w-5" />, tone: "from-yellow-500/15 to-yellow-500/0", label: "Power BI" },
+  tableau: { icon: <PieChart className="h-5 w-5" />, tone: "from-indigo-500/15 to-indigo-500/0", label: "Tableau" },
+  excel: { icon: <TableIcon className="h-5 w-5" />, tone: "from-green-600/15 to-green-600/0", label: "Excel" },
+  statistics: { icon: <Sigma className="h-5 w-5" />, tone: "from-rose-500/15 to-rose-500/0", label: "Statistics" },
 };
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function AssessmentPage() {
   const [defs, setDefs] = useState<AssessmentDef[]>([]);
@@ -71,7 +89,7 @@ function AssessmentPage() {
       const { data, error } = await supabase
         .from("assessment_definitions")
         .select("id, category, title, description, questions(count)")
-        .in("category", ["sql", "python"])
+        .in("category", ["sql", "python", "power_bi", "tableau", "excel", "statistics"])
         .eq("is_active", true);
       if (error) toast.error(error.message);
       const mapped: AssessmentDef[] = (data ?? []).map((d: any) => ({
@@ -109,11 +127,16 @@ function AssessmentPage() {
     const { data, error } = await supabase
       .from("questions")
       .select("id, prompt, options, correct_answer, explanation, order_index, points")
-      .eq("assessment_id", def.id)
-      .order("order_index", { ascending: true });
+      .eq("assessment_id", def.id);
     if (error) return toast.error(error.message);
     if (!data || data.length === 0) return toast.error("No questions available yet.");
-    const qs = data.map((q: any) => ({ ...q, options: Array.isArray(q.options) ? q.options : [] })) as Question[];
+    // Shuffle question pool, take 10 (or fewer if pool smaller), and shuffle each question's options
+    const pool = data.map((q: any) => ({
+      ...q,
+      options: Array.isArray(q.options) ? q.options : [],
+    })) as Question[];
+    const picked = shuffle(pool).slice(0, Math.min(QUESTIONS_PER_ATTEMPT, pool.length));
+    const qs = picked.map((q) => ({ ...q, options: shuffle(q.options) }));
     setQuestions(qs);
     setAnswers({});
     setIndex(0);
@@ -232,7 +255,7 @@ function AssessmentPage() {
                         {meta.icon}
                       </div>
                       <div>
-                        <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{d.category}</Badge>
+                        <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{meta.label}</Badge>
                       </div>
                     </div>
                     <h3 className="font-display text-xl font-semibold mt-4">{d.title}</h3>
@@ -338,7 +361,7 @@ function AssessmentPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{active.category}</Badge>
+          <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{CATEGORY_META[active.category]?.label ?? active.category}</Badge>
           <h1 className="font-display text-2xl font-semibold tracking-tight mt-1 truncate">{active.title}</h1>
         </div>
         <div className={`flex items-center gap-2 text-sm font-mono px-3 py-1.5 rounded-lg border ${timeLeft < 30 ? "border-destructive text-destructive" : "border-border"}`}>
