@@ -11,6 +11,7 @@ import {
   Landmark,
   LogOut,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +42,7 @@ const roleItems: Record<string, { title: string; url: string; icon: any }> = {
   college_admin: { title: "College", url: "/college", icon: GraduationCap },
   institute_admin: { title: "Institute", url: "/institute", icon: Building2 },
   gov_admin: { title: "Government", url: "/government", icon: Landmark },
+  admin: { title: "Admin Panel", url: "/admin", icon: ShieldCheck },
 };
 
 export function AppSidebar() {
