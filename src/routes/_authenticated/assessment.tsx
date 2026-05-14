@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { generateAssessment, submitAssessment } from "@/lib/assessment.functions";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle } from "lucide-react";
@@ -92,6 +93,19 @@ function AssessmentPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {loading && questions.length === 0 && (
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader><Skeleton className="h-5 w-3/4" /></CardHeader>
+              <CardContent className="space-y-2">
+                {Array.from({ length: 4 }).map((_, j) => <Skeleton key={j} className="h-9 w-full rounded-md" />)}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {questions.length > 0 && (
         <div className="space-y-4">

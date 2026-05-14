@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
@@ -25,6 +26,7 @@ function Dashboard() {
   const [score, setScore] = useState<Score | null>(null);
   const [skills, setSkills] = useState<{ name: string; level: number }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const recompute = useServerFn(recomputeEmployability);
 
   const load = async () => {
@@ -40,6 +42,7 @@ function Dashboard() {
       .order("updated_at", { ascending: false })
       .limit(8);
     setSkills((sk ?? []) as any);
+    setInitialLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -71,6 +74,13 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {initialLoading ? (
+          <>
+            <Skeleton className="h-44 md:col-span-2 rounded-xl" />
+            <Skeleton className="h-44 rounded-xl" />
+            <Skeleton className="h-44 rounded-xl" />
+          </>
+        ) : (<>
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">Composite Employability</CardTitle>
@@ -104,6 +114,7 @@ function Dashboard() {
             </Button>
           </CardContent>
         </Card>
+        </>)}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -112,7 +123,11 @@ function Dashboard() {
             <CardTitle>Detected Skills</CardTitle>
           </CardHeader>
           <CardContent>
-            {skills.length === 0 ? (
+            {initialLoading ? (
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-6 w-20 rounded-full" />)}
+              </div>
+            ) : skills.length === 0 ? (
               <p className="text-sm text-muted-foreground">No skills yet. Analyze your resume or take an assessment.</p>
             ) : (
               <div className="flex flex-wrap gap-2">

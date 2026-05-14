@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { analyzeResume } from "@/lib/resume.functions";
 import { toast } from "sonner";
@@ -73,7 +74,22 @@ function ResumePage() {
         <Card>
           <CardHeader><CardTitle>Analysis</CardTitle></CardHeader>
           <CardContent>
-            {!result ? (
+            {loading ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-32 w-32 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                </div>
+                <Skeleton className="h-20 w-full rounded-md" />
+                <Skeleton className="h-20 w-full rounded-md" />
+                <div className="flex flex-wrap gap-1.5">
+                  {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-6 w-16 rounded-full" />)}
+                </div>
+              </div>
+            ) : !result ? (
               <p className="text-sm text-muted-foreground">Run analysis to see your ATS score, strengths, gaps, and keyword matches.</p>
             ) : (
               <div className="space-y-4">

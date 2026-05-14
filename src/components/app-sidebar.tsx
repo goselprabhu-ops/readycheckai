@@ -12,6 +12,7 @@ import {
   LogOut,
   Sparkles,
   ShieldCheck,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +34,7 @@ const studentItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Resume", url: "/resume", icon: FileText },
   { title: "Assessment", url: "/assessment", icon: Brain },
+  { title: "Results", url: "/results", icon: BarChart3 },
   { title: "Roadmap", url: "/roadmap", icon: Target },
   { title: "Mock Interview", url: "/interview", icon: MessageSquare },
 ];
