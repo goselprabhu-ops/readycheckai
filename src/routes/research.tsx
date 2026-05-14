@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MarketingShell } from "@/components/marketing-shell";
 import { Microscope, FlaskConical, BookMarked, Network } from "lucide-react";
+import labImg from "@/assets/research-lab.jpg";
+import networkImg from "@/assets/ai-network.jpg";
 
 export const Route = createFileRoute("/research")({
   head: () => ({ meta: [
@@ -24,6 +26,12 @@ function ResearchPage() {
       title={<>Where AI meets <span className="text-[oklch(0.72_0.2_250)]">measurable learning outcomes</span>.</>}
       intro="Our research advances how readiness is defined, measured, and improved at scale."
     >
+      <section className="max-w-7xl mx-auto px-6 pt-16">
+        <div className="relative rounded-2xl overflow-hidden border border-border shadow-xl">
+          <img src={labImg} alt="ReadyCheck Lab research team" loading="lazy" width={1024} height={1024} className="w-full h-auto block max-h-[480px] object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+        </div>
+      </section>
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-6">
         {themes.map((t) => (
           <div key={t.title} className="bg-card border border-border rounded-2xl p-8">
@@ -34,12 +42,16 @@ function ResearchPage() {
         ))}
       </section>
       <section className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="bg-secondary/40 border border-border rounded-2xl p-10 text-center">
-          <h2 className="font-display font-bold text-2xl">Research partnerships</h2>
-          <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-            We collaborate with universities, education boards, and workforce agencies on
-            longitudinal readiness studies. Reach out if you'd like to partner.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl border border-border">
+          <img src={networkImg} alt="" aria-hidden loading="lazy" width={1024} height={1024} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary/90 to-secondary/60" />
+          <div className="relative p-10 text-center">
+            <h2 className="font-display font-bold text-2xl">Research partnerships</h2>
+            <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
+              We collaborate with universities, education boards, and workforce agencies on
+              longitudinal readiness studies. Reach out if you'd like to partner.
+            </p>
+          </div>
         </div>
       </section>
     </MarketingShell>
