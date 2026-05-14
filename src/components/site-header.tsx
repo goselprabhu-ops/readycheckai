@@ -17,7 +17,10 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
   const activeBase = isDark ? "text-white border-white/80" : "text-foreground border-primary";
 
   return (
-    <header className={`max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4 ${isDark ? "text-white" : ""}`}>
+    <header
+      className={`max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-4 ${isDark ? "text-white" : ""}`}
+      style={isDark ? { background: "linear-gradient(180deg, oklch(0.16 0.07 265) 0%, oklch(0.18 0.08 265) 60%, transparent 100%)" } : undefined}
+    >
       <Link to="/" className="flex items-center gap-3">
         <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-[4.55rem] w-auto" />
       </Link>
