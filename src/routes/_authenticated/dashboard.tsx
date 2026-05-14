@@ -1,18 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +24,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+
+const ReadinessAreaChart = lazy(() =>
+  import("@/components/dashboard-charts").then((m) => ({ default: m.ReadinessAreaChart })),
+);
+const AttemptsBarChart = lazy(() =>
+  import("@/components/dashboard-charts").then((m) => ({ default: m.AttemptsBarChart })),
+);
+
+const ChartFallback = () => <Skeleton className="h-56 w-full rounded-xl" />;
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
