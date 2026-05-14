@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { ReadinessPanel } from "@/components/readiness-panel";
+import { RecommendationsPanel } from "@/components/recommendations-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { recomputeEmployability } from "@/lib/employability.functions";
 import {
@@ -28,7 +29,6 @@ import {
   Code2,
   Sparkles,
   TrendingUp,
-  ArrowRight,
   Target,
   MessageSquare,
 } from "lucide-react";
@@ -159,15 +159,6 @@ function Dashboard() {
         })),
     [attempts],
   );
-
-  const recommendations = useMemo(() => {
-    const recs: { title: string; desc: string; href: string; tone: string }[] = [];
-    if ((score?.resume_score ?? 0) < 70) recs.push({ title: "Strengthen your resume", desc: "Run a fresh ATS analysis to lift your resume score above 70.", href: "/resume", tone: "from-rose-500/10 to-rose-500/0" });
-    if (sql < 70) recs.push({ title: "Practice SQL fundamentals", desc: "Joins, aggregations, window functions — take the SQL assessment.", href: "/assessment", tone: "from-blue-500/10 to-blue-500/0" });
-    if (python < 70) recs.push({ title: "Sharpen Python for analysis", desc: "Pandas + cleaning workflows — take the Python assessment.", href: "/assessment", tone: "from-emerald-500/10 to-emerald-500/0" });
-    if (recs.length === 0) recs.push({ title: "You're investor-ready", desc: "Keep practicing mock interviews to maintain your edge.", href: "/interview", tone: "from-violet-500/10 to-violet-500/0" });
-    return recs.slice(0, 3);
-  }, [score, sql, python]);
 
   return (
     <div className="min-h-full">
@@ -321,24 +312,8 @@ function Dashboard() {
 
         {/* Recommendations + Recent attempts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <motion.div custom={6} initial="hidden" animate="show" variants={fade} className="lg:col-span-2 space-y-3">
-            <h2 className="font-display text-lg font-semibold px-1">Recommendations for you</h2>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {recommendations.map((r, i) => (
-                <Link key={i} to={r.href} className="group">
-                  <div className={`relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-lg`}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${r.tone} opacity-100`} />
-                    <div className="relative">
-                      <div className="font-medium">{r.title}</div>
-                      <p className="text-sm text-muted-foreground mt-1">{r.desc}</p>
-                      <div className="mt-3 inline-flex items-center text-xs text-primary font-medium">
-                        Take action <ArrowRight className="h-3.5 w-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+          <motion.div custom={6} initial="hidden" animate="show" variants={fade} className="lg:col-span-2">
+            <RecommendationsPanel />
           </motion.div>
 
           <motion.div custom={7} initial="hidden" animate="show" variants={fade}>
