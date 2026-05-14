@@ -33,23 +33,35 @@ export const recomputeReadiness = createServerFn({ method: "POST" })
         .limit(20),
       supabase
         .from("resume_analyses")
-        .select("ats_score")
+        .select("ats_score, created_at")
         .order("created_at", { ascending: false })
         .limit(1),
     ]);
 
-    const latestByTopic = (key: string) => {
+    const latestByTopic = (key: string): { score: number; at: string | null } => {
       const a = (attempts ?? []).find((x: any) =>
         (x.topic ?? "").toLowerCase().includes(key),
       );
-      return a ? pct(a.score, a.total) : 0;
+      return a ? { score: pct(a.score, a.total), at: a.created_at ?? null } : { score: 0, at: null };
     };
 
-    const sql = latestByTopic("sql");
-    const python = latestByTopic("python");
-    const resume = ra?.[0]?.ats_score ?? 0;
+    const sqlSig = latestByTopic("sql");
+    const pythonSig = latestByTopic("python");
+    const resumeRow = ra?.[0] as any;
+    const resumeScore = resumeRow?.ats_score ?? 0;
+    const resumeAt = resumeRow?.created_at ?? null;
 
-    const result = computeReadiness({ sql, python, resume }, weights);
+    const result = computeReadiness(
+      {
+        sql: sqlSig.score,
+        python: pythonSig.score,
+        resume: resumeScore,
+        sqlAt: sqlSig.at,
+        pythonAt: pythonSig.at,
+        resumeAt: resumeAt,
+      },
+      weights,
+    );
 
     const { data: row, error } = await supabase
       .from("readiness_history")

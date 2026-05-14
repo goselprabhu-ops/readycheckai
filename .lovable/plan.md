@@ -1,107 +1,128 @@
-## Goal
+# ReadyCheck Lab — V1 Remediation Plan
 
-Ship a Student MVP of the AI Employability Intelligence platform with the foundation for the other four roles (College, Recruiter, Training Institute, Government). Visual style: **Precision Tech Lab** (indigo `#6366F1` brand, cyan `#22D3EE` accent, Space Grotesk display + Inter body, rounded-3xl cards, soft slate canvas).
+Derived from the audit (composite 5.1/10). Goal: clear all blockers and ship a defensible V1 in ~3 focused sprints (~3–4 weeks).
 
-## Scope of this first build
+---
 
-In scope:
-- Public landing page explaining the platform + role selector
-- Email/password + Google auth (Lovable Cloud)
-- Role system with 5 roles; profile auto-created on signup; Student dashboard wired up
-- Resume upload + AI-powered ATS analysis (resume strength, keyword gaps, suggestions)
-- Skill assessment runner (SQL / Python / Analytics MCQs) with scoring
-- Employability score dashboard (composite + sub-scores + market fit panel)
-- AI-generated learning roadmap based on gaps
-- AI mock interview chat
-- Stub dashboards for Recruiter / College / Institute / Government roles (so role switching works end-to-end, full features come later)
+## Sprint 1 — Integrity & Trust (must ship before any paid pilot)
 
-Out of scope (clearly deferred):
-- Live job-market scraping (we'll seed a small market dataset; live ingestion later)
-- Multi-agent orchestration internals (single AI server fn per task for now)
-- Recruiter candidate filtering UI, college placement tracking, gov analytics — placeholders only
-- Predictive employability ML model — derived heuristically from sub-scores for now
+These are the items that make the product defensible. Without them, scores are gameable, readiness is misleading, and pilots will surface embarrassing bugs.
 
-## User experience
+### 1. Lock down assessment integrity (C1, H8)
+- Stop sending `correct_answer` to the browser. New server fn `getAttemptQuestions` returns `{ id, prompt, options }` only.
+- Move scoring to server: `submitAttempt({ attemptId, answers })` looks up correct answers server-side, writes `scores` + `assessment_attempts.total_score`, marks `completed_at`.
+- Server-issued timer: store `attempt_started_at` server-side; reject submits past `started_at + duration`. Client timer becomes display-only.
+- Idempotent submit: unique `(attempt_id)` on completion; second submit returns the first result.
 
+### 2. Fix the skills pipeline (C2)
+- Add `UNIQUE (user_id, name)` on `skills`.
+- Switch `analyzeResumeKeywords` writes to `upsert` on `(user_id, name)` with `level = greatest(existing, new)` and refresh `updated_at`.
+- One-time backfill migration to dedupe existing rows (keep max level, newest `updated_at`).
+
+### 3. Rebuild the readiness formula (C3)
+- Replace `(SQL + Py + Resume) / 3` with weighted score + completeness multiplier + recency decay:
+  - weights configurable per target role (default SQL 0.35, Python 0.35, Resume 0.30)
+  - completeness factor: penalize when any pillar is missing data
+  - recency: half-life ~30 days on the assessment side
+- Persist `weights` and `level` already exist in `readiness_history` — reuse.
+- Snapshot every recompute; chart consumes `readiness_history`.
+
+### 4. Database hardening (C6)
+- Add FKs: `assessment_attempts.user_id`, `assessment_attempts.assessment_id`, `scores.attempt_id`, `scores.question_id`, `questions.assessment_id`, `resume_analyses.resume_id`, `recommendations.attempt_id`, `readiness_history.user_id`.
+- Composite indexes on hot paths:
+  - `assessment_attempts (user_id, completed_at desc)`
+  - `scores (attempt_id)`, `scores (user_id, created_at desc)`
+  - `readiness_history (user_id, computed_at desc)`
+  - `recommendations (user_id, status, created_at desc)`
+  - `skills (user_id)`
+
+### Sprint 1 exit criteria
+- DevTools can no longer reveal answers.
+- Re-uploading a resume does not change the skills row count beyond new skills.
+- Readiness reacts sensibly to a single-pillar improvement (no longer linear-thirds).
+
+---
+
+## Sprint 2 — Reliability & Coverage (C4, C5, C7, H3)
+
+### 1. Server-side PDF extraction (C4)
+- Move `extractPdfText` off the browser. New server fn `extractResumeText({ resumeId })` downloads from the `resumes` bucket via `supabaseAdmin` and parses with a Worker-compatible parser (e.g. `unpdf`).
+- Falls back to a clear error when the PDF is image-only (flag for OCR follow-up, do not silently score 0).
+
+### 2. Email queue health (C5)
+- Add `/api/public/health/email-queue` returning pending count, oldest pending age, last cron run, last DLQ size.
+- Surface a banner in `/admin` when oldest pending > 5 min or last cron > 10 min ago.
+- Add a one-line cron self-check insert into `email_send_log` so absence of activity is itself a signal.
+
+### 3. Consolidate resume analyzers (H3)
+- Pick `analyzeResume` (AI) as primary. `analyzeResumeKeywords` becomes the deterministic fallback when the AI gateway errors or budget is exhausted.
+- Tag every `resume_analyses` row with `method: 'ai' | 'rules'`.
+
+### 4. AI cost guardrails (C7)
+Note: backend rate-limiting primitives are limited; this will be ad-hoc.
+- Per-user daily counters in a new `ai_usage` table (`user_id`, `day`, `function`, `count`).
+- Soft cap (warn) and hard cap (refuse) per function for `analyzeResume`, `generateRoadmap`, `interviewTurn`.
+- Return a clean 429-style payload the UI shows as "daily limit reached".
+
+### Sprint 2 exit criteria
+- 5 MB scanned resume returns a meaningful error, not score 0.
+- Admin banner fires within 5 min of email cron stalling.
+- A scripted abuse run against `interviewTurn` is refused after the daily cap.
+
+---
+
+## Sprint 3 — Polish, performance, accessibility (H4, H5, M1, M2, M3, M4, plus L wins)
+
+### 1. Bundle slimming (H4)
+- `React.lazy` Recharts and Framer Motion panels in `dashboard.tsx`, `progress.tsx`, `assessment.tsx`, `results.tsx`.
+- Replace per-page Framer imports with a small `motion.ts` re-export so tree-shaking works.
+
+### 2. Auth race / role flicker (H5)
+- Cache role in `localStorage` with stale-while-revalidate inside `use-auth.tsx`.
+- Clear cache on `signOut` (also fixes M4).
+
+### 3. File decomposition (M1)
+- Split `assessment.tsx` (435), `progress.tsx` (591), `dashboard.tsx` (467), `resume.tsx` (399) into route file + `use-*` hook + presentation components.
+
+### 4. Design-token cleanup (M2)
+- Sweep `from-blue-500/15`, `from-emerald-500/15`, hard-coded hex into semantic tokens in `src/styles.css`.
+
+### 5. Per-route error/notFound (M3)
+- Add `errorComponent` + `notFoundComponent` to every route with a loader; root gets `notFoundComponent`; `defaultErrorComponent` on the router.
+
+### 6. Recommendations freshness (M5)
+- Mark recommendations as `expired` when their pillar score crosses a threshold; hide expired by default in the UI.
+
+### 7. Quick-win pass (L1–L8)
+- Focus rings on all interactive elements.
+- Replace color-only state with icon + label.
+- Mobile `dashboard` table → cards under `sm`.
+- Empty-state illustrations on Resume, Assessment, Roadmap.
+- `aria-live` on toast region.
+- Lighthouse pass; alt text and meta on all public routes.
+
+### Sprint 3 exit criteria
+- Lighthouse a11y ≥ 95 on `/`, `/dashboard`, `/assessment`.
+- First-load JS for `/dashboard` < 250 KB gz.
+- No file in `src/routes/_authenticated/` exceeds 250 LOC.
+
+---
+
+## Out of scope for V1 (track for V1.1)
+- OCR pipeline for image-only PDFs.
+- Multi-tenant recruiter/college dashboards beyond stubs.
+- Live job-market scraping (`market_demand_seed` stays seeded).
+- ML-based readiness model.
+
+---
+
+## Sequencing summary
+
+```text
+Week 1   Sprint 1: integrity, skills, readiness, FKs/indexes
+Week 2   Sprint 2: server PDF, queue health, analyzer merge, AI caps
+Week 3   Sprint 3: bundles, auth race, file split, a11y, quick wins
+Week 4   Buffer: bug bash, pilot prep, observability (Sentry + log drain)
 ```
-/                       Landing (hero, modules, role selector, CTA)
-/login, /signup         Auth (email+password, Google)
-/_authenticated/...     Protected app with sidebar shell
-  /dashboard            Student employability overview
-  /resume               Upload + ATS analysis history
-  /skills               Assessment runner + skill matrix
-  /roadmap              Personalized learning path
-  /interview            AI mock interview chat
-  /recruiter            Recruiter stub (visible only to recruiter role)
-  /college              College admin stub
-  /institute            Training institute stub
-  /gov                  Government analytics stub
-  /settings             Profile + role
-```
 
-Sidebar uses shadcn `Sidebar` (collapsible icon mode), nav items filtered by current role. Header shows role switcher (only roles assigned to the user) + avatar.
-
-## Data model (Lovable Cloud / Postgres)
-
-- `app_role` enum: `student | recruiter | college_admin | institute_admin | gov_admin`
-- `profiles` (id = auth.users.id, full_name, avatar_url, headline, college, year)
-- `user_roles` (id, user_id, role) — separate table per security rules; `has_role()` security-definer fn
-- `resumes` (id, user_id, file_path, original_name, uploaded_at)
-- `resume_analyses` (id, resume_id, ats_score, strengths jsonb, gaps jsonb, keywords jsonb, summary, created_at)
-- `assessments` (id, user_id, topic, score, total, breakdown jsonb, created_at)
-- `skills` (id, user_id, name, level int, source) — derived from assessments + resume
-- `roadmap_items` (id, user_id, title, description, status, est_minutes, order_index, created_at)
-- `interview_sessions` (id, user_id, role_target, created_at)
-- `interview_messages` (id, session_id, role text, content, created_at)
-- `employability_scores` (id, user_id, composite, resume_score, skills_score, market_fit, computed_at)
-- `market_demand_seed` (id, role, skill, demand_score) — small seeded dataset for market fit + chart
-
-Storage bucket: `resumes` (private, RLS by owner).
-
-RLS: every user-scoped table allows `auth.uid() = user_id`; admin roles get read access via `has_role()` (scaffolded, not yet exposed in UI).
-
-## Server functions (TanStack `createServerFn`)
-
-- `analyzeResume({ resumeId })` — fetches PDF text, calls Lovable AI Gateway (`google/gemini-3-flash-preview`) with structured `Output.object` schema → ATS score + strengths/gaps/keywords. Persists to `resume_analyses`.
-- `generateAssessment({ topic })` — AI returns 10 MCQs with answers (cached per topic/day to limit cost).
-- `submitAssessment({ topic, answers })` — scores, writes `assessments`, updates `skills`.
-- `recomputeEmployability()` — derives composite from latest resume_analysis + assessments + market_demand_seed; writes `employability_scores`.
-- `generateRoadmap()` — AI takes gaps + target role → ordered roadmap items.
-- `interviewTurn({ sessionId, message })` — streams assistant turn via `streamText` + `toUIMessageStreamResponse`.
-
-All AI calls go through a shared `src/lib/ai-gateway.ts` helper using `@ai-sdk/openai-compatible` with `LOVABLE_API_KEY`.
-
-## Design system
-
-Update `src/styles.css` tokens (oklch equivalents of):
-- `--primary` indigo `#6366F1`, `--accent` cyan `#22D3EE`
-- `--background` slate-50, cards white with `border-slate-200`, `rounded-3xl`
-- Display font Space Grotesk, body Inter (loaded in `__root.tsx` head)
-- Reusable: `ScoreRing` (SVG circular score), `StatCard`, `ChatBubble`, `RoadmapStep`
-
-Strict semantic tokens — no raw `text-white` / `bg-black` in components.
-
-## Build sequence
-
-1. Enable Lovable Cloud
-2. Design tokens + fonts + sidebar shell (`__root` provider, `_authenticated` layout, `AppSidebar`)
-3. Landing page + auth pages (email/password + Google) + profile/role bootstrap trigger
-4. DB migration: enum, profiles, user_roles, has_role, all tables, RLS, storage bucket
-5. Student dashboard with mock data wired to real `employability_scores`
-6. Resume upload → storage → `analyzeResume` server fn → results page
-7. Skill assessment runner (generate + submit)
-8. Roadmap page (generate + persist + complete steps)
-9. AI mock interview chat (streaming)
-10. Role-stub pages + role switcher in header
-
-## Technical notes (for reference)
-
-- TanStack Start file-based routes; protected pages under `src/routes/_authenticated/`
-- `beforeLoad` gates loader on `supabase.auth.getUser()` to avoid 401 race
-- Roles enforced via `has_role()` in RLS + a `requireRole` server-fn middleware wrapper
-- Interview uses AI SDK `useChat` with `DefaultChatTransport({ api: '/api/chat' })` server route
-- One assigned role at signup (default `student`); admins can grant additional roles later
-
-## Deferred for follow-ups
-
-Recruiter candidate search, college placement pipeline, training-institute benchmarking, gov workforce analytics, live job feed ingestion, multi-agent orchestrator, prediction ML model, billing, notifications.
+Composite score target after this plan: **8.0/10**, with no remaining items in the Critical bucket.
