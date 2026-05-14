@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SolutionsRouteImport } from './routes/solutions'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResearchRouteImport } from './routes/research'
 import { Route as ProductsRouteImport } from './routes/products'
@@ -33,6 +34,11 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
   path: '/solutions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof ProductsRoute
   '/research': typeof ResearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsRoute
   '/research': typeof ResearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/assessment': typeof AuthenticatedAssessmentRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/products': typeof ProductsRoute
   '/research': typeof ResearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/research'
     | '/signup'
+    | '/sitemap.xml'
     | '/solutions'
     | '/admin'
     | '/assessment'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/research'
     | '/signup'
+    | '/sitemap.xml'
     | '/solutions'
     | '/admin'
     | '/assessment'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/research'
     | '/signup'
+    | '/sitemap.xml'
     | '/solutions'
     | '/_authenticated/admin'
     | '/_authenticated/assessment'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   ProductsRoute: typeof ProductsRoute
   ResearchRoute: typeof ResearchRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolutionsRoute: typeof SolutionsRoute
 }
 
@@ -282,6 +295,13 @@ declare module '@tanstack/react-router' {
       path: '/solutions'
       fullPath: '/solutions'
       preLoaderRoute: typeof SolutionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -460,8 +480,19 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsRoute: ProductsRoute,
   ResearchRoute: ResearchRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolutionsRoute: SolutionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
