@@ -1,18 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-} from "recharts";
 import {
   TrendingUp,
   TrendingDown,
@@ -31,6 +19,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+
+const ReadinessGrowthChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.ReadinessGrowthChart })),
+);
+const ResumeTrendChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.ResumeTrendChart })),
+);
+const TopicLineChart = lazy(() =>
+  import("@/components/progress-charts").then((m) => ({ default: m.TopicLineChart })),
+);
+
+const ChartFallback = ({ h = "h-72" }: { h?: string }) => (
+  <Skeleton className={`${h} w-full rounded-xl`} />
+);
 
 export const Route = createFileRoute("/_authenticated/progress")({
   component: ProgressPage,
