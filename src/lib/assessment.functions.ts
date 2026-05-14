@@ -199,6 +199,33 @@ export const submitAttempt = createServerFn({ method: "POST" })
       breakdown: scoreRows.map((r) => ({ question_id: r.question_id, correct: r.is_correct })),
     } as any);
 
+    // Auto-add to skills if user cleared with ≥80%
+    const pctScore = total > 0 ? Math.round((earned / total) * 100) : 0;
+    if (pctScore >= 80 && defRow) {
+      const skillName = String((defRow as any).category ?? "")
+        .trim()
+        .toUpperCase();
+      if (skillName) {
+        const { data: existing } = await supabase
+          .from("skills")
+          .select("level")
+          .eq("user_id", userId)
+          .eq("name", skillName)
+          .maybeSingle();
+        const newLevel = Math.max((existing as any)?.level ?? 0, pctScore);
+        await supabase.from("skills").upsert(
+          {
+            user_id: userId,
+            name: skillName,
+            level: newLevel,
+            source: "assessment",
+            updated_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "user_id,name" },
+        );
+      }
+    }
+
     return await buildReview(supabase, {
       ...(att as any),
       total_score: earned,
