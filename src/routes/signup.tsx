@@ -13,6 +13,10 @@ const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   email: z.string().trim().email("Enter a valid email").max(255),
   password: z.string().min(6, "Password must be at least 6 characters").max(72),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{6,14}$/, "Phone must be in E.164 format (e.g. +14155552671)"),
 });
 
 export const Route = createFileRoute("/signup")({
@@ -27,12 +31,13 @@ function SignupPage() {
   const nav = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ name, email, password });
+    const parsed = schema.safeParse({ name, email, password, phone });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signUp({
@@ -40,7 +45,7 @@ function SignupPage() {
       password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: parsed.data.name },
+        data: { full_name: parsed.data.name, phone: parsed.data.phone },
       },
     });
     setLoading(false);
@@ -63,6 +68,21 @@ function SignupPage() {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Mobile number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            autoComplete="tel"
+            required
+            placeholder="+14155552671"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Include country code. We'll send a verification code via SMS.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>

@@ -351,6 +351,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           achievements: Json
@@ -372,6 +405,8 @@ export type Database = {
           location: string | null
           onboarded: boolean
           phone: string | null
+          phone_verified: boolean
+          phone_verified_at: string | null
           photo_url: string | null
           portfolio_url: string | null
           projects: Json
@@ -400,6 +435,8 @@ export type Database = {
           location?: string | null
           onboarded?: boolean
           phone?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
           photo_url?: string | null
           portfolio_url?: string | null
           projects?: Json
@@ -428,6 +465,8 @@ export type Database = {
           location?: string | null
           onboarded?: boolean
           phone?: string | null
+          phone_verified?: boolean
+          phone_verified_at?: string | null
           photo_url?: string | null
           portfolio_url?: string | null
           projects?: Json
