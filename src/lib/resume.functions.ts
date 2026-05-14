@@ -4,6 +4,49 @@ import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 
+/**
+ * Idempotent skill upsert: if a row already exists for (user_id, name),
+ * keep the highest level. Backed by the unique index on (user_id, name).
+ */
+async function upsertSkills(
+  supabase: any,
+  userId: string,
+  source: string,
+  rows: { name: string; level: number }[],
+) {
+  if (rows.length === 0) return;
+  const names = Array.from(new Set(rows.map((r) => r.name.trim()).filter(Boolean)));
+  if (names.length === 0) return;
+
+  const { data: existing } = await supabase
+    .from("skills")
+    .select("name, level")
+    .eq("user_id", userId)
+    .in("name", names);
+  const existingMap = new Map<string, number>(
+    (existing ?? []).map((r: any) => [r.name as string, r.level as number]),
+  );
+
+  const merged = names.map((name) => {
+    const incoming = rows
+      .filter((r) => r.name.trim() === name)
+      .reduce((m, r) => Math.max(m, r.level), 0);
+    const prev = existingMap.get(name) ?? 0;
+    return {
+      user_id: userId,
+      name,
+      level: Math.max(prev, incoming),
+      source,
+      updated_at: new Date().toISOString(),
+    };
+  });
+
+  const { error } = await supabase
+    .from("skills")
+    .upsert(merged, { onConflict: "user_id,name" });
+  if (error) throw new Error(error.message);
+}
+
 export const analyzeResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -53,17 +96,8 @@ export const analyzeResume = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // upsert skills
-    if (output.detected_skills.length > 0) {
-      for (const s of output.detected_skills) {
-        await supabase.from("skills").insert({
-          user_id: userId,
-          name: s.name,
-          level: s.level,
-          source: "resume",
-        } as any);
-      }
-    }
+    // upsert skills (greatest-level semantics, deduped)
+    await upsertSkills(supabase, userId, "resume", output.detected_skills);
 
     return { analysis, detected_skills: output.detected_skills };
   });
@@ -158,14 +192,12 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // upsert detected skills (level 70 baseline from keyword detection)
-    for (const name of detectedSkills) {
-      await supabase.from("skills").insert({
-        user_id: userId,
-        name,
-        level: 70,
-        source: "resume-keywords",
-      } as any);
-    }
+    await upsertSkills(
+      supabase,
+      userId,
+      "resume-keywords",
+      detectedSkills.map((name) => ({ name, level: 70 })),
+    );
 
     return {
       analysis,
