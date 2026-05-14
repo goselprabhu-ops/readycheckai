@@ -13,8 +13,11 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeResumeKeywords, registerResumeUpload } from "@/lib/resume.functions";
-import { extractPdfText } from "@/lib/pdf-extract";
+import {
+  analyzeResumeAuto,
+  registerResumeUpload,
+  extractResumeText,
+} from "@/lib/resume.functions";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -30,7 +33,41 @@ export const Route = createFileRoute("/_authenticated/resume")({
   component: ResumePage,
 });
 
-type AnalysisResult = Awaited<ReturnType<typeof analyzeResumeKeywords>>;
+type AnalysisResult = {
+  mode: "ai" | "fallback";
+  score: number;
+  detected_skills: string[];
+  missing_skills: string[];
+  suggestions: string[];
+  breakdown: { reason: string; points: number }[];
+  analysis: any;
+};
+
+function normalize(r: any): AnalysisResult {
+  if (r.mode === "ai") {
+    const skills = (r.detected_skills ?? []).map((s: any) =>
+      typeof s === "string" ? s : s.name,
+    );
+    return {
+      mode: "ai",
+      score: r.analysis?.ats_score ?? 0,
+      detected_skills: skills,
+      missing_skills: (r.analysis?.gaps ?? []) as string[],
+      suggestions: (r.analysis?.suggestions ?? []) as string[],
+      breakdown: [],
+      analysis: r.analysis,
+    };
+  }
+  return {
+    mode: "fallback",
+    score: r.score ?? 0,
+    detected_skills: r.detected_skills ?? [],
+    missing_skills: r.missing_skills ?? [],
+    suggestions: r.suggestions ?? [],
+    breakdown: r.breakdown ?? [],
+    analysis: r.analysis,
+  };
+}
 
 function ResumePage() {
   const [role, setRole] = useState("Data Analyst");
@@ -41,8 +78,9 @@ function ResumePage() {
   );
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
-  const analyze = useServerFn(analyzeResumeKeywords);
+  const analyze = useServerFn(analyzeResumeAuto);
   const registerUpload = useServerFn(registerResumeUpload);
+  const extractText = useServerFn(extractResumeText);
 
   const onDrop = useCallback((accepted: File[]) => {
     const f = accepted[0];
@@ -104,22 +142,26 @@ function ResumePage() {
         data: { filePath: path, originalName: file.name },
       });
 
-      // 2. Extract text in browser
+      // 2. Extract text on the server (Worker-compatible parser).
       setStage("extracting");
       setProgress(55);
-      const text = await extractPdfText(file);
-      if (text.length < 20) throw new Error("Could not extract text from PDF");
+      const { text } = await extractText({ data: { filePath: path } });
       setProgress(75);
 
       // 3. Keyword analysis on server (deterministic)
       setStage("analyzing");
-      const r = await analyze({
+      const raw = await analyze({
         data: { text, targetRole: role, resumeId: (resume as any)?.id },
       });
+      const r = normalize(raw);
       setProgress(100);
       setStage("done");
       setResult(r);
-      toast.success(`Resume scored ${r.score}/100`);
+      toast.success(
+        r.mode === "fallback"
+          ? `AI unavailable — keyword score ${r.score}/100`
+          : `Resume scored ${r.score}/100`,
+      );
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message ?? "Analysis failed");

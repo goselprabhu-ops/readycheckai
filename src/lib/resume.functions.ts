@@ -3,6 +3,8 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { extractPdfTextFromBytes } from "./pdf-extract";
+import { chargeAiUsage, AiCapError } from "./ai-guardrails";
 
 /**
  * Idempotent skill upsert: if a row already exists for (user_id, name),
@@ -59,6 +61,11 @@ export const analyzeResume = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
+    const { supabase, userId } = context;
+
+    // Cost guardrail — atomic increment + hard cap check.
+    await chargeAiUsage(supabase, userId, "resume_ai");
+
     const gateway = createLovableAiGatewayProvider(apiKey);
     const model = gateway(DEFAULT_MODEL);
 
@@ -77,8 +84,6 @@ export const analyzeResume = createServerFn({ method: "POST" })
       output: Output.object({ schema }),
       prompt: `You are an expert ATS resume analyzer. Analyze the resume against the target role "${data.targetRole}".\n\nReturn a strict ATS score (0-100), a 1-2 sentence summary, key strengths, missing gaps, top keywords found, concrete suggestions, and detected skills with proficiency levels (0-100).\n\nRESUME:\n${data.text}`,
     });
-
-    const { supabase, userId } = context;
 
     const { data: analysis, error } = await supabase
       .from("resume_analyses")
@@ -230,4 +235,56 @@ export const registerResumeUpload = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return { resume: row };
+  });
+
+// ---------------------------------------------------------------------------
+// Unified analyzer — tries AI first, falls back to deterministic keyword
+// rules on AI failure (rate-limit, gateway error, parsing error). Caps
+// apply only when AI actually runs.
+// ---------------------------------------------------------------------------
+export const analyzeResumeAuto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      text: z.string().min(20).max(100000),
+      targetRole: z.string().min(1).max(120).default("Data Analyst"),
+      resumeId: z.string().uuid().optional(),
+    }).parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    // Try AI path first.
+    try {
+      const ai = await analyzeResume({ data });
+      return { mode: "ai" as const, ...ai };
+    } catch (e: any) {
+      if (e instanceof AiCapError) {
+        // hard cap — surface to the client; don't silently downgrade.
+        throw e;
+      }
+      // Soft fallback to deterministic keyword analyzer.
+      const kw = await analyzeResumeKeywords({ data });
+      return { mode: "fallback" as const, ...kw };
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// Server-side PDF extraction. Accepts a storage object path (already
+// uploaded to the `resumes` bucket) and returns the extracted text. This
+// removes ~1.5 MB of pdfjs from the browser bundle.
+// ---------------------------------------------------------------------------
+export const extractResumeText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ filePath: z.string().min(1).max(500) }).parse(input)
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: blob, error } = await supabase.storage
+      .from("resumes")
+      .download(data.filePath);
+    if (error || !blob) throw new Error(error?.message ?? "Could not read PDF");
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    const text = await extractPdfTextFromBytes(buf);
+    if (text.length < 20) throw new Error("Could not extract text from PDF");
+    return { text };
   });
