@@ -4,10 +4,21 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
       throw redirect({ to: "/login" });
+    }
+    // Gate everything behind phone OTP verification.
+    if (location.pathname !== "/verify-phone") {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("phone_verified")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (!profile?.phone_verified) {
+        throw redirect({ to: "/verify-phone" });
+      }
     }
   },
   component: AuthedLayout,

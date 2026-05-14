@@ -24,6 +24,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AuthenticatedVerifyPhoneRouteImport } from './routes/_authenticated/verify-phone'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
@@ -118,6 +119,12 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedVerifyPhoneRoute =
+  AuthenticatedVerifyPhoneRouteImport.update({
+    id: '/verify-phone',
+    path: '/verify-phone',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedRoadmapRoute = AuthenticatedRoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
@@ -244,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
@@ -279,6 +287,7 @@ export interface FileRoutesByTo {
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
+  '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
@@ -316,6 +325,7 @@ export interface FileRoutesById {
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
+  '/_authenticated/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/resume'
     | '/roadmap'
+    | '/verify-phone'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/resume'
     | '/roadmap'
+    | '/verify-phone'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
@@ -424,6 +436,7 @@ export interface FileRouteTypes {
     | '/_authenticated/results'
     | '/_authenticated/resume'
     | '/_authenticated/roadmap'
+    | '/_authenticated/verify-phone'
     | '/email/unsubscribe'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
@@ -565,6 +578,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/verify-phone': {
+      id: '/_authenticated/verify-phone'
+      path: '/verify-phone'
+      fullPath: '/verify-phone'
+      preLoaderRoute: typeof AuthenticatedVerifyPhoneRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/roadmap': {
       id: '/_authenticated/roadmap'
@@ -715,6 +735,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
+  AuthenticatedVerifyPhoneRoute: typeof AuthenticatedVerifyPhoneRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -730,6 +751,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
+  AuthenticatedVerifyPhoneRoute: AuthenticatedVerifyPhoneRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
