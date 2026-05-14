@@ -67,12 +67,17 @@ export const regenerateRecommendations = createServerFn({ method: "POST" })
       return { count: 0, drafts: [] as RecommendationDraft[] };
     }
 
+    const allowed = new Set(["sql", "python", "resume"]);
     const rows = drafts.map((d) => ({
       user_id: userId,
       rule_key: d.rule_key,
       title: d.title,
       description: d.description,
-      category: d.category,
+      category: (allowed.has(d.category) ? d.category : null) as
+        | "sql"
+        | "python"
+        | "resume"
+        | null,
       priority: d.priority,
       resource_url: d.resource_url ?? null,
       source: d.source,
