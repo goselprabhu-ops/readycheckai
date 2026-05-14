@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -230,13 +229,13 @@ export function RecommendationsPanel() {
                           </p>
                         )}
                         {r.resource_url && !done && (
-                          <Link
-                            to={r.resource_url}
+                          <a
+                            href={r.resource_url}
                             className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:underline"
                           >
                             Take action
                             <ArrowRight className="h-3 w-3" />
-                          </Link>
+                          </a>
                         )}
                       </div>
                     </div>
