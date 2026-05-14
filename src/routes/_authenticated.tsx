@@ -22,7 +22,7 @@ function AuthedLayout() {
           <header className="h-12 flex items-center gap-2 border-b px-2">
             <SidebarTrigger />
             <Link to="/dashboard" className="font-display text-sm font-semibold">
-              Stride.AI
+              ReadyCheck Lab
             </Link>
           </header>
           <main className="flex-1">

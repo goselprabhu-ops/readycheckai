@@ -68,7 +68,7 @@ export function AppSidebar() {
             <Sparkles className="h-4 w-4 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="font-display font-semibold text-base">Stride.AI</span>
+            <span className="font-display font-semibold text-base">ReadyCheck Lab</span>
           )}
         </Link>
       </SidebarHeader>
