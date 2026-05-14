@@ -3,6 +3,8 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { extractPdfTextFromBytes } from "./pdf-extract";
+import { chargeAiUsage, AiCapError } from "./ai-guardrails";
 
 /**
  * Idempotent skill upsert: if a row already exists for (user_id, name),
@@ -59,6 +61,11 @@ export const analyzeResume = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
+    const { supabase, userId } = context;
+
+    // Cost guardrail — atomic increment + hard cap check.
+    await chargeAiUsage(supabase, userId, "resume_ai");
+
     const gateway = createLovableAiGatewayProvider(apiKey);
     const model = gateway(DEFAULT_MODEL);
 
@@ -77,8 +84,6 @@ export const analyzeResume = createServerFn({ method: "POST" })
       output: Output.object({ schema }),
       prompt: `You are an expert ATS resume analyzer. Analyze the resume against the target role "${data.targetRole}".\n\nReturn a strict ATS score (0-100), a 1-2 sentence summary, key strengths, missing gaps, top keywords found, concrete suggestions, and detected skills with proficiency levels (0-100).\n\nRESUME:\n${data.text}`,
     });
-
-    const { supabase, userId } = context;
 
     const { data: analysis, error } = await supabase
       .from("resume_analyses")
