@@ -355,6 +355,9 @@ export type Database = {
           id: string
           priority: number
           resource_url: string | null
+          rule_key: string | null
+          source: string
+          status: string
           title: string
           user_id: string
         }
@@ -366,6 +369,9 @@ export type Database = {
           id?: string
           priority?: number
           resource_url?: string | null
+          rule_key?: string | null
+          source?: string
+          status?: string
           title: string
           user_id: string
         }
@@ -377,6 +383,9 @@ export type Database = {
           id?: string
           priority?: number
           resource_url?: string | null
+          rule_key?: string | null
+          source?: string
+          status?: string
           title?: string
           user_id?: string
         }
