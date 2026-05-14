@@ -45,8 +45,8 @@ function SignupPage() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Account created. Check your email to confirm.");
-    nav({ to: "/login" });
+    toast.success("Account created. Check your email for the code.");
+    nav({ to: "/verify-email", search: { email: parsed.data.email } });
   };
 
   return (
