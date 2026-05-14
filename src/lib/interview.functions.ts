@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { chargeAiUsage } from "./ai-guardrails";
 
 export const startInterview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -43,6 +44,10 @@ export const interviewTurn = createServerFn({ method: "POST" })
       .select("role_target")
       .eq("id", data.sessionId)
       .single();
+
+    // Enforce per-user daily cap before spending AI tokens.
+    await chargeAiUsage(supabase, userId, "interview");
+
     const { data: history } = await supabase
       .from("interview_messages")
       .select("role, content")
