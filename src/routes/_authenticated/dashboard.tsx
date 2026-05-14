@@ -202,6 +202,11 @@ function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto p-6 -mt-10 relative z-10 space-y-6">
+        {/* Readiness scoring engine */}
+        <motion.div initial="hidden" animate="show" variants={fade}>
+          <ReadinessPanel />
+        </motion.div>
+
         {/* Overall + 3 score cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {initialLoading ? (
