@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { chargeAiUsage } from "./ai-guardrails";
 
 const QUESTIONS_PER_ATTEMPT = 10;
 const SECONDS_PER_QUESTION = 45;
@@ -243,9 +244,14 @@ export const generateAssessment = createServerFn({ method: "POST" })
       count: z.number().min(3).max(10).default(5),
     }).parse(input)
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
+
+    // Enforce per-user daily AI cap.
+    await chargeAiUsage(supabase, userId, "assessment_gen");
+
     const gateway = createLovableAiGatewayProvider(apiKey);
     const model = gateway(DEFAULT_MODEL);
 

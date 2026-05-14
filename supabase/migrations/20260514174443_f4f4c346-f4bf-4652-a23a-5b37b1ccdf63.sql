@@ -1,0 +1,17 @@
+-- Sprint 4: DB hygiene — pin search_path on SECURITY DEFINER pgmq wrappers
+-- and revoke EXECUTE from anon/authenticated (service role retains via owner).
+
+ALTER FUNCTION public.read_email_batch(text, integer, integer) SET search_path = public, pgmq;
+ALTER FUNCTION public.enqueue_email(text, jsonb) SET search_path = public, pgmq;
+ALTER FUNCTION public.delete_email(text, bigint) SET search_path = public, pgmq;
+ALTER FUNCTION public.move_to_dlq(text, text, bigint, jsonb) SET search_path = public, pgmq;
+
+REVOKE EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.delete_email(text, bigint) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) FROM anon, authenticated, public;
+
+GRANT EXECUTE ON FUNCTION public.read_email_batch(text, integer, integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.enqueue_email(text, jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.delete_email(text, bigint) TO service_role;
+GRANT EXECUTE ON FUNCTION public.move_to_dlq(text, text, bigint, jsonb) TO service_role;
