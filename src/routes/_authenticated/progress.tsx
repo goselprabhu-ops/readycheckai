@@ -417,12 +417,6 @@ function computeImprovement(series: number[]) {
   return Math.round(((last - first) / first) * 100);
 }
 
-const tooltipStyle = {
-  borderRadius: 12,
-  border: "1px solid var(--border)",
-  background: "var(--card)",
-};
-
 /* ---------- subcomponents ---------- */
 
 function GlassCard({ children }: { children: React.ReactNode }) {
