@@ -25,6 +25,43 @@ function isForbiddenAuthError(error: RoleLookupError) {
   );
 }
 
+const ROLES_CACHE_KEY = "rcl:roles:v1";
+
+type CachedRoles = { userId: string; roles: AppRole[]; at: number };
+
+function readRoleCache(userId: string): AppRole[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(ROLES_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedRoles;
+    if (parsed.userId !== userId) return null;
+    return parsed.roles;
+  } catch {
+    return null;
+  }
+}
+
+function writeRoleCache(userId: string, roles: AppRole[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const payload: CachedRoles = { userId, roles, at: Date.now() };
+    localStorage.setItem(ROLES_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    /* ignore quota / privacy mode */
+  }
+}
+
+function clearRoleCache() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(ROLES_CACHE_KEY);
+    localStorage.removeItem("activeRole");
+  } catch {
+    /* ignore */
+  }
+}
+
 interface AuthCtx {
   user: User | null;
   session: Session | null;
@@ -82,6 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Stale-while-revalidate: hydrate from cache instantly, then refresh.
+    const cached = readRoleCache(userId);
+    if (cached && cached.length) {
+      setRoles(cached);
+      const stored = (typeof window !== "undefined"
+        ? (localStorage.getItem("activeRole") as AppRole | null)
+        : null);
+      setActiveRoleState(stored && cached.includes(stored) ? stored : (cached[0] ?? "student"));
+    }
+
     let cancelled = false;
     const loadRoles = async () => {
       const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -90,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userError || !userData.user || userData.user.id !== userId) {
         await supabase.auth.signOut().catch(() => {});
         if (!cancelled) {
+          clearRoleCache();
           setRoles([]);
           setActiveRoleState(null);
         }
@@ -107,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Stale/revoked token → 403. Sign out to recover.
         if (isForbiddenAuthError(error)) {
           supabase.auth.signOut().catch(() => {});
+          clearRoleCache();
         }
         setRoles([]);
         setActiveRoleState(null);
@@ -114,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const r = (data ?? []).map((d) => d.role as AppRole);
       setRoles(r);
+      writeRoleCache(userId, r);
       const stored = localStorage.getItem("activeRole") as AppRole | null;
       setActiveRoleState(stored && r.includes(stored) ? stored : (r[0] ?? "student"));
     };
@@ -130,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    clearRoleCache();
     await supabase.auth.signOut();
   };
 
