@@ -1,12 +1,27 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import { AuthShell } from "@/components/auth-shell";
 
-export const Route = createFileRoute("/signup")({ component: SignupPage });
+const schema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters").max(72),
+});
+
+export const Route = createFileRoute("/signup")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) throw redirect({ to: "/dashboard" });
+  },
+  component: SignupPage,
+});
 
 function SignupPage() {
   const nav = useNavigate();
@@ -17,13 +32,15 @@ function SignupPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const parsed = schema.safeParse({ name, email, password });
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: name },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { full_name: parsed.data.name },
       },
     });
     setLoading(false);
@@ -33,20 +50,28 @@ function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-background p-6">
-      <div className="w-full max-w-md bg-card border border-border rounded-3xl p-8">
-        <h1 className="text-2xl font-display font-bold">Create your account</h1>
-        <p className="text-sm text-muted-foreground mt-1">Start your employability journey</p>
-        <form onSubmit={submit} className="mt-6 space-y-4">
-          <div className="space-y-2"><Label>Full name</Label><Input required value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div className="space-y-2"><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-2"><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          <Button type="submit" disabled={loading} className="w-full rounded-xl">{loading ? "Creating…" : "Create account"}</Button>
-        </form>
-        <p className="text-sm text-muted-foreground mt-6 text-center">
-          Have an account? <Link to="/login" className="text-primary font-medium">Sign in</Link>
-        </p>
-      </div>
-    </div>
+    <AuthShell
+      title="Create your account"
+      subtitle="Start your career readiness journey"
+      footer={<>Have an account? <Link to="/login" className="text-primary font-medium">Sign in</Link></>}
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full name</Label>
+          <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <Button type="submit" disabled={loading} className="w-full rounded-xl">
+          {loading ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating…</>) : "Create account"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

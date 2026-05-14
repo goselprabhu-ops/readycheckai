@@ -1,12 +1,26 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import { AuthShell } from "@/components/auth-shell";
 
-export const Route = createFileRoute("/login")({ component: LoginPage });
+const schema = z.object({
+  email: z.string().trim().email("Enter a valid email").max(255),
+  password: z.string().min(6, "Password must be at least 6 characters").max(72),
+});
+
+export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) throw redirect({ to: "/dashboard" });
+  },
+  component: LoginPage,
+});
 
 function LoginPage() {
   const nav = useNavigate();
@@ -16,8 +30,10 @@ function LoginPage() {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const parsed = schema.safeParse({ email, password });
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword(parsed.data);
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
@@ -25,19 +41,27 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-background p-6">
-      <div className="w-full max-w-md bg-card border border-border rounded-3xl p-8">
-        <h1 className="text-2xl font-display font-bold">Sign in</h1>
-        <p className="text-sm text-muted-foreground mt-1">Welcome back to Stride.AI</p>
-        <form onSubmit={submit} className="mt-6 space-y-4">
-          <div className="space-y-2"><Label>Email</Label><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-2"><Label>Password</Label><Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
-          <Button type="submit" disabled={loading} className="w-full rounded-xl">{loading ? "Signing in…" : "Sign in"}</Button>
-        </form>
-        <p className="text-sm text-muted-foreground mt-6 text-center">
-          No account? <Link to="/signup" className="text-primary font-medium">Create one</Link>
-        </p>
-      </div>
-    </div>
+    <AuthShell
+      title="Sign in"
+      subtitle="Welcome back to ReadyCheck Lab"
+      footer={<>No account? <Link to="/signup" className="text-primary font-medium">Create one</Link></>}
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+          </div>
+          <Input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        </div>
+        <Button type="submit" disabled={loading} className="w-full rounded-xl">
+          {loading ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Signing in…</>) : "Sign in"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }
