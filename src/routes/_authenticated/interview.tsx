@@ -106,7 +106,7 @@ function InterviewPage() {
                 }
               }}
             />
-            <Button onClick={onSend} disabled={loading || !input.trim()}>
+            <Button onClick={onSend} disabled={loading || !input.trim()} aria-label="Send message">
               <Send className="h-4 w-4" />
             </Button>
           </div>
