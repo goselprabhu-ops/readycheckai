@@ -218,7 +218,9 @@ function Dashboard() {
       <div className="max-w-6xl mx-auto p-6 -mt-10 relative z-10 space-y-6">
         {/* Readiness scoring engine */}
         <motion.div initial="hidden" animate="show" variants={fade}>
-          <ReadinessPanel />
+          <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
+            <ReadinessPanel />
+          </Suspense>
         </motion.div>
 
         {/* Overall + 3 score cards */}
@@ -304,7 +306,9 @@ function Dashboard() {
         {/* Recommendations + Recent attempts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <motion.div custom={6} initial="hidden" animate="show" variants={fade} className="lg:col-span-2">
-            <RecommendationsPanel />
+            <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
+              <RecommendationsPanel />
+            </Suspense>
           </motion.div>
 
           <motion.div custom={7} initial="hidden" animate="show" variants={fade}>
