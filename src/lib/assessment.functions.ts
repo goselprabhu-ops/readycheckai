@@ -326,25 +326,27 @@ export const submitAssessment = createServerFn({ method: "POST" })
     } as any).select().single();
     if (error) throw new Error(error.message);
 
-    // upsert skill snapshot — keep the higher of existing vs new level
+    // upsert skill ONLY when user clears ≥80%; keep the higher of existing vs new level
     const level = Math.round((score / total) * 100);
-    const { data: existing } = await supabase
-      .from("skills")
-      .select("level")
-      .eq("user_id", userId)
-      .eq("name", data.topic)
-      .maybeSingle();
-    const newLevel = Math.max((existing as any)?.level ?? 0, level);
-    await supabase.from("skills").upsert(
-      {
-        user_id: userId,
-        name: data.topic,
-        level: newLevel,
-        source: "assessment",
-        updated_at: new Date().toISOString(),
-      } as any,
-      { onConflict: "user_id,name" },
-    );
+    if (level >= 80) {
+      const { data: existing } = await supabase
+        .from("skills")
+        .select("level")
+        .eq("user_id", userId)
+        .eq("name", data.topic)
+        .maybeSingle();
+      const newLevel = Math.max((existing as any)?.level ?? 0, level);
+      await supabase.from("skills").upsert(
+        {
+          user_id: userId,
+          name: data.topic,
+          level: newLevel,
+          source: "assessment",
+          updated_at: new Date().toISOString(),
+        } as any,
+        { onConflict: "user_id,name" },
+      );
+    }
 
     return { assessment: row, level };
   });
