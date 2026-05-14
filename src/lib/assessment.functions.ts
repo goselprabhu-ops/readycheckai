@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { chargeAiUsage } from "./ai-guardrails";
 
 const QUESTIONS_PER_ATTEMPT = 10;
 const SECONDS_PER_QUESTION = 45;
@@ -246,6 +247,9 @@ export const generateAssessment = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
+  });
+
+// NOTE: handler split below — see below.
     const gateway = createLovableAiGatewayProvider(apiKey);
     const model = gateway(DEFAULT_MODEL);
 
