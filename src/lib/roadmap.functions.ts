@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { chargeAiUsage } from "./ai-guardrails";
 
 export const generateRoadmap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -19,6 +20,9 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       .select("gaps, suggestions")
       .order("created_at", { ascending: false })
       .limit(1);
+
+    // Enforce per-user daily AI cap (roadmap generation counts as assessment_gen).
+    await chargeAiUsage(supabase, userId, "assessment_gen");
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
