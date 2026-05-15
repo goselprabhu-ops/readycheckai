@@ -44,6 +44,11 @@ type AnalysisResult = {
   analysis: any;
   confidence: number;
   status?: string;
+  parsed_fields?: any;
+  role_matches?: { data_analyst: number; bi_analyst: number; business_analyst: number };
+  ats_breakdown?: { formatting: number; readability: number; keyword_optimization: number; section_structure: number };
+  quality_breakdown?: { impact_statements: number; quantified_achievements: number; action_verbs: number; project_descriptions: number };
+  rewrites?: { summary?: string; bullets?: { original: string; improved: string }[]; projects?: { original: string; improved: string }[] };
 };
 
 function normalize(r: any): AnalysisResult {
@@ -61,6 +66,11 @@ function normalize(r: any): AnalysisResult {
       analysis: r.analysis,
       confidence: r.confidence ?? 1,
       status: r.status,
+      parsed_fields: r.parsed_fields ?? r.analysis?.parsed_fields,
+      role_matches: r.role_matches ?? r.analysis?.role_matches,
+      ats_breakdown: r.ats_breakdown ?? r.analysis?.ats_breakdown,
+      quality_breakdown: r.quality_breakdown ?? r.analysis?.quality_breakdown,
+      rewrites: r.rewrites ?? r.analysis?.rewrites,
     };
   }
   return {
