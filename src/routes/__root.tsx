@@ -14,6 +14,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/web-vitals";
 import { startErrorReporter } from "@/lib/error-reporter";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -126,7 +127,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
