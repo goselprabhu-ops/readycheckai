@@ -28,6 +28,14 @@ import {
   Sparkles,
   X,
   RefreshCw,
+  Download,
+  Target,
+  Gauge,
+  Pencil,
+  Briefcase,
+  GraduationCap,
+  FolderGit2,
+  Award,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/resume")({
