@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { ErrorFallback } from "./ErrorFallback";
-import { reportClientError } from "@/lib/error-reporter";
+// error-reporter wires global window listeners; ErrorBoundary just logs locally
+// and lets the global hook capture. Keep this file dependency-light.
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -19,10 +20,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    try {
-      reportClientError(error, { componentStack: info.componentStack ?? undefined });
-    } catch {
-      // best-effort reporter; never throw from a boundary
+    if (typeof window !== "undefined") {
+      // Re-emit so the global error reporter (window.onerror) records it.
+      try {
+        window.dispatchEvent(new ErrorEvent("error", { error, message: error.message }));
+      } catch {
+        console.error(error, info.componentStack);
+      }
     }
   }
 
