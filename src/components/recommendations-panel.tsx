@@ -60,6 +60,7 @@ export function RecommendationsPanel() {
     const { data, error } = await supabase
       .from("recommendations")
       .select("*")
+      .neq("status", "expired")
       .order("status", { ascending: true })
       .order("priority", { ascending: true })
       .order("created_at", { ascending: false });

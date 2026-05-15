@@ -68,6 +68,8 @@ export const regenerateRecommendations = createServerFn({ method: "POST" })
     }
 
     const allowed = new Set(["sql", "python", "resume"]);
+    const nowIso = new Date().toISOString();
+    const expiresIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const rows = drafts.map((d) => ({
       user_id: userId,
       rule_key: d.rule_key,
@@ -81,6 +83,9 @@ export const regenerateRecommendations = createServerFn({ method: "POST" })
       priority: d.priority,
       resource_url: d.resource_url ?? null,
       source: d.source,
+      status: "pending" as const,
+      generated_at: nowIso,
+      expires_at: expiresIso,
     }));
 
     const { error } = await supabase
