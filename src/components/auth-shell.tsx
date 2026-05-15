@@ -17,13 +17,7 @@ export function AuthShell({
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       {/* Brand panel */}
       <div className="relative hidden lg:flex flex-col justify-between p-10 overflow-hidden text-white">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, oklch(0.28 0.13 265) 0%, oklch(0.38 0.18 262) 45%, oklch(0.55 0.22 260) 100%)",
-          }}
-        />
+        <div className="absolute inset-0" style={{ background: "var(--gradient-panel-soft)" }} />
         <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-40 -left-20 w-[26rem] h-[26rem] rounded-full bg-white/10 blur-3xl" />
 
