@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { chargeAiUsage } from "./ai-guardrails";
 
@@ -38,9 +39,9 @@ export const startAttempt = createServerFn({ method: "POST" })
     if (defErr || !def) throw new Error("Assessment not found");
     if (!(def as any).is_active) throw new Error("Assessment is not active");
 
-    // Pull pool
+    // Pull pool from sanitized public view (no correct_answer / explanation)
     const { data: pool, error: qErr } = await supabase
-      .from("questions")
+      .from("questions_public" as any)
       .select("id, prompt, options, points, order_index")
       .eq("assessment_id", data.assessmentId);
     if (qErr) throw new Error(qErr.message);
@@ -130,15 +131,33 @@ export const submitAttempt = createServerFn({ method: "POST" })
     const startedAt = new Date((att as any).started_at).getTime();
     const elapsedMs = Date.now() - startedAt;
 
-    // Load the questions referenced by the submitted answers
+    // Load the questions referenced by the submitted answers.
+    // Public meta (assessment_id, points) via user-scoped client; secrets via service-role admin.
     const qIds = data.answers.map((a) => a.questionId);
-    const { data: qs, error: qErr } = await supabase
-      .from("questions")
-      .select("id, assessment_id, correct_answer, points")
-      .in("id", qIds);
+    const [{ data: qs, error: qErr }, { data: secrets, error: sErr }] = await Promise.all([
+      supabase
+        .from("questions_public" as any)
+        .select("id, assessment_id, points")
+        .in("id", qIds),
+      supabaseAdmin
+        .from("question_secrets" as any)
+        .select("question_id, correct_answer")
+        .in("question_id", qIds),
+    ]);
     if (qErr) throw new Error(qErr.message);
+    if (sErr) throw new Error(sErr.message);
+    const secretMap = new Map<string, string>(
+      (secrets ?? []).map((s: any) => [s.question_id as string, s.correct_answer as string]),
+    );
     const qMap = new Map<string, { correct_answer: string; points: number; assessment_id: string }>(
-      (qs ?? []).map((q: any) => [q.id, { correct_answer: q.correct_answer, points: q.points ?? 1, assessment_id: q.assessment_id }]),
+      (qs ?? []).map((q: any) => [
+        q.id,
+        {
+          correct_answer: secretMap.get(q.id) ?? "",
+          points: q.points ?? 1,
+          assessment_id: q.assessment_id,
+        },
+      ]),
     );
 
     // Validate all questions belong to this attempt's assessment
@@ -240,19 +259,36 @@ async function buildReview(
 ) {
   const { data: rows } = await supabase
     .from("scores")
-    .select("question_id, selected_answer, is_correct, points_awarded, questions:question_id(id, prompt, options, correct_answer, explanation, points)")
+    .select("question_id, selected_answer, is_correct, points_awarded, questions:question_id(id, prompt, options, points)")
     .eq("attempt_id", att.id);
 
-  const review = (rows ?? []).map((r: any) => ({
-    questionId: r.question_id as string,
-    selected: r.selected_answer as string | null,
-    isCorrect: !!r.is_correct,
-    pointsAwarded: r.points_awarded ?? 0,
-    prompt: r.questions?.prompt as string,
-    options: (Array.isArray(r.questions?.options) ? r.questions.options : []) as string[],
-    correctAnswer: r.questions?.correct_answer as string,
-    explanation: (r.questions?.explanation ?? null) as string | null,
-  }));
+  const qIds = (rows ?? []).map((r: any) => r.question_id as string);
+  const { data: secrets } = qIds.length
+    ? await supabaseAdmin
+        .from("question_secrets" as any)
+        .select("question_id, correct_answer, explanation")
+        .in("question_id", qIds)
+    : { data: [] as any[] };
+  const secretMap = new Map<string, { correct_answer: string; explanation: string | null }>(
+    (secrets ?? []).map((s: any) => [
+      s.question_id as string,
+      { correct_answer: s.correct_answer as string, explanation: (s.explanation ?? null) as string | null },
+    ]),
+  );
+
+  const review = (rows ?? []).map((r: any) => {
+    const sec = secretMap.get(r.question_id as string);
+    return {
+      questionId: r.question_id as string,
+      selected: r.selected_answer as string | null,
+      isCorrect: !!r.is_correct,
+      pointsAwarded: r.points_awarded ?? 0,
+      prompt: r.questions?.prompt as string,
+      options: (Array.isArray(r.questions?.options) ? r.questions.options : []) as string[],
+      correctAnswer: sec?.correct_answer ?? "",
+      explanation: sec?.explanation ?? null,
+    };
+  });
 
   return {
     attemptId: att.id,
