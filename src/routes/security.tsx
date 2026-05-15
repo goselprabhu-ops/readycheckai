@@ -103,19 +103,14 @@ function SecurityPage() {
   ];
 
   return (
-    <MarketingShell>
+    <MarketingShell
+      eyebrow="Trust Center"
+      title="Security & Status"
+      intro="ReadyCheck Lab is built for institutions. Here's exactly how we protect your data and how you can verify it's working — live."
+    >
       <section className="border-b border-border/60">
-        <div className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
-          <Badge variant="secondary" className="mb-4">Trust Center</Badge>
-          <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight">
-            Security & Status
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            ReadyCheck Lab is built for institutions. Here's exactly how we
-            protect your data and how you can verify it's working — live.
-          </p>
-
-          <Card className="mt-8">
+        <div className="container mx-auto px-4 py-12 max-w-4xl">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4 text-primary" />
