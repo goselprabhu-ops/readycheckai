@@ -63,7 +63,13 @@ function OnboardingPage() {
 
       setStage("extracting");
       setProgress(55);
-      const { text } = await extractText({ data: { filePath: path } });
+      const ext = await extractText({ data: { filePath: path } });
+      if (!ext.text || ext.status !== "ok") {
+        throw new Error(
+          (ext as any).message ?? "Could not extract text from this PDF",
+        );
+      }
+      const text = ext.text;
 
       setStage("parsing");
       setProgress(75);

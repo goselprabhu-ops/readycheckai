@@ -3,8 +3,13 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
-import { extractPdfTextFromBytes } from "./pdf-extract";
+import { extractPdf, type ParserStatus } from "./pdf-extract";
 import { chargeAiUsage, AiCapError } from "./ai-guardrails";
+import {
+  decideAnalyzer,
+  PARSER_STATUS_MESSAGES,
+  type ResumeAnalysisMethod,
+} from "./resume-pipeline";
 
 /**
  * Idempotent skill upsert: if a row already exists for (user_id, name),
@@ -56,6 +61,8 @@ export const analyzeResume = createServerFn({ method: "POST" })
       text: z.string().min(50).max(50000),
       targetRole: z.string().min(1).max(120).default("Software Engineer"),
       resumeId: z.string().uuid().optional(),
+      extractionConfidence: z.number().min(0).max(1).optional(),
+      parserStatus: z.string().max(40).optional(),
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
@@ -85,22 +92,20 @@ export const analyzeResume = createServerFn({ method: "POST" })
       prompt: `You are an expert ATS resume analyzer. Analyze the resume against the target role "${data.targetRole}".\n\nReturn a strict ATS score (0-100), a 1-2 sentence summary, key strengths, missing gaps, top keywords found, concrete suggestions, and detected skills with proficiency levels (0-100).\n\nRESUME:\n${data.text}`,
     });
 
-    const { data: analysis, error } = await supabase
-      .from("resume_analyses")
-      .insert({
-        user_id: userId,
-        resume_id: data.resumeId ?? null,
-        ats_score: output.ats_score,
-        summary: output.summary,
-        strengths: output.strengths,
-        gaps: output.gaps,
-        keywords: output.keywords,
-        suggestions: output.suggestions,
-        method: "ai",
-      } as any)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
+    const analysis = await persistCanonicalAnalysis(supabase, {
+      user_id: userId,
+      resume_id: data.resumeId ?? null,
+      ats_score: output.ats_score,
+      summary: output.summary,
+      strengths: output.strengths,
+      gaps: output.gaps,
+      keywords: output.keywords,
+      suggestions: output.suggestions,
+      method: "ai",
+      extraction_confidence: data.extractionConfidence ?? null,
+      parser_status: (data.parserStatus as ParserStatus | undefined) ?? "ok",
+      extraction_error: null,
+    });
 
     // upsert skills (greatest-level semantics, deduped)
     await upsertSkills(supabase, userId, "resume", output.detected_skills);
@@ -155,6 +160,9 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
       text: z.string().min(20).max(100000),
       targetRole: z.string().min(1).max(120).default("Data Analyst"),
       resumeId: z.string().uuid().optional(),
+      extractionConfidence: z.number().min(0).max(1).optional(),
+      parserStatus: z.string().max(40).optional(),
+      method: z.enum(["keyword", "fallback"]).default("keyword"),
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
@@ -181,22 +189,20 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
     const strengths = detectedSkills.map((s) => `${s} found in resume`);
     const summary = `Resume scored ${score}/100 for ${data.targetRole}. ${detectedSkills.length} of ${SKILL_RULES.length} target areas detected.`;
 
-    const { data: analysis, error } = await supabase
-      .from("resume_analyses")
-      .insert({
-        user_id: userId,
-        resume_id: data.resumeId ?? null,
-        ats_score: score,
-        summary,
-        strengths,
-        gaps: missingSkills,
-        keywords: detectedSkills,
-        suggestions,
-        method: "rules",
-      } as any)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
+    const analysis = await persistCanonicalAnalysis(supabase, {
+      user_id: userId,
+      resume_id: data.resumeId ?? null,
+      ats_score: score,
+      summary,
+      strengths,
+      gaps: missingSkills,
+      keywords: detectedSkills,
+      suggestions,
+      method: data.method,
+      extraction_confidence: data.extractionConfidence ?? null,
+      parser_status: (data.parserStatus as ParserStatus | undefined) ?? "ok",
+      extraction_error: null,
+    });
 
     // upsert detected skills (level 70 baseline from keyword detection)
     await upsertSkills(
@@ -251,20 +257,21 @@ export const analyzeResumeAuto = createServerFn({ method: "POST" })
       text: z.string().min(20).max(100000),
       targetRole: z.string().min(1).max(120).default("Data Analyst"),
       resumeId: z.string().uuid().optional(),
+      extractionConfidence: z.number().min(0).max(1).optional(),
+      parserStatus: z.string().max(40).optional(),
     }).parse(input)
   )
   .handler(async ({ data, context }) => {
-    // Try AI path first.
+    // Try AI path first; fall back to deterministic keyword analyzer on
+    // any non-cap error. Cap errors are surfaced verbatim.
     try {
       const ai = await analyzeResume({ data });
       return { mode: "ai" as const, ...ai };
     } catch (e: any) {
-      if (e instanceof AiCapError) {
-        // hard cap — surface to the client; don't silently downgrade.
-        throw e;
-      }
-      // Soft fallback to deterministic keyword analyzer.
-      const kw = await analyzeResumeKeywords({ data });
+      if (e instanceof AiCapError) throw e;
+      const kw = await analyzeResumeKeywords({
+        data: { ...data, method: "fallback" },
+      });
       return { mode: "fallback" as const, ...kw };
     }
   });
@@ -284,9 +291,163 @@ export const extractResumeText = createServerFn({ method: "POST" })
     const { data: blob, error } = await supabase.storage
       .from("resumes")
       .download(data.filePath);
-    if (error || !blob) throw new Error(error?.message ?? "Could not read PDF");
+    if (error || !blob) {
+      return {
+        text: "",
+        status: "malformed_pdf" as ParserStatus,
+        confidence: 0,
+        pageCount: 0,
+        error: error?.message ?? "Could not download PDF",
+        message: PARSER_STATUS_MESSAGES.malformed_pdf,
+      };
+    }
     const buf = new Uint8Array(await blob.arrayBuffer());
-    const text = await extractPdfTextFromBytes(buf);
-    if (text.length < 20) throw new Error("Could not extract text from PDF");
-    return { text };
+    const result = await extractPdf(buf);
+    return {
+      ...result,
+      message: PARSER_STATUS_MESSAGES[result.status],
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Canonical persist: one record per resume_id, latest analysis wins.
+// ---------------------------------------------------------------------------
+async function persistCanonicalAnalysis(
+  supabase: any,
+  row: {
+    user_id: string;
+    resume_id: string | null;
+    ats_score: number;
+    summary: string;
+    strengths: string[];
+    gaps: string[];
+    keywords: string[];
+    suggestions: string[];
+    method: ResumeAnalysisMethod;
+    extraction_confidence: number | null;
+    parser_status: ParserStatus | null;
+    extraction_error: string | null;
+  },
+) {
+  if (row.resume_id) {
+    const { data, error } = await supabase
+      .from("resume_analyses")
+      .upsert(row as any, { onConflict: "resume_id" })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+  const { data, error } = await supabase
+    .from("resume_analyses")
+    .insert(row as any)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// One-shot pipeline endpoint — extract → decide → analyze → persist.
+// Frontend calls a single fn and receives status updates via stages.
+// ---------------------------------------------------------------------------
+export const runResumePipeline = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      filePath: z.string().min(1).max(500),
+      resumeId: z.string().uuid(),
+      targetRole: z.string().min(1).max(120).default("Data Analyst"),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // 1. Download + extract
+    const { data: blob, error: dlErr } = await supabase.storage
+      .from("resumes")
+      .download(data.filePath);
+    if (dlErr || !blob) {
+      const errMsg = dlErr?.message ?? "Could not download PDF";
+      await persistCanonicalAnalysis(supabase, {
+        user_id: userId,
+        resume_id: data.resumeId,
+        ats_score: 0, summary: errMsg, strengths: [], gaps: [], keywords: [], suggestions: [],
+        method: "fallback",
+        extraction_confidence: 0,
+        parser_status: "malformed_pdf",
+        extraction_error: errMsg,
+      });
+      return {
+        ok: false as const,
+        stage: "extract" as const,
+        status: "malformed_pdf" as ParserStatus,
+        message: PARSER_STATUS_MESSAGES.malformed_pdf,
+        error: errMsg,
+      };
+    }
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    const ext = await extractPdf(buf);
+
+    const decision = decideAnalyzer({
+      status: ext.status,
+      textLength: ext.text.length,
+      aiAvailable: !!process.env.LOVABLE_API_KEY,
+    });
+
+    if (decision.analyzer === "skip") {
+      // Persist a traceable record with the failure mode so admins can audit.
+      const summary = PARSER_STATUS_MESSAGES[ext.status];
+      await persistCanonicalAnalysis(supabase, {
+        user_id: userId,
+        resume_id: data.resumeId,
+        ats_score: 0, summary, strengths: [], gaps: [], keywords: [], suggestions: [],
+        method: "fallback",
+        extraction_confidence: ext.confidence,
+        parser_status: ext.status,
+        extraction_error: ext.error ?? decision.reason,
+      });
+      return {
+        ok: false as const,
+        stage: "extract" as const,
+        status: ext.status,
+        message: summary,
+        error: ext.error ?? null,
+        confidence: ext.confidence,
+      };
+    }
+
+    // 2. Analyze (AI primary, deterministic fallback)
+    const analyzeInput = {
+      text: ext.text,
+      targetRole: data.targetRole,
+      resumeId: data.resumeId,
+      extractionConfidence: ext.confidence,
+      parserStatus: ext.status,
+    };
+
+    try {
+      const ai = await analyzeResume({ data: analyzeInput });
+      return {
+        ok: true as const,
+        stage: "done" as const,
+        mode: "ai" as const,
+        status: ext.status,
+        confidence: ext.confidence,
+        ...ai,
+      };
+    } catch (e: any) {
+      if (e instanceof AiCapError) throw e;
+      const kw = await analyzeResumeKeywords({
+        data: { ...analyzeInput, method: "fallback" as const },
+      });
+      return {
+        ok: true as const,
+        stage: "done" as const,
+        mode: "fallback" as const,
+        status: ext.status,
+        confidence: ext.confidence,
+        ...kw,
+      };
+    }
   });
