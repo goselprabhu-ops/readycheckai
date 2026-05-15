@@ -10,6 +10,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
+import { AccessibleChart, summarizeSeries } from "./_a11y";
 
 const tooltipStyle = {
   borderRadius: 12,
@@ -27,8 +28,12 @@ export interface ReadinessSeriesPoint {
 
 export function ReadinessGrowthChart({ data }: { data: ReadinessSeriesPoint[] }) {
   return (
-    <div className="h-72">
-      <ResponsiveContainer>
+    <AccessibleChart
+      label="Readiness growth with SQL, Python and resume sub-scores"
+      summary={summarizeSeries("Readiness", data.map((d) => d.Readiness))}
+    >
+      <div className="h-72 w-full">
+        <ResponsiveContainer>
         <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="gReadyP" x1="0" y1="0" x2="0" y2="1">
@@ -51,15 +56,20 @@ export function ReadinessGrowthChart({ data }: { data: ReadinessSeriesPoint[] })
           <Line type="monotone" dataKey="Python" stroke="oklch(0.65 0.18 160)" strokeWidth={1.5} dot={false} />
           <Line type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" strokeWidth={1.5} dot={false} />
         </AreaChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }
 
 export function ResumeTrendChart({ data }: { data: { date: string; score: number }[] }) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
+    <AccessibleChart
+      label="Resume score trend"
+      summary={summarizeSeries("Resume score", data.map((d) => d.score))}
+    >
+      <div className="h-56 w-full">
+        <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
@@ -67,8 +77,9 @@ export function ResumeTrendChart({ data }: { data: { date: string; score: number
           <Tooltip contentStyle={tooltipStyle} />
           <Line type="monotone" dataKey="score" stroke="oklch(0.7 0.18 30)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
         </LineChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }
 
@@ -80,8 +91,12 @@ export function TopicLineChart({
   color: string;
 }) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
+    <AccessibleChart
+      label="Topic score trend"
+      summary={summarizeSeries("Topic score", data.map((d) => d.score))}
+    >
+      <div className="h-56 w-full">
+        <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
@@ -90,7 +105,8 @@ export function TopicLineChart({
           <ReferenceLine y={70} stroke="oklch(0.7 0.15 150)" strokeDasharray="4 4" />
           <Line type="monotone" dataKey="score" stroke={color} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
         </LineChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }
