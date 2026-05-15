@@ -187,7 +187,9 @@ function ResumePage() {
       toast.success(
         r.mode === "fallback"
           ? `AI unavailable — keyword score ${r.score}/100`
-          : `Resume scored ${r.score}/100`,
+          : r.mode === "ocr"
+            ? `Scanned PDF read with OCR — ${r.score}/100 (verify accuracy)`
+            : `Resume scored ${r.score}/100`,
       );
     } catch (e: any) {
       console.error(e);
