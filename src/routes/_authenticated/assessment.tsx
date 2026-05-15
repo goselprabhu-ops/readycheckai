@@ -81,6 +81,7 @@ function AssessmentPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [result, setResult] = useState<{ score: number; total: number; review: ReviewItem[] } | null>(null);
   const timerRef = useRef<number | null>(null);
 
@@ -108,24 +109,25 @@ function AssessmentPage() {
     })();
   }, []);
 
-  // Timer
+  // Timer — driven by server-issued expiresAt so pausing JS / reloading
+  // can't extend the clock.
   useEffect(() => {
-    if (!active || result) return;
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          window.clearInterval(timerRef.current!);
-          void submit(true);
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
+    if (!active || result || !expiresAt) return;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        if (timerRef.current) window.clearInterval(timerRef.current);
+        void submit(true);
+      }
+    };
+    tick();
+    timerRef.current = window.setInterval(tick, 1000);
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, result]);
+  }, [active, result, expiresAt]);
 
   const start = async (def: AssessmentDef) => {
     try {
@@ -135,10 +137,10 @@ function AssessmentPage() {
       setAnswers({});
       setIndex(0);
       setResult(null);
-      // Use server-issued duration; fall back to client estimate if missing
-      const elapsedMs = Date.now() - new Date(res.startedAt).getTime();
-      const remaining = Math.max(1, res.durationSeconds - Math.floor(elapsedMs / 1000));
-      setTimeLeft(remaining);
+      // Sync countdown to server-issued expiry
+      const expMs = new Date(res.expiresAt).getTime();
+      setExpiresAt(expMs);
+      setTimeLeft(Math.max(1, Math.ceil((expMs - Date.now()) / 1000)));
       setActive(def);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not start assessment");
@@ -152,6 +154,7 @@ function AssessmentPage() {
     setIndex(0);
     setResult(null);
     setAttemptId(null);
+    setExpiresAt(null);
     if (timerRef.current) window.clearInterval(timerRef.current);
   };
 
