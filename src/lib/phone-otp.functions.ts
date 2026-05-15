@@ -17,31 +17,36 @@ function hashCode(code: string, userId: string) {
   return createHash("sha256").update(`${userId}:${code}`).digest("hex");
 }
 
-async function sendTwilioWhatsApp(to: string, body: string) {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const twilioKey = process.env.TWILIO_API_KEY;
-  const from = process.env.TWILIO_FROM_NUMBER;
-  if (!lovableKey) throw new Error("LOVABLE_API_KEY is not configured");
-  if (!twilioKey) throw new Error("TWILIO_API_KEY is not configured");
-  if (!from) throw new Error("TWILIO_FROM_NUMBER is not configured");
+async function sendMsg91Sms(to: string, code: string) {
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const templateId = process.env.MSG91_TEMPLATE_ID;
+  const senderId = process.env.MSG91_SENDER_ID;
+  if (!authKey) throw new Error("MSG91_AUTH_KEY is not configured");
+  if (!templateId) throw new Error("MSG91_TEMPLATE_ID is not configured");
+  if (!senderId) throw new Error("MSG91_SENDER_ID is not configured");
 
-  // Twilio WhatsApp requires the `whatsapp:` channel prefix on both To and From.
-  const toAddr = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
-  const fromAddr = from.startsWith("whatsapp:") ? from : `whatsapp:${from}`;
+  // MSG91 expects mobile in international format WITHOUT the leading `+`.
+  const mobile = to.replace(/^\+/, "");
 
-  const res = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
+  const url = new URL("https://control.msg91.com/api/v5/flow");
+  const res = await fetch(url.toString(), {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": twilioKey,
-      "Content-Type": "application/x-www-form-urlencoded",
+      authkey: authKey,
+      "Content-Type": "application/json",
+      accept: "application/json",
     },
-    body: new URLSearchParams({ To: toAddr, From: fromAddr, Body: body }),
+    body: JSON.stringify({
+      template_id: templateId,
+      sender: senderId,
+      short_url: "0",
+      recipients: [{ mobiles: mobile, otp: code }],
+    }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
+  if (!res.ok || (data as any)?.type === "error") {
     throw new Error(
-      `Twilio error [${res.status}]: ${(data as any)?.message || JSON.stringify(data)}`,
+      `MSG91 error [${res.status}]: ${(data as any)?.message || JSON.stringify(data)}`,
     );
   }
   return data;
@@ -81,10 +86,7 @@ export const sendPhoneOtp = createServerFn({ method: "POST" })
     });
     if (insErr) throw new Error(insErr.message);
 
-    await sendTwilioWhatsApp(
-      data.phone,
-      `Your ReadyCheck Lab verification code is ${code}. It expires in ${OTP_TTL_MIN} minutes.`,
-    );
+    await sendMsg91Sms(data.phone, code);
 
     return { ok: true, expires_at };
   });
