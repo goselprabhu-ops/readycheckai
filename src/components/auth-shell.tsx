@@ -54,7 +54,7 @@ export function AuthShell({
       </div>
 
       {/* Form panel */}
-      <div className="flex items-center justify-center p-6 sm:p-10">
+      <main className="flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-3 duration-500">
           <div className="lg:hidden mb-6 flex items-center gap-2 font-display text-lg font-bold text-primary">
             <Sparkles className="h-5 w-5" />
@@ -65,7 +65,7 @@ export function AuthShell({
           <div className="mt-8">{children}</div>
           {footer && <div className="mt-6 text-sm text-muted-foreground text-center">{footer}</div>}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
