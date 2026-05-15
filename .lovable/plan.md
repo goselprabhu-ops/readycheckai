@@ -1,83 +1,131 @@
+## V1 Architecture Refactor — Plan
 
-# Version 1 Rollout — Phased Plan
+Goal: prepare ReadyCheck Lab for V1 expansion (analytics careers focus) without breaking the shipped MVP. This is **scaffolding + light refactor**, not a feature build. New V1 features (Phase A–E) ship in follow-up turns onto this foundation.
 
-The MVP.1–MVP.7 hardening trail is complete and the readiness report returned a **GO**. To evolve into Version 1 safely, we'll ship in 4 small phases instead of one big push, so each phase can be reviewed, tested, and rolled back independently.
+### Current state (audit)
+- Routes: flat under `src/routes/` and `src/routes/_authenticated/` — already correct for TanStack Start.
+- Components: flat under `src/components/` — feature components mixed with shell components.
+- Lib: flat under `src/lib/` — server fns and client helpers mixed.
+- Auth/RLS already wired (`_authenticated.tsx` layout, `has_role`, admin route uses role check).
+- Existing primitives: shadcn `ui/`, sidebar (`app-sidebar`), header/footer, charts, score-ring, panels, sonner toasts.
 
----
+### Scope of this turn
 
-## Phase 1 — Launch Blockers (P0)
+Pure scaffolding. **No route moves, no behavior changes, no MVP regressions.** Everything below is additive — existing imports keep working.
 
-Goal: Close the two items the readiness report flagged as required before opening to institutional users.
+#### 1. Feature folders (additive)
+Create empty/index-only barrels under `src/features/` for the V1 domains. Existing code stays where it is; new V1 code lands here.
+```
+src/features/
+  resume/        index.ts
+  assessments/   index.ts
+  interview/     index.ts
+  readiness/     index.ts
+  roadmap/       index.ts
+  profile/       index.ts
+  admin/         index.ts
+  recruiter/     index.ts
+  institution/   index.ts
+```
+Each `index.ts` re-exports the matching existing modules (e.g. `resume/index.ts` → `export * from "@/lib/resume.functions"`). Pure aliasing, zero moves.
 
-1. **Lock down SECURITY DEFINER RPCs**
-   - Apply `REVOKE EXECUTE … FROM PUBLIC, anon, authenticated` and re-`GRANT` only to `service_role` for the 7 helpers: `read_email_batch`, `enqueue_email`, `delete_email`, `move_to_dlq`, `log_system_event`, plus the two email-token helpers.
-   - Keep `increment_ai_usage`, `check_action_cooldown`, `log_security_event`, `has_role`, `system_health_summary` callable by `authenticated` (they self-check `auth.uid()` / role).
-2. **Enable HIBP password breach check** in Supabase Auth config via `configure_auth`.
-3. Re-run `supabase--linter` + `security--run_security_scan` to confirm green.
-
-Deliverable: migration + auth config update. No UI changes.
-
----
-
-## Phase 2 — Quality Gates in CI (P1)
-
-Goal: Prevent regressions in accessibility and performance once we start moving fast.
-
-1. **axe-core a11y gate** — add `@axe-core/playwright` smoke test on `/`, `/dashboard`, `/resume`, `/onboarding`, `/assessment`. Fail build on serious/critical violations.
-2. **Web Vitals beacon** — wire `onCLS/onINP/onLCP` from `web-vitals` into the existing `logEvent` pipeline (`system_events` with `source='web-vitals'`).
-3. **Bundle budget** — add a `vite-bundle-visualizer`-based size check for the main chunk (warn >250 KB gz, fail >350 KB gz).
-4. **Design token consolidation** — sweep remaining hardcoded gradients into `src/styles.css` tokens.
-
-Deliverable: CI workflow + small refactors. Documented in `docs/observability.md`.
-
----
-
-## Phase 3 — Resume Pipeline Maturity (P2)
-
-Goal: Move resume analysis from "reliable" to "trustworthy at scale".
-
-1. **Real OCR provider** for scanned PDFs (Tesseract WASM in the server fn, or external API behind a secret) — replace the current `parser_status='ocr'` stub with actual extraction.
-2. **Background job queue** for long extractions: enqueue in `pgmq` (`resume_extract` queue), process via existing worker pattern, free up the request thread.
-3. **User-facing extraction states** — surface `parser_status` + `extraction_confidence` on the resume page with a retry CTA when confidence is low.
-4. **Pruning cron** — `pg_cron` job to expire stale `resume_analyses` drafts and orphan storage objects weekly.
-
-Deliverable: 1 migration (queue + cron), 1 server fn (worker), small UI update on `/resume`.
-
----
-
-## Phase 4 — Operational & UX Polish (P2/P3)
-
-Goal: Round off the remaining nice-to-haves so V1 feels finished.
-
-1. **Sentry SDK** for frontend errors (already documented; just wire the DSN secret + `init`).
-2. **`LazyMotion`** migration — switch `src/lib/motion.ts` to `LazyMotion + domAnimation` and rewrite `motion.*` → `m.*` across the 7 consumer files. Saves ~30 KB gz.
-3. **Ring component consolidation** — merge `ScoreRing` + `ReadinessRing` into one parameterized component.
-4. **E2E happy path** — Playwright spec: signup → onboarding → resume upload → assessment → dashboard.
-
-Deliverable: small refactors + 1 test file.
-
----
-
-## Sequencing & Checkpoints
-
-```text
-Phase 1  →  ship & verify (linter+scan green)        ← launch unblocker
-Phase 2  →  ship & verify (CI green on PR)
-Phase 3  →  ship & verify (resume e2e on staging)
-Phase 4  →  ship & verify (full e2e + bundle report)
+#### 2. Shared layer
+```
+src/shared/
+  types/           # cross-feature TS types (Role, ReadinessPillar, etc.)
+    roles.ts       # 'data_analyst' | 'business_analyst' | 'bi_analyst' | 'jr_data_scientist'
+    readiness.ts   # pillar + score shapes
+    api.ts         # generic ApiResult<T>, Paginated<T>
+    index.ts
+  api/
+    client.ts      # thin wrapper around supabase + useServerFn helpers (centralized error → toast)
+    query-keys.ts  # canonical react-query keys
+  config/
+    theme.ts       # design tokens map (reads from styles.css vars)
+    nav.ts         # single source of truth for sidebar + top-nav items
+    roles.ts       # role display labels + icons
 ```
 
-After each phase I'll stop, summarize what changed, and wait for your go-ahead before starting the next one. That keeps blast radius small and lets you re-prioritize between phases (e.g. promote a Phase 4 item if a partner asks).
+#### 3. Reusable UI system (`src/components/common/`)
+New presentational primitives, all built on shadcn/ui + design tokens. No new colors — uses existing `--primary`, `--card`, etc.
+- `MetricCard` — KPI card (label, value, delta, icon) — replaces ad-hoc cards
+- `SectionCard` — titled card with optional action slot
+- `EmptyState` — icon + title + description + CTA
+- `LoadingSkeleton` — variants: `card`, `list`, `chart`, `table`, `ring`
+- `ChartContainer` — wraps recharts with title/legend/loading/empty
+- `Modal` — typed wrapper around shadcn Dialog (controlled + form-friendly)
+- `FormField` — label + control + error + hint, react-hook-form ready
+- `PageHeader` — h1 + breadcrumb + actions
+- `RoleBadge` — colored chip per analytics role
+- `ScorePill` — small readiness % pill
+- `DataTable` — minimal wrapper with loading/empty/sort
 
----
+#### 4. Dashboard shell
+```
+src/components/layouts/
+  DashboardShell.tsx   # sidebar + top nav + outlet, mobile drawer
+  TopNav.tsx           # breadcrumbs, user menu, notifications slot
+  PageContainer.tsx    # max-w + padding wrapper
+```
+`DashboardShell` is opt-in. `_authenticated.tsx` keeps current behavior; new V1 routes wrap with `DashboardShell`. Existing routes can migrate one-by-one in later phases.
 
-## Technical Notes
+#### 5. Error boundary + toast system
+- `src/components/common/ErrorBoundary.tsx` — class boundary that reports via existing `error-reporter.ts`, renders `ErrorFallback`.
+- `src/components/common/ErrorFallback.tsx` — friendly fallback with retry.
+- `src/shared/api/toast.ts` — `notify.success/error/info/promise(...)` thin wrapper around sonner so feature code never imports sonner directly.
 
-- **Migrations**: each phase ships at most one migration to keep rollback simple.
-- **Secrets needed later**: Sentry DSN (Phase 4), optional OCR API key (Phase 3) — I'll request via `add_secret` only when that phase starts.
-- **No schema breakage**: all new tables/columns are additive; existing RLS patterns reused.
-- **Type regen**: `src/integrations/supabase/types.ts` auto-updates after each migration — do not hand-edit.
+#### 6. Role-based route protection
+- Add `src/components/layouts/RoleGate.tsx` — client gate that checks `useUserRoles()` and renders fallback or children.
+- Add `src/shared/api/roles.ts` — `useUserRoles()` hook backed by a new `getMyRoles` server fn (queries `user_roles` via `requireSupabaseAuth`).
+- Existing `admin.tsx` keeps its server-side check; `RoleGate` is for in-page conditional UI (nav items, action buttons).
 
----
+#### 7. Theme & design tokens
+- Audit `src/styles.css` — confirm tokens cover: surfaces, primary/accent, success/warn/danger, chart palette (5 colors), radius scale, shadow scale.
+- Add missing chart colors as `--chart-1..5` if absent. No visual changes to existing screens.
+- `src/shared/config/theme.ts` — TS export of the same tokens for chart components and runtime usage.
 
-**Recommendation:** start with **Phase 1** now (smallest, unblocks launch). Reply to confirm and I'll execute it.
+#### 8. Global state
+Lightweight — no Redux. Add:
+- `src/shared/state/user-context.tsx` — provides `{ user, profile, roles, refresh }` to the authenticated tree, sourced from existing profile fns. Replaces scattered `useQuery(profile)` calls over time.
+- React Query already wired; document canonical query keys in `query-keys.ts`.
+
+### Technical details
+
+**File-by-file additions** (~25 new files, 0 deletions, ~3 small edits):
+
+New:
+- `src/features/{resume,assessments,interview,readiness,roadmap,profile,admin,recruiter,institution}/index.ts` (9)
+- `src/shared/types/{roles,readiness,api,index}.ts` (4)
+- `src/shared/api/{client,query-keys,toast,roles}.ts` (4)
+- `src/shared/config/{theme,nav,roles}.ts` (3)
+- `src/shared/state/user-context.tsx` (1)
+- `src/components/common/{MetricCard,SectionCard,EmptyState,LoadingSkeleton,ChartContainer,Modal,FormField,PageHeader,RoleBadge,ScorePill,DataTable,ErrorBoundary,ErrorFallback}.tsx` (13)
+- `src/components/layouts/{DashboardShell,TopNav,PageContainer,RoleGate}.tsx` (4)
+- `src/lib/roles.functions.ts` — `getMyRoles` server fn (1)
+- `docs/v1-architecture.md` — folder map + conventions (1)
+
+Edits (surgical):
+- `src/styles.css` — add `--chart-1..5` if missing
+- `src/routes/__root.tsx` — wrap with top-level `ErrorBoundary`
+- No edits to MVP feature routes/components
+
+**Conventions documented in `docs/v1-architecture.md`:**
+- New features go in `src/features/<name>/{components,hooks,functions.ts}`
+- Cross-feature primitives → `src/components/common/`
+- Server fns: `*.functions.ts` (existing pattern preserved)
+- Imports always via `@/` alias
+- All new colors via tokens only
+
+### Out of scope (deferred to Phase A–E)
+- Per-role match %, ATS sub-scores, AI rewrite (Phase A)
+- Power BI / Excel / Statistics tracks (Phase B)
+- Public profile, badges (Phase C)
+- Question CRUD, recruiter search, market signals (Phase D)
+- Stripe, E2E (Phase E)
+- Migrating existing routes onto `DashboardShell` (incremental, per phase)
+
+### Verification
+- Build passes (typecheck strict)
+- All existing routes render unchanged
+- New common components render in isolation (no consumers yet)
+- `getMyRoles` returns current user's roles
