@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminOverview, listAdminUsers, setUserRole } from "@/lib/admin.functions";
+import {
+  getAdminOverview,
+  listAdminUsers,
+  listAdminResumeAnalyses,
+  setUserRole,
+} from "@/lib/admin.functions";
 import { Users, FileText, Brain, TrendingUp, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,17 +46,37 @@ interface AdminUser {
 function AdminPanel() {
   const overview = useServerFn(getAdminOverview);
   const list = useServerFn(listAdminUsers);
+  const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
-  const [totals, setTotals] = useState({ users: 0, assessments: 0, resumes: 0, avgComposite: 0 });
+  const [totals, setTotals] = useState({
+    users: 0,
+    assessments: 0,
+    resumes: 0,
+    resumesAi: 0,
+    resumesRules: 0,
+    avgComposite: 0,
+  });
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [analyses, setAnalyses] = useState<
+    Array<{
+      id: string;
+      user_id: string;
+      full_name: string | null;
+      ats_score: number;
+      method: "ai" | "rules";
+      summary: string | null;
+      created_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [o, l] = await Promise.all([overview(), list()]);
+      const [o, l, r] = await Promise.all([overview(), list(), listResumes()]);
       setTotals(o.totals);
       setUsers(l.users as AdminUser[]);
+      setAnalyses(r.analyses);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -74,7 +99,13 @@ function AdminPanel() {
   const stats = [
     { label: "Users", value: totals.users, icon: Users },
     { label: "Assessments", value: totals.assessments, icon: Brain },
-    { label: "Resumes Analyzed", value: totals.resumes, icon: FileText },
+    {
+      label: "Resumes Analyzed",
+      value: loading
+        ? "—"
+        : `${totals.resumes} (${totals.resumesAi} AI · ${totals.resumesRules} rules)`,
+      icon: FileText,
+    },
     { label: "Avg Readiness", value: `${totals.avgComposite}`, icon: TrendingUp },
   ];
 
@@ -152,6 +183,56 @@ function AdminPanel() {
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       No users yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Resume Analyses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead className="w-20">Score</TableHead>
+                  <TableHead className="w-28">Method</TableHead>
+                  <TableHead>Summary</TableHead>
+                  <TableHead className="w-40">When</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analyses.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-medium">{a.full_name ?? "—"}</TableCell>
+                    <TableCell>{a.ats_score}/100</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={a.method === "ai" ? "default" : "secondary"}
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {a.method === "ai" ? "AI" : "Rules"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-md truncate text-muted-foreground text-sm">
+                      {a.summary ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {new Date(a.created_at).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!loading && analyses.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No resume analyses yet.
                     </TableCell>
                   </TableRow>
                 )}
