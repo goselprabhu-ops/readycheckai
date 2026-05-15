@@ -9,6 +9,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { AccessibleChart, summarizeSeries } from "./_a11y";
 
 export type ReadinessPoint = {
   date: string;
@@ -23,9 +24,11 @@ export type AttemptPoint = {
 };
 
 export function ReadinessAreaChart({ data }: { data: ReadinessPoint[] }) {
+  const summary = summarizeSeries("Readiness", data.map((d) => d.Readiness));
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
+    <AccessibleChart label="Readiness, resume and skills over time" summary={summary}>
+      <div className="h-56 w-full">
+        <ResponsiveContainer>
         <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="gReady" x1="0" y1="0" x2="0" y2="1">
@@ -55,15 +58,18 @@ export function ReadinessAreaChart({ data }: { data: ReadinessPoint[] }) {
           <Area type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" fill="url(#gResume)" strokeWidth={2} />
           <Area type="monotone" dataKey="Skills" stroke="oklch(0.7 0.18 160)" fill="url(#gSkills)" strokeWidth={2} />
         </AreaChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }
 
 export function AttemptsBarChart({ data }: { data: AttemptPoint[] }) {
+  const summary = summarizeSeries("Recent attempt scores", data.map((d) => d.score));
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
+    <AccessibleChart label="Recent assessment attempts" summary={summary}>
+      <div className="h-56 w-full">
+        <ResponsiveContainer>
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
@@ -77,7 +83,8 @@ export function AttemptsBarChart({ data }: { data: AttemptPoint[] }) {
           />
           <Bar dataKey="score" fill="var(--primary)" radius={[8, 8, 0, 0]} />
         </BarChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }
