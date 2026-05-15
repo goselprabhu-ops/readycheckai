@@ -151,13 +151,7 @@ function ProgressPage() {
     <div className="min-h-full">
       {/* Hero */}
       <div className="relative overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, oklch(0.26 0.13 265) 0%, oklch(0.38 0.18 262) 50%, oklch(0.55 0.22 260) 100%)",
-          }}
-        />
+        <div className="absolute inset-0" style={{ background: "var(--gradient-panel)" }} />
         <div className="absolute -top-24 -right-20 h-80 w-80 rounded-full bg-white/15 blur-3xl" />
         <div className="absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="relative max-w-6xl mx-auto px-6 py-10 text-white">
