@@ -9,6 +9,7 @@ import {
   Shield,
   Building2,
   Briefcase,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@/shared/types/roles";
@@ -25,6 +26,7 @@ export interface NavItem {
 
 export const DASHBOARD_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, group: "main" },
+  { label: "Analytics", to: "/analytics", icon: BarChart3, group: "main" },
   { label: "Profile", to: "/profile", icon: User, group: "main" },
 
   { label: "Resume", to: "/resume", icon: FileText, group: "career" },
