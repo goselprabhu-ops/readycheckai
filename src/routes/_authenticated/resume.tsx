@@ -28,6 +28,14 @@ import {
   Sparkles,
   X,
   RefreshCw,
+  Download,
+  Target,
+  Gauge,
+  Pencil,
+  Briefcase,
+  GraduationCap,
+  FolderGit2,
+  Award,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/resume")({
@@ -44,6 +52,11 @@ type AnalysisResult = {
   analysis: any;
   confidence: number;
   status?: string;
+  parsed_fields?: any;
+  role_matches?: { data_analyst: number; bi_analyst: number; business_analyst: number };
+  ats_breakdown?: { formatting: number; readability: number; keyword_optimization: number; section_structure: number };
+  quality_breakdown?: { impact_statements: number; quantified_achievements: number; action_verbs: number; project_descriptions: number };
+  rewrites?: { summary?: string; bullets?: { original: string; improved: string }[]; projects?: { original: string; improved: string }[] };
 };
 
 function normalize(r: any): AnalysisResult {
@@ -61,6 +74,11 @@ function normalize(r: any): AnalysisResult {
       analysis: r.analysis,
       confidence: r.confidence ?? 1,
       status: r.status,
+      parsed_fields: r.parsed_fields ?? r.analysis?.parsed_fields,
+      role_matches: r.role_matches ?? r.analysis?.role_matches,
+      ats_breakdown: r.ats_breakdown ?? r.analysis?.ats_breakdown,
+      quality_breakdown: r.quality_breakdown ?? r.analysis?.quality_breakdown,
+      rewrites: r.rewrites ?? r.analysis?.rewrites,
     };
   }
   return {
@@ -365,7 +383,44 @@ function ResumePage() {
         </Card>
       </div>
 
-      {result && <BreakdownCard result={result} />}
+      {result && (
+        <div id="resume-report" className="space-y-6">
+          {result.role_matches && <RoleMatchCards matches={result.role_matches} />}
+          {result.ats_breakdown && (
+            <SubScoreGrid
+              title="ATS compatibility breakdown"
+              icon={<Gauge className="h-4 w-4 text-primary" />}
+              data={[
+                { label: "Formatting", value: result.ats_breakdown.formatting },
+                { label: "Readability", value: result.ats_breakdown.readability },
+                { label: "Keyword optimization", value: result.ats_breakdown.keyword_optimization },
+                { label: "Section structure", value: result.ats_breakdown.section_structure },
+              ]}
+            />
+          )}
+          {result.quality_breakdown && (
+            <SubScoreGrid
+              title="Resume quality"
+              icon={<Sparkles className="h-4 w-4 text-primary" />}
+              data={[
+                { label: "Impact statements", value: result.quality_breakdown.impact_statements },
+                { label: "Quantified achievements", value: result.quality_breakdown.quantified_achievements },
+                { label: "Action verbs", value: result.quality_breakdown.action_verbs },
+                { label: "Project descriptions", value: result.quality_breakdown.project_descriptions },
+              ]}
+            />
+          )}
+          {result.parsed_fields && <ParsedFieldsCard fields={result.parsed_fields} />}
+          {result.rewrites && <RewritesCard rewrites={result.rewrites} />}
+          <BreakdownCard result={result} />
+          <div className="flex justify-end print:hidden">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Download className="h-4 w-4 mr-2" />
+              Download analysis report
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -535,5 +590,250 @@ function SkeletonResult() {
         ))}
       </div>
     </div>
+  );
+}
+
+function bandClass(v: number) {
+  if (v >= 80) return "text-emerald-600";
+  if (v >= 60) return "text-primary";
+  if (v >= 40) return "text-amber-600";
+  return "text-destructive";
+}
+
+function RoleMatchCards({
+  matches,
+}: {
+  matches: { data_analyst: number; bi_analyst: number; business_analyst: number };
+}) {
+  const items = [
+    { key: "data_analyst", label: "Data Analyst", value: matches.data_analyst },
+    { key: "bi_analyst", label: "BI Analyst", value: matches.bi_analyst },
+    { key: "business_analyst", label: "Business Analyst", value: matches.business_analyst },
+  ];
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Target className="h-4 w-4 text-primary" /> Role match
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {items.map((it) => (
+            <div key={it.key} className="rounded-lg border bg-card p-4 space-y-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-medium">{it.label}</span>
+                <span className={`text-2xl font-semibold tabular-nums ${bandClass(it.value)}`}>
+                  {Math.round(it.value)}%
+                </span>
+              </div>
+              <Progress value={it.value} />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SubScoreGrid({
+  title,
+  icon,
+  data,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  data: { label: string; value: number }[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          {icon} {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {data.map((d) => (
+            <div key={d.label} className="rounded-lg border bg-card p-4 space-y-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs text-muted-foreground">{d.label}</span>
+                <span className={`text-xl font-semibold tabular-nums ${bandClass(d.value)}`}>
+                  {Math.round(d.value)}
+                </span>
+              </div>
+              <Progress value={d.value} />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ParsedFieldsCard({ fields }: { fields: any }) {
+  if (!fields || (typeof fields === "object" && Object.keys(fields).length === 0)) return null;
+  const education = (fields.education ?? []) as any[];
+  const experience = (fields.experience ?? []) as any[];
+  const projects = (fields.projects ?? []) as any[];
+  const certifications = (fields.certifications ?? []) as string[];
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileText className="h-4 w-4 text-primary" /> Parsed resume
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {(fields.name || fields.email || fields.phone) && (
+          <div className="text-sm">
+            {fields.name && <div className="font-semibold">{fields.name}</div>}
+            <div className="text-muted-foreground text-xs">
+              {[fields.email, fields.phone].filter(Boolean).join(" · ")}
+            </div>
+          </div>
+        )}
+        {education.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-muted-foreground" /> Education
+            </h4>
+            <ul className="space-y-1 text-sm">
+              {education.map((e, i) => (
+                <li key={i} className="text-muted-foreground">
+                  <span className="text-foreground font-medium">{e.degree}</span>
+                  {e.institution ? ` · ${e.institution}` : ""}
+                  {e.year ? ` · ${e.year}` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {experience.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-muted-foreground" /> Experience
+            </h4>
+            <ul className="space-y-3 text-sm">
+              {experience.map((x, i) => (
+                <li key={i}>
+                  <div className="font-medium">
+                    {x.title}
+                    {x.company ? ` — ${x.company}` : ""}
+                  </div>
+                  {x.duration && (
+                    <div className="text-xs text-muted-foreground">{x.duration}</div>
+                  )}
+                  {Array.isArray(x.highlights) && x.highlights.length > 0 && (
+                    <ul className="list-disc list-inside text-muted-foreground mt-1">
+                      {x.highlights.map((h: string, j: number) => (
+                        <li key={j}>{h}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {projects.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <FolderGit2 className="h-4 w-4 text-muted-foreground" /> Projects
+            </h4>
+            <ul className="space-y-2 text-sm">
+              {projects.map((p, i) => (
+                <li key={i}>
+                  <div className="font-medium">{p.name}</div>
+                  {p.description && (
+                    <div className="text-muted-foreground">{p.description}</div>
+                  )}
+                  {Array.isArray(p.tech) && p.tech.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {p.tech.map((t: string) => (
+                        <Badge key={t} variant="outline" className="text-[10px]">
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {certifications.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <Award className="h-4 w-4 text-muted-foreground" /> Certifications
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {certifications.map((c, i) => (
+                <Badge key={i} variant="secondary">
+                  {c}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function RewritesCard({
+  rewrites,
+}: {
+  rewrites: { summary?: string; bullets?: { original: string; improved: string }[]; projects?: { original: string; improved: string }[] };
+}) {
+  const hasContent =
+    !!rewrites.summary ||
+    (rewrites.bullets && rewrites.bullets.length > 0) ||
+    (rewrites.projects && rewrites.projects.length > 0);
+  if (!hasContent) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Pencil className="h-4 w-4 text-primary" /> AI rewrites
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {rewrites.summary && (
+          <div>
+            <h4 className="text-sm font-semibold mb-1">Improved summary</h4>
+            <p className="text-sm text-muted-foreground rounded-md border bg-muted/30 p-3">
+              {rewrites.summary}
+            </p>
+          </div>
+        )}
+        {rewrites.bullets && rewrites.bullets.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Stronger bullets</h4>
+            <div className="space-y-3">
+              {rewrites.bullets.map((b, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-2 text-sm">
+                  <div className="text-muted-foreground line-through">{b.original}</div>
+                  <div className="text-foreground">{b.improved}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {rewrites.projects && rewrites.projects.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Project rewrites</h4>
+            <div className="space-y-3">
+              {rewrites.projects.map((p, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-2 text-sm">
+                  <div className="text-muted-foreground line-through">{p.original}</div>
+                  <div className="text-foreground">{p.improved}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

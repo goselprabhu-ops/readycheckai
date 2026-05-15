@@ -87,12 +87,77 @@ export const analyzeResume = createServerFn({ method: "POST" })
       keywords: z.array(z.string()).max(20),
       suggestions: z.array(z.string()).max(8),
       detected_skills: z.array(z.object({ name: z.string(), level: z.number().min(0).max(100) })).max(20),
+      parsed_fields: z.object({
+        name: z.string().optional().default(""),
+        email: z.string().optional().default(""),
+        phone: z.string().optional().default(""),
+        education: z.array(z.object({
+          degree: z.string().optional().default(""),
+          institution: z.string().optional().default(""),
+          year: z.string().optional().default(""),
+        })).max(8).optional().default([]),
+        experience: z.array(z.object({
+          title: z.string().optional().default(""),
+          company: z.string().optional().default(""),
+          duration: z.string().optional().default(""),
+          highlights: z.array(z.string()).max(6).optional().default([]),
+        })).max(8).optional().default([]),
+        projects: z.array(z.object({
+          name: z.string().optional().default(""),
+          description: z.string().optional().default(""),
+          tech: z.array(z.string()).max(10).optional().default([]),
+        })).max(8).optional().default([]),
+        certifications: z.array(z.string()).max(12).optional().default([]),
+      }).optional().default({}),
+      role_matches: z.object({
+        data_analyst: z.number().min(0).max(100),
+        bi_analyst: z.number().min(0).max(100),
+        business_analyst: z.number().min(0).max(100),
+      }),
+      ats_breakdown: z.object({
+        formatting: z.number().min(0).max(100),
+        readability: z.number().min(0).max(100),
+        keyword_optimization: z.number().min(0).max(100),
+        section_structure: z.number().min(0).max(100),
+      }),
+      quality_breakdown: z.object({
+        impact_statements: z.number().min(0).max(100),
+        quantified_achievements: z.number().min(0).max(100),
+        action_verbs: z.number().min(0).max(100),
+        project_descriptions: z.number().min(0).max(100),
+      }),
+      rewrites: z.object({
+        summary: z.string().optional().default(""),
+        bullets: z.array(z.object({
+          original: z.string(),
+          improved: z.string(),
+        })).max(6).optional().default([]),
+        projects: z.array(z.object({
+          original: z.string(),
+          improved: z.string(),
+        })).max(4).optional().default([]),
+      }).optional().default({}),
     });
 
     const { output } = await generateText({
       model,
       output: Output.object({ schema }),
-      prompt: `You are an expert ATS resume analyzer. Analyze the resume against the target role "${data.targetRole}".\n\nReturn a strict ATS score (0-100), a 1-2 sentence summary, key strengths, missing gaps, top keywords found, concrete suggestions, and detected skills with proficiency levels (0-100).\n\nRESUME:\n${data.text}`,
+      prompt: `You are a recruiter-grade ATS resume analyzer for analytics careers.
+
+Target role: "${data.targetRole}".
+
+Tasks:
+1. Strict ATS score 0-100 plus 1-2 sentence summary.
+2. Key strengths, gaps, top keywords, concrete suggestions.
+3. Detected skills with proficiency 0-100. Use semantic understanding — infer SQL, Power BI, Tableau, dashboards, analytics, business communication even if exact keywords are missing.
+4. parsed_fields: extract name, email, phone, education[], experience[], projects[], certifications[].
+5. role_matches: % fit (0-100) for Data Analyst, BI Analyst, Business Analyst.
+6. ats_breakdown: 0-100 each for formatting, readability, keyword_optimization, section_structure.
+7. quality_breakdown: 0-100 each for impact_statements, quantified_achievements, action_verbs, project_descriptions.
+8. rewrites: an improved summary, up to 6 bullet rewrites (original + improved with quantified impact and strong verbs), up to 4 project description rewrites.
+
+RESUME:
+${data.text}`,
     });
 
     const analysis = await persistCanonicalAnalysis(supabase, {
@@ -108,12 +173,25 @@ export const analyzeResume = createServerFn({ method: "POST" })
       extraction_confidence: data.extractionConfidence ?? null,
       parser_status: (data.parserStatus as ParserStatus | undefined) ?? "ok",
       extraction_error: null,
+      parsed_fields: output.parsed_fields ?? {},
+      role_matches: output.role_matches,
+      ats_breakdown: output.ats_breakdown,
+      quality_breakdown: output.quality_breakdown,
+      rewrites: output.rewrites ?? {},
     });
 
     // upsert skills (greatest-level semantics, deduped)
     await upsertSkills(supabase, userId, "resume", output.detected_skills);
 
-    return { analysis, detected_skills: output.detected_skills };
+    return {
+      analysis,
+      detected_skills: output.detected_skills,
+      parsed_fields: output.parsed_fields,
+      role_matches: output.role_matches,
+      ats_breakdown: output.ats_breakdown,
+      quality_breakdown: output.quality_breakdown,
+      rewrites: output.rewrites,
+    };
   });
 
 // ---------------------------------------------------------------------------
@@ -330,6 +408,11 @@ async function persistCanonicalAnalysis(
     extraction_confidence: number | null;
     parser_status: ParserStatus | null;
     extraction_error: string | null;
+    parsed_fields?: any;
+    role_matches?: any;
+    ats_breakdown?: any;
+    quality_breakdown?: any;
+    rewrites?: any;
   },
 ) {
   if (row.resume_id) {
