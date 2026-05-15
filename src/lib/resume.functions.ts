@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { extractPdf, type ParserStatus } from "./pdf-extract";
 import { chargeAiUsage, AiCapError } from "./ai-guardrails";
+import { enforceCooldown } from "./security";
 import {
   decideAnalyzer,
   PARSER_STATUS_MESSAGES,
@@ -362,6 +363,8 @@ export const runResumePipeline = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    await enforceCooldown(supabase, "resume_analysis", 30);
 
     // 1. Download + extract
     const { data: blob, error: dlErr } = await supabase.storage
