@@ -31,11 +31,13 @@ export const exportMyData = createServerFn({ method: "POST" })
       "ai_usage_daily",
     ] as const;
 
-    const out: Record<string, unknown> = {};
+    const out: Record<string, any> = {};
     for (const t of tables) {
       // `profiles` is keyed by `id`, everything else by `user_id`.
       const filterCol = t === "profiles" ? "id" : "user_id";
-      const { data, error } = await supabase.from(t).select("*").eq(filterCol, userId);
+      const { data, error } = await (supabase.from(t as any) as any)
+        .select("*")
+        .eq(filterCol, userId);
       out[t] = error ? { error: error.message } : data ?? [];
     }
 
@@ -51,6 +53,6 @@ export const exportMyData = createServerFn({ method: "POST" })
       exported_at: new Date().toISOString(),
       user_id: userId,
       schema_version: 1,
-      data: out,
+      data: out as any,
     };
   });
