@@ -13,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile, updateMyProfile, type ProfileInput } from "@/lib/profile.functions";
 import { profileCompletion } from "@/lib/profile-completion";
 import { toast } from "sonner";
-import { Plus, Trash2, Camera, Loader2, Save, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Camera, Loader2, Save, CheckCircle2, Download } from "lucide-react";
+import { exportMyData } from "@/lib/gdpr.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -33,6 +34,8 @@ function ProfilePage() {
   const nav = useNavigate();
   const fetchProfile = useServerFn(getMyProfile);
   const saveProfile = useServerFn(updateMyProfile);
+  const runExport = useServerFn(exportMyData);
+  const [exporting, setExporting] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -345,6 +348,40 @@ function ProfilePage() {
       <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-2xl border bg-background/90 p-3 shadow backdrop-blur">
         <span className="text-sm text-muted-foreground">Profile is {completion}% complete</span>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            disabled={exporting}
+            className="rounded-xl"
+            onClick={async () => {
+              setExporting(true);
+              try {
+                const payload = await runExport();
+                const blob = new Blob([JSON.stringify(payload, null, 2)], {
+                  type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `readychecklab-export-${new Date()
+                  .toISOString()
+                  .slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast.success("Data exported");
+              } catch (e: any) {
+                toast.error(e?.message ?? "Export failed");
+              } finally {
+                setExporting(false);
+              }
+            }}
+          >
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Export my data
+          </Button>
           <Button variant="outline" onClick={() => save(false)} disabled={saving} className="rounded-xl">
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Save draft
