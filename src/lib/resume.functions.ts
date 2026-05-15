@@ -3,8 +3,13 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
-import { extractPdfTextFromBytes } from "./pdf-extract";
+import { extractPdf, type ParserStatus } from "./pdf-extract";
 import { chargeAiUsage, AiCapError } from "./ai-guardrails";
+import {
+  decideAnalyzer,
+  PARSER_STATUS_MESSAGES,
+  type ResumeAnalysisMethod,
+} from "./resume-pipeline";
 
 /**
  * Idempotent skill upsert: if a row already exists for (user_id, name),
