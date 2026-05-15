@@ -46,9 +46,11 @@ export type Database = {
           assessment_id: string
           completed_at: string | null
           created_at: string
+          expires_at: string | null
           id: string
           max_score: number
           started_at: string
+          status: string
           total_score: number
           user_id: string
         }
@@ -56,9 +58,11 @@ export type Database = {
           assessment_id: string
           completed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           max_score?: number
           started_at?: string
+          status?: string
           total_score?: number
           user_id: string
         }
@@ -66,9 +70,11 @@ export type Database = {
           assessment_id?: string
           completed_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           max_score?: number
           started_at?: string
+          status?: string
           total_score?: number
           user_id?: string
         }

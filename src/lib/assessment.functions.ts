@@ -8,6 +8,8 @@ import { chargeAiUsage } from "./ai-guardrails";
 
 const QUESTIONS_PER_ATTEMPT = 10;
 const SECONDS_PER_QUESTION = 45;
+const SUBMIT_GRACE_SECONDS = 10;
+const RECENT_ATTEMPTS_LOOKBACK = 3;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
@@ -47,10 +49,30 @@ export const startAttempt = createServerFn({ method: "POST" })
     if (qErr) throw new Error(qErr.message);
     if (!pool || pool.length === 0) throw new Error("No questions available");
 
-    const picked = shuffle(pool as any[]).slice(
-      0,
-      Math.min(QUESTIONS_PER_ATTEMPT, pool.length),
-    );
+    // Anti-repeat: prefer questions the user has not seen recently.
+    const { data: recentAtt } = await supabase
+      .from("assessment_attempts")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("assessment_id", data.assessmentId)
+      .order("started_at", { ascending: false })
+      .limit(RECENT_ATTEMPTS_LOOKBACK);
+    const recentIds = (recentAtt ?? []).map((r: any) => r.id as string);
+    let seenIds = new Set<string>();
+    if (recentIds.length) {
+      const { data: seenRows } = await supabase
+        .from("scores")
+        .select("question_id")
+        .in("attempt_id", recentIds);
+      seenIds = new Set((seenRows ?? []).map((r: any) => r.question_id as string));
+    }
+    const fresh = (pool as any[]).filter((q) => !seenIds.has(q.id));
+    const stale = (pool as any[]).filter((q) => seenIds.has(q.id));
+    const target = Math.min(QUESTIONS_PER_ATTEMPT, pool.length);
+    const picked = [
+      ...shuffle(fresh).slice(0, target),
+      ...shuffle(stale).slice(0, Math.max(0, target - fresh.length)),
+    ].slice(0, target);
     const sanitized = picked.map((q: any) => ({
       id: q.id as string,
       prompt: q.prompt as string,
@@ -60,6 +82,7 @@ export const startAttempt = createServerFn({ method: "POST" })
 
     const maxScore = sanitized.reduce((s, q) => s + (q.points || 1), 0);
     const durationSeconds = sanitized.length * SECONDS_PER_QUESTION;
+    const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
 
     // Create attempt row (server-issued started_at)
     const { data: att, error: attErr } = await supabase
@@ -69,14 +92,17 @@ export const startAttempt = createServerFn({ method: "POST" })
         assessment_id: data.assessmentId,
         max_score: maxScore,
         total_score: 0,
+        expires_at: expiresAt,
+        status: "in_progress",
       } as any)
-      .select("id, started_at")
+      .select("id, started_at, expires_at")
       .single();
     if (attErr || !att) throw new Error(attErr?.message ?? "Could not start attempt");
 
     return {
       attemptId: (att as any).id as string,
       startedAt: (att as any).started_at as string,
+      expiresAt: (att as any).expires_at as string,
       durationSeconds,
       assessment: {
         id: (def as any).id,
@@ -116,7 +142,7 @@ export const submitAttempt = createServerFn({ method: "POST" })
     // Load attempt (RLS scopes to user)
     const { data: att, error: attErr } = await supabase
       .from("assessment_attempts")
-      .select("id, user_id, assessment_id, started_at, completed_at, max_score, total_score")
+      .select("id, user_id, assessment_id, started_at, expires_at, completed_at, max_score, total_score, status")
       .eq("id", data.attemptId)
       .single();
     if (attErr || !att) throw new Error("Attempt not found");
@@ -127,9 +153,9 @@ export const submitAttempt = createServerFn({ method: "POST" })
       return await buildReview(supabase, att as any);
     }
 
-    // Server-issued timer enforcement (with 10s grace)
-    const startedAt = new Date((att as any).started_at).getTime();
-    const elapsedMs = Date.now() - startedAt;
+    // Server-issued expiry enforcement (with grace window).
+    const expiresAtMs = new Date((att as any).expires_at).getTime();
+    const expired = Date.now() > expiresAtMs + SUBMIT_GRACE_SECONDS * 1000;
 
     // Load the questions referenced by the submitted answers.
     // Public meta (assessment_id, points) via user-scoped client; secrets via service-role admin.
@@ -167,16 +193,15 @@ export const submitAttempt = createServerFn({ method: "POST" })
       if (q.assessment_id !== (att as any).assessment_id) throw new Error("Question/attempt mismatch");
     }
 
-    const durationMs = (data.answers.length * SECONDS_PER_QUESTION + 10) * 1000;
-    const timedOut = elapsedMs > durationMs;
-
-    // Score (timed-out submits count as 0, but we still record per-question selections)
+    // Grade what was actually submitted. If the attempt expired beyond the
+    // grace window we still record the answers (auto-submit semantics) but
+    // mark the attempt as "expired" so the UI can surface that.
     let earned = 0;
     let total = 0;
     const scoreRows = data.answers.map((a) => {
       const q = qMap.get(a.questionId)!;
       total += q.points;
-      const isCorrect = !timedOut && a.selected === q.correct_answer;
+      const isCorrect = a.selected != null && a.selected === q.correct_answer;
       if (isCorrect) earned += q.points;
       return {
         attempt_id: data.attemptId,
@@ -197,6 +222,7 @@ export const submitAttempt = createServerFn({ method: "POST" })
         total_score: earned,
         max_score: total,
         completed_at: new Date().toISOString(),
+        status: expired ? "expired" : "submitted",
       } as any)
       .eq("id", data.attemptId);
     if (updErr) throw new Error(updErr.message);
