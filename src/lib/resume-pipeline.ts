@@ -41,6 +41,7 @@ export function decideAnalyzer(opts: {
  */
 export const PARSER_STATUS_MESSAGES: Record<ParserStatus, string> = {
   ok: "Resume parsed successfully.",
+  ocr_ok: "Scanned PDF read with OCR — accuracy may vary.",
   empty_extraction:
     "We couldn't read enough text from this PDF. Try exporting it as a text-based PDF instead of a scan.",
   image_only_pdf:
