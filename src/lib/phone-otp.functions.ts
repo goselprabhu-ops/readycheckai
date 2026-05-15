@@ -29,6 +29,13 @@ async function sendMsg91Sms(to: string, code: string) {
   const mobile = to.replace(/^\+/, "");
 
   const url = new URL("https://control.msg91.com/api/v5/flow");
+  const reqBody = {
+    template_id: templateId,
+    sender: senderId,
+    short_url: "0",
+    recipients: [{ mobiles: mobile, otp: code }],
+  };
+  console.log("[MSG91] sending", { url: url.toString(), body: { ...reqBody, recipients: [{ mobiles: mobile, otp: "****" }] } });
   const res = await fetch(url.toString(), {
     method: "POST",
     headers: {
@@ -36,14 +43,10 @@ async function sendMsg91Sms(to: string, code: string) {
       "Content-Type": "application/json",
       accept: "application/json",
     },
-    body: JSON.stringify({
-      template_id: templateId,
-      sender: senderId,
-      short_url: "0",
-      recipients: [{ mobiles: mobile, otp: code }],
-    }),
+    body: JSON.stringify(reqBody),
   });
   const data = await res.json().catch(() => ({}));
+  console.log("[MSG91] response", { status: res.status, data });
   if (!res.ok || (data as any)?.type === "error") {
     throw new Error(
       `MSG91 error [${res.status}]: ${(data as any)?.message || JSON.stringify(data)}`,
