@@ -652,10 +652,13 @@ export type Database = {
         Row: {
           ats_score: number
           created_at: string
+          extraction_confidence: number | null
+          extraction_error: string | null
           gaps: Json
           id: string
           keywords: Json
           method: string
+          parser_status: string | null
           resume_id: string
           strengths: Json
           suggestions: Json
@@ -665,10 +668,13 @@ export type Database = {
         Insert: {
           ats_score?: number
           created_at?: string
+          extraction_confidence?: number | null
+          extraction_error?: string | null
           gaps?: Json
           id?: string
           keywords?: Json
           method?: string
+          parser_status?: string | null
           resume_id: string
           strengths?: Json
           suggestions?: Json
@@ -678,10 +684,13 @@ export type Database = {
         Update: {
           ats_score?: number
           created_at?: string
+          extraction_confidence?: number | null
+          extraction_error?: string | null
           gaps?: Json
           id?: string
           keywords?: Json
           method?: string
+          parser_status?: string | null
           resume_id?: string
           strengths?: Json
           suggestions?: Json
