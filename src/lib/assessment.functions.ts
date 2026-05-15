@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { chargeAiUsage } from "./ai-guardrails";
+import { enforceCooldown } from "./security";
 
 const QUESTIONS_PER_ATTEMPT = 10;
 const SECONDS_PER_QUESTION = 45;
@@ -147,6 +148,7 @@ export const submitAttempt = createServerFn({ method: "POST" })
       .single();
     if (attErr || !att) throw new Error("Attempt not found");
     if ((att as any).user_id !== userId) throw new Error("Forbidden");
+    await enforceCooldown(supabase, "assessment_submit", 5);
 
     // Idempotent path: already completed → return saved review
     if ((att as any).completed_at) {
@@ -339,6 +341,7 @@ export const generateAssessment = createServerFn({ method: "POST" })
     if (!apiKey) throw new Error("AI gateway not configured");
 
     // Enforce per-user daily AI cap.
+    await enforceCooldown(supabase, "assessment_gen", 30);
     await chargeAiUsage(supabase, userId, "assessment_gen");
 
     const gateway = createLovableAiGatewayProvider(apiKey);
