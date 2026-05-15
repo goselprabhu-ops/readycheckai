@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { computeReadiness, DEFAULT_WEIGHTS, type ReadinessWeights } from "./readiness";
+import {
+  computeReadinessV2,
+  DEFAULT_ROLE_PROFILE,
+  profileFromRow,
+  type RoleProfile,
+} from "./readiness-engine";
 
 const WeightsSchema = z
   .object({
@@ -23,9 +28,8 @@ export const recomputeReadiness = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const weights: ReadinessWeights = data.weights ?? DEFAULT_WEIGHTS;
 
-    const [{ data: attempts }, { data: ra }] = await Promise.all([
+    const [{ data: attempts }, { data: ra }, { data: profile }, { data: history }] = await Promise.all([
       supabase
         .from("assessments")
         .select("topic, score, total, created_at")
@@ -35,41 +39,73 @@ export const recomputeReadiness = createServerFn({ method: "POST" })
         .from("resume_analyses")
         .select("ats_score, created_at")
         .order("created_at", { ascending: false })
-        .limit(1),
+        .limit(5),
+      supabase
+        .from("profiles")
+        .select("target_role")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("readiness_history")
+        .select("readiness, computed_at")
+        .order("computed_at", { ascending: false })
+        .limit(5),
     ]);
 
-    const latestByTopic = (key: string): { score: number; at: string | null } => {
-      const a = (attempts ?? []).find((x: any) =>
+    // Aggregate per-pillar signals (latest score, recency, sample count).
+    const pillarSignal = (key: string) => {
+      const matches = (attempts ?? []).filter((x: any) =>
         (x.topic ?? "").toLowerCase().includes(key),
       );
-      return a ? { score: pct(a.score, a.total), at: a.created_at ?? null } : { score: 0, at: null };
+      const latest = matches[0] as any;
+      return {
+        score: latest ? pct(latest.score, latest.total) : 0,
+        at: latest?.created_at ?? null,
+        samples: matches.length,
+      };
     };
 
-    const sqlSig = latestByTopic("sql");
-    const pythonSig = latestByTopic("python");
-    const resumeRow = ra?.[0] as any;
-    const resumeScore = resumeRow?.ats_score ?? 0;
-    const resumeAt = resumeRow?.created_at ?? null;
+    const resumeRows = (ra ?? []) as any[];
+    const resumeSig = {
+      score: resumeRows[0]?.ats_score ?? 0,
+      at: resumeRows[0]?.created_at ?? null,
+      samples: resumeRows.length,
+    };
 
-    const result = computeReadiness(
+    // Resolve role profile (DB-backed, falls back to default Data Analyst).
+    let roleProfile: RoleProfile = DEFAULT_ROLE_PROFILE;
+    const targetSlug = (profile as any)?.target_role as string | null | undefined;
+    if (targetSlug) {
+      const { data: roleRow } = await supabase
+        .from("target_roles")
+        .select("slug, name, skill_weights, benchmark_ranges")
+        .eq("slug", targetSlug)
+        .maybeSingle();
+      if (roleRow) roleProfile = profileFromRow(roleRow as any);
+    }
+
+    // Legacy override: caller can still pass raw weights.
+    if (data.weights) {
+      roleProfile = { ...roleProfile, weights: data.weights };
+    }
+
+    const result = computeReadinessV2(
       {
-        sql: sqlSig.score,
-        python: pythonSig.score,
-        resume: resumeScore,
-        sqlAt: sqlSig.at,
-        pythonAt: pythonSig.at,
-        resumeAt: resumeAt,
+        sql: pillarSignal("sql"),
+        python: pillarSignal("python"),
+        resume: resumeSig,
+        history: (history ?? []) as any,
       },
-      weights,
+      roleProfile,
     );
 
     const { data: row, error } = await supabase
       .from("readiness_history")
       .insert({
         user_id: userId,
-        sql_score: result.sql,
-        python_score: result.python,
-        resume_score: result.resume,
+        sql_score: result.pillars.sql,
+        python_score: result.pillars.python,
+        resume_score: result.pillars.resume,
         readiness: result.readiness,
         level: result.level,
         weights: result.weights,
