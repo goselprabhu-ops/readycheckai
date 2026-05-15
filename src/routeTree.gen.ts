@@ -38,6 +38,7 @@ import { Route as AuthenticatedCollegeRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAssessmentRouteImport } from './routes/_authenticated/assessment'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicWebVitalsRouteImport } from './routes/api/public/web-vitals'
 import { Route as ApiPublicHealthIndexRouteImport } from './routes/api/public/health/index'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -191,6 +192,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebVitalsRoute = ApiPublicWebVitalsRouteImport.update({
+  id: '/api/public/web-vitals',
+  path: '/api/public/web-vitals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHealthIndexRoute = ApiPublicHealthIndexRouteImport.update({
   id: '/api/public/health/',
   path: '/api/public/health/',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
   '/_authenticated/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/health/email-queue': typeof ApiPublicHealthEmailQueueRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/api/public/web-vitals'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
     | '/lovable/email/auth/preview'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/roadmap'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/api/public/web-vitals'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
     | '/lovable/email/auth/preview'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/_authenticated/roadmap'
     | '/_authenticated/verify-phone'
     | '/email/unsubscribe'
+    | '/api/public/web-vitals'
     | '/lovable/email/suppression'
     | '/api/public/health/email-queue'
     | '/lovable/email/auth/preview'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  ApiPublicWebVitalsRoute: typeof ApiPublicWebVitalsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHealthEmailQueueRoute: typeof ApiPublicHealthEmailQueueRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -690,6 +703,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/web-vitals': {
+      id: '/api/public/web-vitals'
+      path: '/api/public/web-vitals'
+      fullPath: '/api/public/web-vitals'
+      preLoaderRoute: typeof ApiPublicWebVitalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/health/': {
       id: '/api/public/health/'
       path: '/api/public/health'
@@ -794,6 +814,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  ApiPublicWebVitalsRoute: ApiPublicWebVitalsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHealthEmailQueueRoute: ApiPublicHealthEmailQueueRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
@@ -806,3 +827,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
