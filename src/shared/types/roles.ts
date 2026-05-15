@@ -7,8 +7,14 @@ export const ANALYTICS_ROLES = [
 
 export type AnalyticsRole = (typeof ANALYTICS_ROLES)[number];
 
-// App-level roles (matches public.app_role enum in Postgres).
-export type AppRole = "admin" | "moderator" | "student" | "recruiter" | "college";
+// App-level roles (matches public.app_role enum in Postgres + use-auth hook).
+export type AppRole =
+  | "student"
+  | "recruiter"
+  | "college_admin"
+  | "institute_admin"
+  | "gov_admin"
+  | "admin";
 
 export const ANALYTICS_ROLE_LABELS: Record<AnalyticsRole, string> = {
   data_analyst: "Data Analyst",
