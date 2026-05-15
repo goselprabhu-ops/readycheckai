@@ -322,7 +322,20 @@ function ResultView({ result }: { result: AnalysisResult }) {
     >
       <div className="flex items-center gap-4">
         <ScoreRing value={result.score} label="Score" />
-        <p className="text-sm">{(result.analysis as any)?.summary}</p>
+        <div className="space-y-2">
+          <Badge
+            variant={result.mode === "ai" ? "default" : "secondary"}
+            className="text-[10px] uppercase tracking-wide"
+            aria-label={
+              result.mode === "ai"
+                ? "Analyzed by AI"
+                : "Analyzed by deterministic keyword fallback"
+            }
+          >
+            {result.mode === "ai" ? "AI analysis" : "Keyword fallback"}
+          </Badge>
+          <p className="text-sm">{(result.analysis as any)?.summary}</p>
+        </div>
       </div>
 
       <Section
