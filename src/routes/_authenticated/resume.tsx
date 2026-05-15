@@ -383,7 +383,44 @@ function ResumePage() {
         </Card>
       </div>
 
-      {result && <BreakdownCard result={result} />}
+      {result && (
+        <div id="resume-report" className="space-y-6">
+          {result.role_matches && <RoleMatchCards matches={result.role_matches} />}
+          {result.ats_breakdown && (
+            <SubScoreGrid
+              title="ATS compatibility breakdown"
+              icon={<Gauge className="h-4 w-4 text-primary" />}
+              data={[
+                { label: "Formatting", value: result.ats_breakdown.formatting },
+                { label: "Readability", value: result.ats_breakdown.readability },
+                { label: "Keyword optimization", value: result.ats_breakdown.keyword_optimization },
+                { label: "Section structure", value: result.ats_breakdown.section_structure },
+              ]}
+            />
+          )}
+          {result.quality_breakdown && (
+            <SubScoreGrid
+              title="Resume quality"
+              icon={<Sparkles className="h-4 w-4 text-primary" />}
+              data={[
+                { label: "Impact statements", value: result.quality_breakdown.impact_statements },
+                { label: "Quantified achievements", value: result.quality_breakdown.quantified_achievements },
+                { label: "Action verbs", value: result.quality_breakdown.action_verbs },
+                { label: "Project descriptions", value: result.quality_breakdown.project_descriptions },
+              ]}
+            />
+          )}
+          {result.parsed_fields && <ParsedFieldsCard fields={result.parsed_fields} />}
+          {result.rewrites && <RewritesCard rewrites={result.rewrites} />}
+          <BreakdownCard result={result} />
+          <div className="flex justify-end print:hidden">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Download className="h-4 w-4 mr-2" />
+              Download analysis report
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
