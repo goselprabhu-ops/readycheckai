@@ -470,12 +470,49 @@ export type Database = {
         }
         Relationships: []
       }
-      questions: {
+      question_secrets: {
         Row: {
-          assessment_id: string
           correct_answer: string
           created_at: string
           explanation: string | null
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          explanation?: string | null
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          explanation?: string | null
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_secrets_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_secrets_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "questions_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          assessment_id: string
+          created_at: string
           id: string
           options: Json
           order_index: number
@@ -484,9 +521,7 @@ export type Database = {
         }
         Insert: {
           assessment_id: string
-          correct_answer: string
           created_at?: string
-          explanation?: string | null
           id?: string
           options?: Json
           order_index?: number
@@ -495,9 +530,7 @@ export type Database = {
         }
         Update: {
           assessment_id?: string
-          correct_answer?: string
           created_at?: string
-          explanation?: string | null
           id?: string
           options?: Json
           order_index?: number
@@ -756,6 +789,13 @@ export type Database = {
             referencedRelation: "questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "scores_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       skills: {
@@ -859,7 +899,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      questions_public: {
+        Row: {
+          assessment_id: string | null
+          created_at: string | null
+          id: string | null
+          options: Json | null
+          order_index: number | null
+          points: number | null
+          prompt: string | null
+        }
+        Insert: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          prompt?: string | null
+        }
+        Update: {
+          assessment_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          prompt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       delete_email: {
