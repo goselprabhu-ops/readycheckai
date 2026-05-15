@@ -206,7 +206,7 @@ function RolePanel({ role }: { role: AnalyticsRole }) {
                     <div className="truncate text-sm font-medium">{a.topic}</div>
                     <div className="text-xs text-muted-foreground">{formatDate(a.created_at)}</div>
                   </div>
-                  <ScorePill value={a.score} />
+                  <ScorePill score={a.score} />
                 </li>
               ))}
             </ul>
