@@ -74,13 +74,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "assessment_attempts_assessment_fk"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "assessment_definitions"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "assessment_attempts_assessment_id_fkey"
             columns: ["assessment_id"]
             isOneToOne: false
@@ -513,13 +506,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "questions_assessment_fk"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "assessment_definitions"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "questions_assessment_id_fkey"
             columns: ["assessment_id"]
             isOneToOne: false
@@ -609,13 +595,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "recommendations_attempt_fk"
-            columns: ["attempt_id"]
-            isOneToOne: false
-            referencedRelation: "assessment_attempts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "recommendations_attempt_id_fkey"
             columns: ["attempt_id"]
             isOneToOne: false
@@ -662,13 +641,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "resume_analyses_resume_fk"
-            columns: ["resume_id"]
-            isOneToOne: false
-            referencedRelation: "resumes"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "resume_analyses_resume_id_fkey"
             columns: ["resume_id"]
@@ -768,24 +740,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "scores_attempt_fk"
-            columns: ["attempt_id"]
-            isOneToOne: false
-            referencedRelation: "assessment_attempts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "scores_attempt_id_fkey"
             columns: ["attempt_id"]
             isOneToOne: false
             referencedRelation: "assessment_attempts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scores_question_fk"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "questions"
             referencedColumns: ["id"]
           },
           {
