@@ -26,6 +26,18 @@ export const getAdminOverview = createServerFn({ method: "POST" })
       supabase.from("employability_scores").select("composite"),
     ]);
 
+    // Method breakdown for resume analyses (ai vs deterministic fallback).
+    const [aiCount, rulesCount] = await Promise.all([
+      supabase
+        .from("resume_analyses")
+        .select("id", { count: "exact", head: true })
+        .eq("method", "ai"),
+      supabase
+        .from("resume_analyses")
+        .select("id", { count: "exact", head: true })
+        .eq("method", "rules"),
+    ]);
+
     const composites = (scores.data ?? []).map((r: any) => r.composite ?? 0);
     const avgComposite = composites.length
       ? Math.round(composites.reduce((a: number, b: number) => a + b, 0) / composites.length)
@@ -36,8 +48,44 @@ export const getAdminOverview = createServerFn({ method: "POST" })
         users: profiles.count ?? 0,
         assessments: assessments.count ?? 0,
         resumes: resumes.count ?? 0,
+        resumesAi: aiCount.count ?? 0,
+        resumesRules: rulesCount.count ?? 0,
         avgComposite,
       },
+    };
+  });
+
+export const listAdminResumeAnalyses = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+
+    const { data: rows, error } = await supabase
+      .from("resume_analyses")
+      .select("id, user_id, ats_score, method, summary, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+
+    const ids = Array.from(new Set((rows ?? []).map((r: any) => r.user_id)));
+    const { data: profiles } = ids.length
+      ? await supabase.from("profiles").select("id, full_name").in("id", ids)
+      : { data: [] as any[] };
+    const nameById = new Map<string, string>(
+      (profiles ?? []).map((p: any) => [p.id, p.full_name ?? ""]),
+    );
+
+    return {
+      analyses: (rows ?? []).map((r: any) => ({
+        id: r.id as string,
+        user_id: r.user_id as string,
+        full_name: nameById.get(r.user_id) ?? null,
+        ats_score: r.ats_score as number,
+        method: (r.method ?? "ai") as "ai" | "rules",
+        summary: r.summary as string | null,
+        created_at: r.created_at as string,
+      })),
     };
   });
 
