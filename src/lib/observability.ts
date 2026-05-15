@@ -46,10 +46,10 @@ export async function logEvent(input: LogEventInput): Promise<void> {
     await supabaseAdmin.rpc("log_system_event", {
       _event_type: input.eventType,
       _severity: input.severity ?? "info",
-      _source: input.source ?? null,
-      _route: input.route ?? null,
-      _message: input.message ?? null,
-      _latency_ms: input.latencyMs ?? null,
+      _source: input.source ?? undefined,
+      _route: input.route ?? undefined,
+      _message: input.message ?? undefined,
+      _latency_ms: input.latencyMs ?? undefined,
       _metadata: (input.metadata ?? {}) as never,
     });
   } catch {
