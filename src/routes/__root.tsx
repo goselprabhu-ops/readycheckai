@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 import { useEffect } from "react";
 import { startWebVitals } from "@/lib/web-vitals";
+import { startErrorReporter } from "@/lib/error-reporter";
 
 function NotFoundComponent() {
   return (
@@ -119,6 +120,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useEffect(() => {
     startWebVitals();
+    startErrorReporter();
   }, []);
 
   return (
