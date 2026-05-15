@@ -12,7 +12,17 @@ import {
   listAdminResumeAnalyses,
   setUserRole,
 } from "@/lib/admin.functions";
-import { Users, FileText, Brain, TrendingUp, ShieldCheck, AlertTriangle } from "lucide-react";
+import { getSystemDiagnostics } from "@/lib/observability.functions";
+import {
+  Users,
+  FileText,
+  Brain,
+  TrendingUp,
+  ShieldCheck,
+  AlertTriangle,
+  Activity,
+  RefreshCw,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -49,6 +59,9 @@ function AdminPanel() {
   const list = useServerFn(listAdminUsers);
   const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
+  const diagnostics = useServerFn(getSystemDiagnostics);
+  const [diag, setDiag] = useState<Awaited<ReturnType<typeof getSystemDiagnostics>> | null>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
   const [totals, setTotals] = useState({
     users: 0,
     assessments: 0,
@@ -109,8 +122,13 @@ function AdminPanel() {
   useEffect(() => {
     load();
     loadEmailHealth();
+    loadDiagnostics();
     const t = setInterval(loadEmailHealth, 60_000);
-    return () => clearInterval(t);
+    const d = setInterval(loadDiagnostics, 120_000);
+    return () => {
+      clearInterval(t);
+      clearInterval(d);
+    };
   }, []);
 
   const toggleRole = async (targetUserId: string, role: Role, grant: boolean) => {
