@@ -610,6 +610,7 @@ export type Database = {
           gaps: Json
           id: string
           keywords: Json
+          method: string
           resume_id: string
           strengths: Json
           suggestions: Json
@@ -622,6 +623,7 @@ export type Database = {
           gaps?: Json
           id?: string
           keywords?: Json
+          method?: string
           resume_id: string
           strengths?: Json
           suggestions?: Json
@@ -634,6 +636,7 @@ export type Database = {
           gaps?: Json
           id?: string
           keywords?: Json
+          method?: string
           resume_id?: string
           strengths?: Json
           suggestions?: Json
