@@ -125,13 +125,7 @@ function OnboardingPage() {
   return (
     <div className="min-h-full">
       <div className="relative overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, oklch(0.26 0.13 265) 0%, oklch(0.38 0.18 262) 50%, oklch(0.55 0.22 260) 100%)",
-          }}
-        />
+        <div className="absolute inset-0" style={{ background: "var(--gradient-panel)" }} />
         <div className="relative max-w-4xl mx-auto px-6 py-10 text-white">
           <div className="text-xs uppercase tracking-widest text-white/70">Welcome aboard</div>
           <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">

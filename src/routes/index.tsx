@@ -116,7 +116,7 @@ function Index() {
           </div>
 
           <div className="relative hidden lg:block">
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-[oklch(0.55_0.22_260)/0.35] to-transparent blur-3xl" />
+            <div className="absolute -inset-6 rounded-[2.5rem] blur-3xl" style={{ background: "var(--gradient-hero-glow)" }} />
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_30px_120px_-20px_oklch(0.5_0.22_260/0.6)]">
               <img
                 src={heroImg}
@@ -125,7 +125,7 @@ function Index() {
                 height={1024}
                 className="w-full h-auto block"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.18_0.08_265)/0.6] via-transparent to-transparent" />
+              <div className="absolute inset-0" style={{ background: "var(--gradient-hero-veil-top)" }} />
             </div>
           </div>
         </section>
@@ -155,7 +155,7 @@ function Index() {
         <div className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10 items-center">
           <div className="relative rounded-2xl overflow-hidden border border-border shadow-lg">
             <img src={studentsImg} alt="Students collaborating with AI readiness dashboards" loading="lazy" width={1024} height={1024} className="w-full h-auto block" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[oklch(0.18_0.08_265)/0.5] via-transparent to-transparent" />
+            <div className="absolute inset-0" style={{ background: "var(--gradient-hero-veil-strong)" }} />
           </div>
           <div className="space-y-6">
           <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
@@ -204,7 +204,7 @@ function Index() {
       {/* Positioning */}
       <section className="relative bg-[oklch(0.18_0.08_265)] text-white overflow-hidden">
         <img src={networkImg} alt="" aria-hidden loading="lazy" width={1024} height={1024} className="absolute inset-0 w-full h-full object-cover opacity-30" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.18_0.08_265)/0.85] via-[oklch(0.18_0.08_265)/0.7] to-[oklch(0.18_0.08_265)]" />
+        <div className="absolute inset-0" style={{ background: "var(--gradient-hero-veil-bottom)" }} />
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-xs font-semibold tracking-wider text-[oklch(0.78_0.18_245)]">POSITIONING</span>

@@ -11,6 +11,8 @@ import {
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
+import { useEffect } from "react";
+import { startWebVitals } from "@/lib/web-vitals";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +117,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    startWebVitals();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
