@@ -906,6 +906,42 @@ export type Database = {
         }
         Relationships: []
       }
+      system_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          latency_ms: number | null
+          message: string | null
+          metadata: Json
+          route: string | null
+          severity: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          metadata?: Json
+          route?: string | null
+          severity?: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          metadata?: Json
+          route?: string | null
+          severity?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       target_roles: {
         Row: {
           benchmark_ranges: Json
@@ -1036,6 +1072,18 @@ export type Database = {
         }
         Returns: string
       }
+      log_system_event: {
+        Args: {
+          _event_type: string
+          _latency_ms?: number
+          _message?: string
+          _metadata?: Json
+          _route?: string
+          _severity?: string
+          _source?: string
+        }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1053,6 +1101,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      system_health_summary: { Args: never; Returns: Json }
     }
     Enums: {
       app_role:

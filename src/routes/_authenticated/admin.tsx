@@ -12,7 +12,17 @@ import {
   listAdminResumeAnalyses,
   setUserRole,
 } from "@/lib/admin.functions";
-import { Users, FileText, Brain, TrendingUp, ShieldCheck, AlertTriangle } from "lucide-react";
+import { getSystemDiagnostics } from "@/lib/observability.functions";
+import {
+  Users,
+  FileText,
+  Brain,
+  TrendingUp,
+  ShieldCheck,
+  AlertTriangle,
+  Activity,
+  RefreshCw,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -49,6 +59,9 @@ function AdminPanel() {
   const list = useServerFn(listAdminUsers);
   const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
+  const diagnostics = useServerFn(getSystemDiagnostics);
+  const [diag, setDiag] = useState<Awaited<ReturnType<typeof getSystemDiagnostics>> | null>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
   const [totals, setTotals] = useState({
     users: 0,
     assessments: 0,
@@ -106,11 +119,28 @@ function AdminPanel() {
     }
   };
 
+  const loadDiagnostics = async () => {
+    setDiagLoading(true);
+    try {
+      setDiag(await diagnostics());
+    } catch (e: any) {
+      // Surface errors quietly — diagnostics failure shouldn't block the panel.
+      console.warn("diagnostics failed", e);
+    } finally {
+      setDiagLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
     loadEmailHealth();
+    loadDiagnostics();
     const t = setInterval(loadEmailHealth, 60_000);
-    return () => clearInterval(t);
+    const d = setInterval(loadDiagnostics, 120_000);
+    return () => {
+      clearInterval(t);
+      clearInterval(d);
+    };
   }, []);
 
   const toggleRole = async (targetUserId: string, role: Role, grant: boolean) => {
@@ -198,6 +228,98 @@ function AdminPanel() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            System Diagnostics
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadDiagnostics}
+            disabled={diagLoading}
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${diagLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!diag ? (
+            <p className="text-sm text-muted-foreground">Loading diagnostics…</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Database</div>
+                  <div className="font-medium flex items-center gap-2">
+                    <Badge variant={diag.db.ok ? "default" : "destructive"}>
+                      {diag.db.ok ? "OK" : "DOWN"}
+                    </Badge>
+                    <span className="text-muted-foreground">{diag.db.latency_ms}ms</span>
+                  </div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Errors (24h)</div>
+                  <div className="font-medium">
+                    {diag.summary.totals?.error ?? 0} err ·{" "}
+                    {diag.summary.totals?.critical ?? 0} crit
+                  </div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">Resume (24h)</div>
+                  <div className="font-medium">
+                    {diag.resume.total} total · {diag.resume.failed} failed
+                  </div>
+                </div>
+                <div className="rounded-md border p-3">
+                  <div className="text-xs text-muted-foreground">AI calls today</div>
+                  <div className="font-medium">
+                    {Object.values(diag.ai_usage_today).reduce((a, b) => a + b, 0)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(diag.env).map(([k, v]) => (
+                  <Badge key={k} variant={v ? "secondary" : "destructive"} className="text-[10px]">
+                    {k}: {v ? "set" : "missing"}
+                  </Badge>
+                ))}
+              </div>
+
+              {(diag.summary.recent_errors?.length ?? 0) > 0 && (
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                    Recent errors
+                  </div>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {diag.summary.recent_errors!.map((e) => (
+                      <div
+                        key={e.id}
+                        className="text-xs flex items-start gap-2 border-l-2 border-destructive/60 pl-2"
+                      >
+                        <Badge
+                          variant={e.severity === "critical" ? "destructive" : "secondary"}
+                          className="text-[9px] uppercase"
+                        >
+                          {e.severity}
+                        </Badge>
+                        <span className="font-mono text-muted-foreground">
+                          {new Date(e.created_at).toLocaleTimeString()}
+                        </span>
+                        <span className="font-medium">{e.event_type}</span>
+                        <span className="text-muted-foreground truncate">{e.message ?? ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
