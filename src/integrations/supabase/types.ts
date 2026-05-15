@@ -863,27 +863,33 @@ export type Database = {
       }
       target_roles: {
         Row: {
+          benchmark_ranges: Json
           created_at: string
           description: string | null
           id: string
           is_active: boolean
           name: string
+          skill_weights: Json
           slug: string
         }
         Insert: {
+          benchmark_ranges?: Json
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          skill_weights?: Json
           slug: string
         }
         Update: {
+          benchmark_ranges?: Json
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          skill_weights?: Json
           slug?: string
         }
         Relationships: []
