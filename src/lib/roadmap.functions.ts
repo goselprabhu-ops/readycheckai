@@ -4,6 +4,7 @@ import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { chargeAiUsage } from "./ai-guardrails";
+import { enforceCooldown } from "./security";
 
 export const generateRoadmap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -22,6 +23,7 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       .limit(1);
 
     // Enforce per-user daily AI cap (roadmap generation counts as assessment_gen).
+    await enforceCooldown(supabase, "roadmap_generate", 60);
     await chargeAiUsage(supabase, userId, "assessment_gen");
 
     const apiKey = process.env.LOVABLE_API_KEY;
