@@ -19,7 +19,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
   return (
     <header
       className={`max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-3 sm:gap-4 ${isDark ? "text-white" : ""}`}
-      style={isDark ? { background: "linear-gradient(180deg, oklch(0.16 0.07 265) 0%, oklch(0.18 0.08 265) 60%, transparent 100%)" } : undefined}
+      style={isDark ? { background: "var(--gradient-header-dark)" } : undefined}
     >
       <Link to="/" className="flex items-center gap-3 shrink-0" aria-label="ReadyCheck Lab — Home">
         <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-16 sm:h-20 md:h-[6.825rem] w-auto" />
