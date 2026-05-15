@@ -417,6 +417,67 @@ function AdminPanel() {
 
       <Card>
         <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-primary" />
+              Audit Log
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadAudit}
+              disabled={auditLoading}
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${auditLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1 max-h-96 overflow-y-auto">
+            {auditRows.map((e) => (
+              <div
+                key={`${e.kind}-${e.id}`}
+                className="text-xs flex items-start gap-2 border-l-2 border-border pl-2 py-1"
+              >
+                <Badge variant="outline" className="text-[9px] uppercase">
+                  {e.kind}
+                </Badge>
+                <Badge
+                  variant={
+                    e.severity === "critical" || e.severity === "error"
+                      ? "destructive"
+                      : e.severity === "warn"
+                      ? "secondary"
+                      : "outline"
+                  }
+                  className="text-[9px] uppercase"
+                >
+                  {e.severity}
+                </Badge>
+                <span className="font-mono text-muted-foreground whitespace-nowrap">
+                  {new Date(e.created_at).toLocaleString()}
+                </span>
+                <span className="font-medium">{e.event_type}</span>
+                {e.route && (
+                  <span className="text-muted-foreground truncate">{e.route}</span>
+                )}
+                {e.message && (
+                  <span className="text-muted-foreground truncate">— {e.message}</span>
+                )}
+              </div>
+            ))}
+            {!auditLoading && auditRows.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No audit events yet.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Recent Resume Analyses</CardTitle>
         </CardHeader>
         <CardContent>
