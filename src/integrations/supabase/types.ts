@@ -650,6 +650,7 @@ export type Database = {
       }
       resume_analyses: {
         Row: {
+          ats_breakdown: Json
           ats_score: number
           created_at: string
           extraction_confidence: number | null
@@ -658,8 +659,12 @@ export type Database = {
           id: string
           keywords: Json
           method: string
+          parsed_fields: Json
           parser_status: string | null
+          quality_breakdown: Json
           resume_id: string
+          rewrites: Json
+          role_matches: Json
           status: string
           strengths: Json
           suggestions: Json
@@ -667,6 +672,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ats_breakdown?: Json
           ats_score?: number
           created_at?: string
           extraction_confidence?: number | null
@@ -675,8 +681,12 @@ export type Database = {
           id?: string
           keywords?: Json
           method?: string
+          parsed_fields?: Json
           parser_status?: string | null
+          quality_breakdown?: Json
           resume_id: string
+          rewrites?: Json
+          role_matches?: Json
           status?: string
           strengths?: Json
           suggestions?: Json
@@ -684,6 +694,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ats_breakdown?: Json
           ats_score?: number
           created_at?: string
           extraction_confidence?: number | null
@@ -692,8 +703,12 @@ export type Database = {
           id?: string
           keywords?: Json
           method?: string
+          parsed_fields?: Json
           parser_status?: string | null
+          quality_breakdown?: Json
           resume_id?: string
+          rewrites?: Json
+          role_matches?: Json
           status?: string
           strengths?: Json
           suggestions?: Json
