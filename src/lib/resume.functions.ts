@@ -6,6 +6,8 @@ import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { extractPdf, type ParserStatus } from "./pdf-extract";
 import { chargeAiUsage, AiCapError } from "./ai-guardrails";
 import { enforceCooldown } from "./security";
+import { ocrPdfViaGateway } from "./resume-ocr";
+import { logEvent } from "./observability";
 import {
   decideAnalyzer,
   PARSER_STATUS_MESSAGES,
@@ -390,7 +392,34 @@ export const runResumePipeline = createServerFn({ method: "POST" })
       };
     }
     const buf = new Uint8Array(await blob.arrayBuffer());
-    const ext = await extractPdf(buf);
+    let ext = await extractPdf(buf);
+    let usedOcr = false;
+
+    // OCR fallback for scanned / image-only PDFs.
+    if (
+      ext.status === "image_only_pdf" &&
+      process.env.LOVABLE_API_KEY
+    ) {
+      const t0 = Date.now();
+      const ocr = await ocrPdfViaGateway(buf, process.env.LOVABLE_API_KEY);
+      await logEvent({
+        eventType: "resume_ocr",
+        severity: ocr.ok ? "info" : "warn",
+        source: "resume-pipeline",
+        message: ocr.ok ? "ocr_success" : ocr.error ?? "ocr_failed",
+        latencyMs: Date.now() - t0,
+        metadata: { model: ocr.model, byteSize: buf.byteLength },
+      });
+      if (ocr.ok) {
+        usedOcr = true;
+        ext = {
+          text: ocr.text,
+          status: "ocr_ok",
+          confidence: 0.55, // OCR is inherently lossy — never claim full confidence
+          pageCount: ext.pageCount,
+        };
+      }
+    }
 
     const decision = decideAnalyzer({
       status: ext.status,
@@ -434,7 +463,7 @@ export const runResumePipeline = createServerFn({ method: "POST" })
       return {
         ok: true as const,
         stage: "done" as const,
-        mode: "ai" as const,
+        mode: (usedOcr ? "ocr" : "ai") as "ai" | "ocr",
         status: ext.status,
         confidence: ext.confidence,
         ...ai,
