@@ -12,7 +12,8 @@ import {
   listAdminResumeAnalyses,
   setUserRole,
 } from "@/lib/admin.functions";
-import { Users, FileText, Brain, TrendingUp, ShieldCheck } from "lucide-react";
+import { Users, FileText, Brain, TrendingUp, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -69,6 +70,17 @@ function AdminPanel() {
     }>
   >([]);
   const [loading, setLoading] = useState(true);
+  const [emailHealth, setEmailHealth] = useState<{
+    ok: boolean;
+    counts: { pending: number; sent: number; failed: number; dlq: number; other: number };
+    oldest_pending_age_seconds: number;
+    last_activity_age_seconds: number | null;
+    pending_stalled: boolean;
+    cron_stalled: boolean;
+    rate_limited: boolean;
+    dlq_rate: number;
+    retry_after_until: string | null;
+  } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -84,7 +96,22 @@ function AdminPanel() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const loadEmailHealth = async () => {
+    try {
+      const res = await fetch("/api/public/health/email-queue", { cache: "no-store" });
+      if (!res.ok) return;
+      setEmailHealth(await res.json());
+    } catch {
+      // Network errors are non-critical for the panel; banner just won't show.
+    }
+  };
+
+  useEffect(() => {
+    load();
+    loadEmailHealth();
+    const t = setInterval(loadEmailHealth, 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   const toggleRole = async (targetUserId: string, role: Role, grant: boolean) => {
     try {
@@ -115,6 +142,48 @@ function AdminPanel() {
         <ShieldCheck className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-display font-bold">Admin Panel</h1>
       </div>
+
+      {emailHealth && !emailHealth.ok && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Email queue is stalled</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc pl-5 space-y-0.5 text-sm">
+              {emailHealth.pending_stalled && (
+                <li>
+                  Oldest pending email is{" "}
+                  {Math.round(emailHealth.oldest_pending_age_seconds / 60)} min old
+                  (threshold 5 min).
+                </li>
+              )}
+              {emailHealth.cron_stalled && (
+                <li>
+                  No queue activity for{" "}
+                  {emailHealth.last_activity_age_seconds !== null
+                    ? Math.round(emailHealth.last_activity_age_seconds / 60)
+                    : "?"}{" "}
+                  min — cron may be down.
+                </li>
+              )}
+              {emailHealth.rate_limited && (
+                <li>
+                  Provider rate-limited until{" "}
+                  {emailHealth.retry_after_until
+                    ? new Date(emailHealth.retry_after_until).toLocaleTimeString()
+                    : "unknown"}
+                  .
+                </li>
+              )}
+              {emailHealth.dlq_rate >= 0.25 && (
+                <li>
+                  DLQ rate is {Math.round(emailHealth.dlq_rate * 100)}% over the last hour
+                  ({emailHealth.counts.dlq} dead-lettered).
+                </li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
