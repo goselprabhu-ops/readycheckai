@@ -191,6 +191,56 @@ function AdminPanel() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Resume Analyses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead className="w-20">Score</TableHead>
+                  <TableHead className="w-28">Method</TableHead>
+                  <TableHead>Summary</TableHead>
+                  <TableHead className="w-40">When</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {analyses.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-medium">{a.full_name ?? "—"}</TableCell>
+                    <TableCell>{a.ats_score}/100</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={a.method === "ai" ? "default" : "secondary"}
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {a.method === "ai" ? "AI" : "Rules"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-md truncate text-muted-foreground text-sm">
+                      {a.summary ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {new Date(a.created_at).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!loading && analyses.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No resume analyses yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
