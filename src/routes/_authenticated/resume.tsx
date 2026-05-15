@@ -14,11 +14,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScoreRing } from "@/components/score-ring";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  analyzeResumeAuto,
   registerResumeUpload,
-  extractResumeText,
+  runResumePipeline,
 } from "@/lib/resume.functions";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -27,6 +27,7 @@ import {
   FileText,
   Sparkles,
   X,
+  RefreshCw,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/resume")({
@@ -41,6 +42,7 @@ type AnalysisResult = {
   suggestions: string[];
   breakdown: { reason: string; points: number }[];
   analysis: any;
+  confidence: number;
 };
 
 function normalize(r: any): AnalysisResult {
@@ -56,6 +58,7 @@ function normalize(r: any): AnalysisResult {
       suggestions: (r.analysis?.suggestions ?? []) as string[],
       breakdown: [],
       analysis: r.analysis,
+      confidence: r.confidence ?? 1,
     };
   }
   return {
@@ -66,6 +69,7 @@ function normalize(r: any): AnalysisResult {
     suggestions: r.suggestions ?? [],
     breakdown: r.breakdown ?? [],
     analysis: r.analysis,
+    confidence: r.confidence ?? 1,
   };
 }
 
@@ -77,10 +81,14 @@ function ResumePage() {
     "idle",
   );
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [pipelineError, setPipelineError] = useState<{
+    title: string;
+    message: string;
+    retryable: boolean;
+  } | null>(null);
 
-  const analyze = useServerFn(analyzeResumeAuto);
   const registerUpload = useServerFn(registerResumeUpload);
-  const extractText = useServerFn(extractResumeText);
+  const runPipeline = useServerFn(runResumePipeline);
 
   const onDrop = useCallback((accepted: File[]) => {
     const f = accepted[0];
@@ -119,10 +127,12 @@ function ResumePage() {
     setResult(null);
     setStage("idle");
     setProgress(0);
+    setPipelineError(null);
   };
 
   const run = async () => {
     if (!file) return;
+    setPipelineError(null);
     try {
       // 1. Upload to storage
       setStage("uploading");
@@ -136,23 +146,37 @@ function ResumePage() {
         upsert: false,
       });
       if (upErr) throw upErr;
-      setProgress(35);
+      setProgress(30);
 
       const { resume } = await registerUpload({
         data: { filePath: path, originalName: file.name },
       });
 
-      // 2. Extract text on the server (Worker-compatible parser).
+      // 2. Single canonical pipeline call: extract → analyze → persist.
       setStage("extracting");
       setProgress(55);
-      const { text } = await extractText({ data: { filePath: path } });
-      setProgress(75);
-
-      // 3. Keyword analysis on server (deterministic)
-      setStage("analyzing");
-      const raw = await analyze({
-        data: { text, targetRole: role, resumeId: (resume as any)?.id },
+      const raw = await runPipeline({
+        data: {
+          filePath: path,
+          resumeId: (resume as any).id,
+          targetRole: role,
+        },
       });
+      setProgress(85);
+
+      if (!raw.ok) {
+        setPipelineError({
+          title: "Couldn't analyze this resume",
+          message: raw.message,
+          retryable: raw.status !== "image_only_pdf" && raw.status !== "oversized",
+        });
+        setStage("idle");
+        setProgress(0);
+        toast.error(raw.message);
+        return;
+      }
+
+      setStage("analyzing");
       const r = normalize(raw);
       setProgress(100);
       setStage("done");
@@ -164,7 +188,9 @@ function ResumePage() {
       );
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message ?? "Analysis failed");
+      const msg = e?.message ?? "Analysis failed";
+      setPipelineError({ title: "Analysis failed", message: msg, retryable: true });
+      toast.error(msg);
       setStage("idle");
       setProgress(0);
     }
@@ -277,8 +303,34 @@ function ResumePage() {
             {loading && (
               <div className="space-y-2">
                 <Progress value={progress} />
-                <p className="text-xs text-muted-foreground capitalize">{stage}…</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {stage === "uploading" && "Uploading PDF…"}
+                  {stage === "extracting" && "Extracting text from PDF…"}
+                  {stage === "analyzing" && "Analyzing against your target role…"}
+                </p>
               </div>
+            )}
+
+            {pipelineError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>{pipelineError.title}</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p>{pipelineError.message}</p>
+                  {pipelineError.retryable && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={run}
+                      disabled={!file || loading}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      Retry analysis
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
             )}
 
             <Button onClick={run} disabled={!file || loading} className="w-full">
