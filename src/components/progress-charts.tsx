@@ -1,96 +1,47 @@
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-} from "recharts";
+import { lazy, Suspense } from "react";
+import type { ComponentProps } from "react";
+import type {
+  ReadinessGrowthChart as ReadinessGrowthChartImpl,
+  ResumeTrendChart as ResumeTrendChartImpl,
+  TopicLineChart as TopicLineChartImpl,
+} from "./charts/_progress-impl";
 
-const tooltipStyle = {
-  borderRadius: 12,
-  border: "1px solid var(--border)",
-  background: "var(--card)",
-};
+export type { ReadinessSeriesPoint } from "./charts/_progress-impl";
 
-export interface ReadinessSeriesPoint {
-  date: string;
-  Readiness: number;
-  SQL: number;
-  Python: number;
-  Resume: number;
-}
+const ReadinessGrowthChartLazy = lazy(() =>
+  import("./charts/_progress-impl").then((m) => ({ default: m.ReadinessGrowthChart })),
+);
+const ResumeTrendChartLazy = lazy(() =>
+  import("./charts/_progress-impl").then((m) => ({ default: m.ResumeTrendChart })),
+);
+const TopicLineChartLazy = lazy(() =>
+  import("./charts/_progress-impl").then((m) => ({ default: m.TopicLineChart })),
+);
 
-export function ReadinessGrowthChart({ data }: { data: ReadinessSeriesPoint[] }) {
+const Fallback = ({ h = "h-56" }: { h?: string }) => (
+  <div className={`${h} rounded-md bg-muted/30 animate-pulse`} />
+);
+
+export function ReadinessGrowthChart(props: ComponentProps<typeof ReadinessGrowthChartImpl>) {
   return (
-    <div className="h-72">
-      <ResponsiveContainer>
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <defs>
-            <linearGradient id="gReadyP" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-          <Tooltip contentStyle={tooltipStyle} />
-          <ReferenceLine
-            y={70}
-            stroke="oklch(0.7 0.15 150)"
-            strokeDasharray="4 4"
-            label={{ value: "Interview ready", position: "right", fontSize: 10, fill: "var(--muted-foreground)" }}
-          />
-          <Area type="monotone" dataKey="Readiness" stroke="var(--primary)" strokeWidth={2.5} fill="url(#gReadyP)" />
-          <Line type="monotone" dataKey="SQL" stroke="oklch(0.6 0.18 250)" strokeWidth={1.5} dot={false} />
-          <Line type="monotone" dataKey="Python" stroke="oklch(0.65 0.18 160)" strokeWidth={1.5} dot={false} />
-          <Line type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" strokeWidth={1.5} dot={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+    <Suspense fallback={<Fallback h="h-72" />}>
+      <ReadinessGrowthChartLazy {...props} />
+    </Suspense>
   );
 }
 
-export function ResumeTrendChart({ data }: { data: { date: string; score: number }[] }) {
+export function ResumeTrendChart(props: ComponentProps<typeof ResumeTrendChartImpl>) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-          <Tooltip contentStyle={tooltipStyle} />
-          <Line type="monotone" dataKey="score" stroke="oklch(0.7 0.18 30)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <Suspense fallback={<Fallback />}>
+      <ResumeTrendChartLazy {...props} />
+    </Suspense>
   );
 }
 
-export function TopicLineChart({
-  data,
-  color,
-}: {
-  data: { date: string; score: number }[];
-  color: string;
-}) {
+export function TopicLineChart(props: ComponentProps<typeof TopicLineChartImpl>) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-          <Tooltip contentStyle={tooltipStyle} />
-          <ReferenceLine y={70} stroke="oklch(0.7 0.15 150)" strokeDasharray="4 4" />
-          <Line type="monotone" dataKey="score" stroke={color} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+    <Suspense fallback={<Fallback />}>
+      <TopicLineChartLazy {...props} />
+    </Suspense>
   );
 }

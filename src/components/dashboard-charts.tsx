@@ -1,83 +1,34 @@
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-} from "recharts";
+// Lazy chart wrappers — Recharts (~80kb gz) is split into its own chunk
+// and only loads when a chart is actually rendered.
+import { lazy, Suspense } from "react";
+import type { ComponentProps } from "react";
+import type { ReadinessAreaChart as ReadinessAreaChartImpl, AttemptsBarChart as AttemptsBarChartImpl } from "./charts/_dashboard-impl";
 
-export type ReadinessPoint = {
-  date: string;
-  Readiness: number;
-  Resume: number;
-  Skills: number;
-};
+export type { ReadinessPoint, AttemptPoint } from "./charts/_dashboard-impl";
 
-export type AttemptPoint = {
-  date: string;
-  score: number;
-};
+const ReadinessAreaChartLazy = lazy(() =>
+  import("./charts/_dashboard-impl").then((m) => ({ default: m.ReadinessAreaChart })),
+);
+const AttemptsBarChartLazy = lazy(() =>
+  import("./charts/_dashboard-impl").then((m) => ({ default: m.AttemptsBarChart })),
+);
 
-export function ReadinessAreaChart({ data }: { data: ReadinessPoint[] }) {
+const Fallback = ({ h = "h-56" }: { h?: string }) => (
+  <div className={`${h} rounded-md bg-muted/30 animate-pulse`} />
+);
+
+export function ReadinessAreaChart(props: ComponentProps<typeof ReadinessAreaChartImpl>) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <defs>
-            <linearGradient id="gReady" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.5} />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="gResume" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.7 0.18 30)" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="oklch(0.7 0.18 30)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="gSkills" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.7 0.18 160)" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="oklch(0.7 0.18 160)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-          <Tooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid var(--border)",
-              background: "var(--card)",
-            }}
-          />
-          <Area type="monotone" dataKey="Readiness" stroke="var(--primary)" fill="url(#gReady)" strokeWidth={2} />
-          <Area type="monotone" dataKey="Resume" stroke="oklch(0.7 0.18 30)" fill="url(#gResume)" strokeWidth={2} />
-          <Area type="monotone" dataKey="Skills" stroke="oklch(0.7 0.18 160)" fill="url(#gSkills)" strokeWidth={2} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+    <Suspense fallback={<Fallback />}>
+      <ReadinessAreaChartLazy {...props} />
+    </Suspense>
   );
 }
 
-export function AttemptsBarChart({ data }: { data: AttemptPoint[] }) {
+export function AttemptsBarChart(props: ComponentProps<typeof AttemptsBarChartImpl>) {
   return (
-    <div className="h-56">
-      <ResponsiveContainer>
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-          <YAxis domain={[0, 100]} stroke="var(--muted-foreground)" fontSize={11} />
-          <Tooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid var(--border)",
-              background: "var(--card)",
-            }}
-          />
-          <Bar dataKey="score" fill="var(--primary)" radius={[8, 8, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <Suspense fallback={<Fallback />}>
+      <AttemptsBarChartLazy {...props} />
+    </Suspense>
   );
 }
