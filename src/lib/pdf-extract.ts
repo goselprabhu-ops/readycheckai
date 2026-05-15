@@ -3,6 +3,7 @@
 
 export type ParserStatus =
   | "ok"
+  | "ocr_ok"
   | "empty_extraction"
   | "image_only_pdf"
   | "malformed_pdf"
