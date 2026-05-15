@@ -408,6 +408,11 @@ async function persistCanonicalAnalysis(
     extraction_confidence: number | null;
     parser_status: ParserStatus | null;
     extraction_error: string | null;
+    parsed_fields?: any;
+    role_matches?: any;
+    ats_breakdown?: any;
+    quality_breakdown?: any;
+    rewrites?: any;
   },
 ) {
   if (row.resume_id) {
