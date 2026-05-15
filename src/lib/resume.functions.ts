@@ -96,6 +96,7 @@ export const analyzeResume = createServerFn({ method: "POST" })
         gaps: output.gaps,
         keywords: output.keywords,
         suggestions: output.suggestions,
+        method: "ai",
       } as any)
       .select()
       .single();
@@ -191,6 +192,7 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
         gaps: missingSkills,
         keywords: detectedSkills,
         suggestions,
+        method: "rules",
       } as any)
       .select()
       .single();
