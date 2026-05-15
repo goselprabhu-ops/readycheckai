@@ -121,9 +121,10 @@ export function AppSidebar() {
           variant="ghost"
           size="sm"
           className="justify-start gap-2"
+          aria-label="Sign out of your account"
           onClick={() => signOut()}
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4" aria-hidden="true" />
           {!collapsed && <span>Sign out</span>}
         </Button>
       </SidebarFooter>
