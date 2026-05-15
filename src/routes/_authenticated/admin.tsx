@@ -13,6 +13,7 @@ import {
   setUserRole,
 } from "@/lib/admin.functions";
 import { getSystemDiagnostics } from "@/lib/observability.functions";
+import { listAuditEvents } from "@/lib/audit.functions";
 import {
   Users,
   FileText,
@@ -22,6 +23,7 @@ import {
   AlertTriangle,
   Activity,
   RefreshCw,
+  ScrollText,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -60,8 +62,22 @@ function AdminPanel() {
   const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
   const diagnostics = useServerFn(getSystemDiagnostics);
+  const audit = useServerFn(listAuditEvents);
   const [diag, setDiag] = useState<Awaited<ReturnType<typeof getSystemDiagnostics>> | null>(null);
   const [diagLoading, setDiagLoading] = useState(false);
+  const [auditRows, setAuditRows] = useState<
+    Array<{
+      kind: "system" | "security";
+      id: string;
+      created_at: string;
+      event_type: string;
+      severity: string;
+      route?: string | null;
+      source?: string | null;
+      message?: string | null;
+    }>
+  >([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [totals, setTotals] = useState({
     users: 0,
     assessments: 0,
@@ -131,10 +147,26 @@ function AdminPanel() {
     }
   };
 
+  const loadAudit = async () => {
+    setAuditLoading(true);
+    try {
+      const r = await audit({ data: { kind: "all", severity: "any", limit: 100 } });
+      const merged = [...r.system, ...r.security].sort((a, b) =>
+        a.created_at < b.created_at ? 1 : -1,
+      );
+      setAuditRows(merged.slice(0, 100) as any);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
     loadEmailHealth();
     loadDiagnostics();
+    loadAudit();
     const t = setInterval(loadEmailHealth, 60_000);
     const d = setInterval(loadDiagnostics, 120_000);
     return () => {
@@ -379,6 +411,67 @@ function AdminPanel() {
                 )}
               </TableBody>
             </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ScrollText className="h-5 w-5 text-primary" />
+              Audit Log
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadAudit}
+              disabled={auditLoading}
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${auditLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1 max-h-96 overflow-y-auto">
+            {auditRows.map((e) => (
+              <div
+                key={`${e.kind}-${e.id}`}
+                className="text-xs flex items-start gap-2 border-l-2 border-border pl-2 py-1"
+              >
+                <Badge variant="outline" className="text-[9px] uppercase">
+                  {e.kind}
+                </Badge>
+                <Badge
+                  variant={
+                    e.severity === "critical" || e.severity === "error"
+                      ? "destructive"
+                      : e.severity === "warn"
+                      ? "secondary"
+                      : "outline"
+                  }
+                  className="text-[9px] uppercase"
+                >
+                  {e.severity}
+                </Badge>
+                <span className="font-mono text-muted-foreground whitespace-nowrap">
+                  {new Date(e.created_at).toLocaleString()}
+                </span>
+                <span className="font-medium">{e.event_type}</span>
+                {e.route && (
+                  <span className="text-muted-foreground truncate">{e.route}</span>
+                )}
+                {e.message && (
+                  <span className="text-muted-foreground truncate">— {e.message}</span>
+                )}
+              </div>
+            ))}
+            {!auditLoading && auditRows.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No audit events yet.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
