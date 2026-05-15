@@ -17,13 +17,17 @@ function hashCode(code: string, userId: string) {
   return createHash("sha256").update(`${userId}:${code}`).digest("hex");
 }
 
-async function sendTwilioSms(to: string, body: string) {
+async function sendTwilioWhatsApp(to: string, body: string) {
   const lovableKey = process.env.LOVABLE_API_KEY;
   const twilioKey = process.env.TWILIO_API_KEY;
   const from = process.env.TWILIO_FROM_NUMBER;
   if (!lovableKey) throw new Error("LOVABLE_API_KEY is not configured");
   if (!twilioKey) throw new Error("TWILIO_API_KEY is not configured");
   if (!from) throw new Error("TWILIO_FROM_NUMBER is not configured");
+
+  // Twilio WhatsApp requires the `whatsapp:` channel prefix on both To and From.
+  const toAddr = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
+  const fromAddr = from.startsWith("whatsapp:") ? from : `whatsapp:${from}`;
 
   const res = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
     method: "POST",
@@ -32,7 +36,7 @@ async function sendTwilioSms(to: string, body: string) {
       "X-Connection-Api-Key": twilioKey,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({ To: to, From: from, Body: body }),
+    body: new URLSearchParams({ To: toAddr, From: fromAddr, Body: body }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -77,7 +81,7 @@ export const sendPhoneOtp = createServerFn({ method: "POST" })
     });
     if (insErr) throw new Error(insErr.message);
 
-    await sendTwilioSms(
+    await sendTwilioWhatsApp(
       data.phone,
       `Your ReadyCheck Lab verification code is ${code}. It expires in ${OTP_TTL_MIN} minutes.`,
     );

@@ -70,7 +70,7 @@ function SignupPage() {
           <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Mobile number</Label>
+          <Label htmlFor="phone">WhatsApp number</Label>
           <Input
             id="phone"
             type="tel"
@@ -81,7 +81,7 @@ function SignupPage() {
             onChange={(e) => setPhone(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Include country code. We'll send a verification code via SMS.
+            Include country code. We'll send a verification code on WhatsApp.
           </p>
         </div>
         <div className="space-y-2">
