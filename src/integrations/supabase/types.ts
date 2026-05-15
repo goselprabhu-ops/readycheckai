@@ -595,6 +595,8 @@ export type Database = {
           category: Database["public"]["Enums"]["assessment_category"] | null
           created_at: string
           description: string | null
+          expires_at: string | null
+          generated_at: string
           id: string
           priority: number
           resource_url: string | null
@@ -609,6 +611,8 @@ export type Database = {
           category?: Database["public"]["Enums"]["assessment_category"] | null
           created_at?: string
           description?: string | null
+          expires_at?: string | null
+          generated_at?: string
           id?: string
           priority?: number
           resource_url?: string | null
@@ -623,6 +627,8 @@ export type Database = {
           category?: Database["public"]["Enums"]["assessment_category"] | null
           created_at?: string
           description?: string | null
+          expires_at?: string | null
+          generated_at?: string
           id?: string
           priority?: number
           resource_url?: string | null
