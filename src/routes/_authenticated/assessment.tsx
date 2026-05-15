@@ -245,7 +245,7 @@ function AssessmentPage() {
           <Card className="rounded-2xl overflow-hidden">
             <div
               className="p-8 text-white relative"
-              style={{ background: "linear-gradient(135deg, oklch(0.28 0.13 265), oklch(0.55 0.22 260))" }}
+              style={{ background: "var(--gradient-panel-edge)" }}
             >
               <Trophy className="h-8 w-8 mb-3" />
               <div className="text-sm uppercase tracking-widest text-white/70">{active.title}</div>
