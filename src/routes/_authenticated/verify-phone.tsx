@@ -84,17 +84,17 @@ function VerifyPhonePage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            <CardTitle>Verify your WhatsApp number</CardTitle>
+            <CardTitle>Verify your mobile number</CardTitle>
           </div>
           <p className="text-sm text-muted-foreground">
-            We'll send a code to your WhatsApp to confirm your number.
+            We'll send a code by SMS to confirm your number.
           </p>
         </CardHeader>
         <CardContent>
           {step === "phone" ? (
             <form onSubmit={handleSend} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">WhatsApp number (E.164 format)</Label>
+                <Label htmlFor="phone">Mobile number (E.164 format)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -109,7 +109,7 @@ function VerifyPhonePage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Make sure this number is registered with WhatsApp.
+                Use international format, e.g. +14155552671.
               </p>
               <Button type="submit" disabled={sending} className="w-full">
                 {sending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</> : "Send code"}
@@ -118,7 +118,7 @@ function VerifyPhonePage() {
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Enter the 4-digit code we sent on WhatsApp to{" "}
+                Enter the 4-digit code we sent by SMS to{" "}
                 <span className="font-medium text-foreground">{phone}</span>.
               </p>
               <div className="space-y-2">
