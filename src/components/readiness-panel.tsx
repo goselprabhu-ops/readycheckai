@@ -170,8 +170,13 @@ function ReadinessRing({ value, level }: { value: number; level: ReadinessLevel 
   const color = LEVEL_COLOR[level];
 
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
+    <div
+      className="relative"
+      style={{ width: size, height: size }}
+      role="img"
+      aria-label={`Readiness ${value} out of 100, level ${level}`}
+    >
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true" focusable="false">
         <circle
           cx={size / 2}
           cy={size / 2}
