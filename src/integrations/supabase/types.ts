@@ -819,6 +819,42 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json
+          route: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json
+          route?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       skills: {
         Row: {
           id: string
@@ -966,6 +1002,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_action_cooldown: {
+        Args: { _action: string; _cooldown_seconds: number }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -984,6 +1024,17 @@ export type Database = {
       increment_ai_usage: {
         Args: { _feature: string; _hard_cap: number; _user_id: string }
         Returns: number
+      }
+      log_security_event: {
+        Args: {
+          _event_type: string
+          _ip?: string
+          _metadata?: Json
+          _route?: string
+          _severity?: string
+          _user_agent?: string
+        }
+        Returns: string
       }
       move_to_dlq: {
         Args: {
