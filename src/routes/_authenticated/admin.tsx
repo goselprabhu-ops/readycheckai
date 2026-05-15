@@ -13,6 +13,7 @@ import {
   setUserRole,
 } from "@/lib/admin.functions";
 import { getSystemDiagnostics } from "@/lib/observability.functions";
+import { listAuditEvents } from "@/lib/audit.functions";
 import {
   Users,
   FileText,
@@ -22,6 +23,7 @@ import {
   AlertTriangle,
   Activity,
   RefreshCw,
+  ScrollText,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -60,8 +62,22 @@ function AdminPanel() {
   const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
   const diagnostics = useServerFn(getSystemDiagnostics);
+  const audit = useServerFn(listAuditEvents);
   const [diag, setDiag] = useState<Awaited<ReturnType<typeof getSystemDiagnostics>> | null>(null);
   const [diagLoading, setDiagLoading] = useState(false);
+  const [auditRows, setAuditRows] = useState<
+    Array<{
+      kind: "system" | "security";
+      id: string;
+      created_at: string;
+      event_type: string;
+      severity: string;
+      route?: string | null;
+      source?: string | null;
+      message?: string | null;
+    }>
+  >([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [totals, setTotals] = useState({
     users: 0,
     assessments: 0,
@@ -131,10 +147,26 @@ function AdminPanel() {
     }
   };
 
+  const loadAudit = async () => {
+    setAuditLoading(true);
+    try {
+      const r = await audit({ data: { kind: "all", severity: "any", limit: 100 } });
+      const merged = [...r.system, ...r.security].sort((a, b) =>
+        a.created_at < b.created_at ? 1 : -1,
+      );
+      setAuditRows(merged.slice(0, 100) as any);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
     loadEmailHealth();
     loadDiagnostics();
+    loadAudit();
     const t = setInterval(loadEmailHealth, 60_000);
     const d = setInterval(loadDiagnostics, 120_000);
     return () => {
