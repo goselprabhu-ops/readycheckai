@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/resume")({
 });
 
 type AnalysisResult = {
-  mode: "ai" | "fallback";
+  mode: "ai" | "fallback" | "ocr";
   score: number;
   detected_skills: string[];
   missing_skills: string[];
@@ -43,15 +43,16 @@ type AnalysisResult = {
   breakdown: { reason: string; points: number }[];
   analysis: any;
   confidence: number;
+  status?: string;
 };
 
 function normalize(r: any): AnalysisResult {
-  if (r.mode === "ai") {
+  if (r.mode === "ai" || r.mode === "ocr") {
     const skills = (r.detected_skills ?? []).map((s: any) =>
       typeof s === "string" ? s : s.name,
     );
     return {
-      mode: "ai",
+      mode: r.mode,
       score: r.analysis?.ats_score ?? 0,
       detected_skills: skills,
       missing_skills: (r.analysis?.gaps ?? []) as string[],
@@ -59,6 +60,7 @@ function normalize(r: any): AnalysisResult {
       breakdown: [],
       analysis: r.analysis,
       confidence: r.confidence ?? 1,
+      status: r.status,
     };
   }
   return {
@@ -70,6 +72,7 @@ function normalize(r: any): AnalysisResult {
     breakdown: r.breakdown ?? [],
     analysis: r.analysis,
     confidence: r.confidence ?? 1,
+    status: r.status,
   };
 }
 
@@ -184,7 +187,9 @@ function ResumePage() {
       toast.success(
         r.mode === "fallback"
           ? `AI unavailable — keyword score ${r.score}/100`
-          : `Resume scored ${r.score}/100`,
+          : r.mode === "ocr"
+            ? `Scanned PDF read with OCR — ${r.score}/100 (verify accuracy)`
+            : `Resume scored ${r.score}/100`,
       );
     } catch (e: any) {
       console.error(e);
@@ -366,6 +371,20 @@ function ResumePage() {
 }
 
 function ResultView({ result }: { result: AnalysisResult }) {
+  const confidencePct = Math.round((result.confidence ?? 1) * 100);
+  const lowConfidence = (result.confidence ?? 1) < 0.5 || result.mode === "ocr";
+  const modeLabel =
+    result.mode === "ai"
+      ? "AI analysis"
+      : result.mode === "ocr"
+        ? "OCR + AI"
+        : "Keyword fallback";
+  const modeAria =
+    result.mode === "ai"
+      ? "Analyzed by AI"
+      : result.mode === "ocr"
+        ? "Scanned PDF read with OCR, then analyzed by AI — accuracy may vary"
+        : "Analyzed by deterministic keyword fallback";
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -374,21 +393,34 @@ function ResultView({ result }: { result: AnalysisResult }) {
     >
       <div className="flex items-center gap-4">
         <ScoreRing value={result.score} label="Score" />
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           <Badge
-            variant={result.mode === "ai" ? "default" : "secondary"}
+            variant={result.mode === "ai" ? "default" : result.mode === "ocr" ? "outline" : "secondary"}
             className="text-[10px] uppercase tracking-wide"
-            aria-label={
-              result.mode === "ai"
-                ? "Analyzed by AI"
-                : "Analyzed by deterministic keyword fallback"
-            }
+            aria-label={modeAria}
           >
-            {result.mode === "ai" ? "AI analysis" : "Keyword fallback"}
+            {modeLabel}
           </Badge>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span aria-label={`Extraction confidence ${confidencePct} percent`}>
+              Extraction confidence: <strong className="text-foreground">{confidencePct}%</strong>
+            </span>
+          </div>
           <p className="text-sm">{(result.analysis as any)?.summary}</p>
         </div>
       </div>
+
+      {lowConfidence && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Low extraction confidence</AlertTitle>
+          <AlertDescription>
+            {result.mode === "ocr"
+              ? "We had to OCR this scanned PDF. Re-uploading a text-based PDF (exported from Word or Google Docs) will give a more accurate score."
+              : "Some sections may not have been read cleanly. Re-upload as a text-based PDF for the most accurate result."}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Section
         title="Detected skills"
