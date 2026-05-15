@@ -167,9 +167,9 @@ function LearningPathPage() {
     }
   };
 
-  const weeks: PathWeek[] = path?.weeks ?? [];
-  const heatmap: HeatmapEntry[] = path?.skill_heatmap ?? [];
-  const projects: PathProject[] = path?.projects ?? [];
+  const weeks = ((path?.weeks ?? []) as unknown) as PathWeek[];
+  const heatmap = ((path?.skill_heatmap ?? []) as unknown) as HeatmapEntry[];
+  const projects = ((path?.projects ?? []) as unknown) as PathProject[];
 
   const totals = useMemo(() => {
     let total = 0;
