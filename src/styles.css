@@ -197,3 +197,10 @@
     scroll-behavior: auto !important;
   }
 }
+
+@media print {
+  body * { visibility: hidden; }
+  #resume-report, #resume-report * { visibility: visible; }
+  #resume-report { position: absolute; left: 0; top: 0; width: 100%; padding: 1rem; }
+  .print\:hidden { display: none !important; }
+}
