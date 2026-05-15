@@ -660,6 +660,7 @@ export type Database = {
           method: string
           parser_status: string | null
           resume_id: string
+          status: string
           strengths: Json
           suggestions: Json
           summary: string | null
@@ -676,6 +677,7 @@ export type Database = {
           method?: string
           parser_status?: string | null
           resume_id: string
+          status?: string
           strengths?: Json
           suggestions?: Json
           summary?: string | null
@@ -692,6 +694,7 @@ export type Database = {
           method?: string
           parser_status?: string | null
           resume_id?: string
+          status?: string
           strengths?: Json
           suggestions?: Json
           summary?: string | null
@@ -1091,6 +1094,10 @@ export type Database = {
           payload: Json
           source_queue: string
         }
+        Returns: number
+      }
+      prune_failed_resume_analyses: {
+        Args: { _older_than_days?: number }
         Returns: number
       }
       read_email_batch: {
