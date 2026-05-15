@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminOverview, listAdminUsers, setUserRole } from "@/lib/admin.functions";
+import {
+  getAdminOverview,
+  listAdminUsers,
+  listAdminResumeAnalyses,
+  setUserRole,
+} from "@/lib/admin.functions";
 import { Users, FileText, Brain, TrendingUp, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,17 +46,37 @@ interface AdminUser {
 function AdminPanel() {
   const overview = useServerFn(getAdminOverview);
   const list = useServerFn(listAdminUsers);
+  const listResumes = useServerFn(listAdminResumeAnalyses);
   const setRole = useServerFn(setUserRole);
-  const [totals, setTotals] = useState({ users: 0, assessments: 0, resumes: 0, avgComposite: 0 });
+  const [totals, setTotals] = useState({
+    users: 0,
+    assessments: 0,
+    resumes: 0,
+    resumesAi: 0,
+    resumesRules: 0,
+    avgComposite: 0,
+  });
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [analyses, setAnalyses] = useState<
+    Array<{
+      id: string;
+      user_id: string;
+      full_name: string | null;
+      ats_score: number;
+      method: "ai" | "rules";
+      summary: string | null;
+      created_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [o, l] = await Promise.all([overview(), list()]);
+      const [o, l, r] = await Promise.all([overview(), list(), listResumes()]);
       setTotals(o.totals);
       setUsers(l.users as AdminUser[]);
+      setAnalyses(r.analyses);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -74,7 +99,13 @@ function AdminPanel() {
   const stats = [
     { label: "Users", value: totals.users, icon: Users },
     { label: "Assessments", value: totals.assessments, icon: Brain },
-    { label: "Resumes Analyzed", value: totals.resumes, icon: FileText },
+    {
+      label: "Resumes Analyzed",
+      value: loading
+        ? "—"
+        : `${totals.resumes} (${totals.resumesAi} AI · ${totals.resumesRules} rules)`,
+      icon: FileText,
+    },
     { label: "Avg Readiness", value: `${totals.avgComposite}`, icon: TrendingUp },
   ];
 
