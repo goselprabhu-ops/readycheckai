@@ -74,13 +74,23 @@ export const getSystemDiagnostics = createServerFn({ method: "POST" })
       {},
     );
 
+    type SummaryEvent = {
+      id: string;
+      created_at: string;
+      event_type: string;
+      severity: string;
+      source?: string | null;
+      route?: string | null;
+      message?: string | null;
+      metadata?: Record<string, string | number | boolean | null> | null;
+    };
     const safeSummary = JSON.parse(JSON.stringify(summary ?? {})) as {
       window_hours?: number;
       checked_at?: string;
       totals?: { total: number; info: number; warn: number; error: number; critical: number };
       by_source?: Record<string, number>;
-      recent_errors?: Array<Record<string, unknown>>;
-      security_recent?: Array<Record<string, unknown>>;
+      recent_errors?: SummaryEvent[];
+      security_recent?: SummaryEvent[];
     };
 
     return {
