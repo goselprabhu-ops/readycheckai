@@ -74,12 +74,21 @@ export const getSystemDiagnostics = createServerFn({ method: "POST" })
       {},
     );
 
+    const safeSummary = JSON.parse(JSON.stringify(summary ?? {})) as {
+      window_hours?: number;
+      checked_at?: string;
+      totals?: { total: number; info: number; warn: number; error: number; critical: number };
+      by_source?: Record<string, number>;
+      recent_errors?: Array<Record<string, unknown>>;
+      security_recent?: Array<Record<string, unknown>>;
+    };
+
     return {
       checked_at: new Date().toISOString(),
       env,
       db,
       resume,
       ai_usage_today,
-      summary: (summary ?? {}) as unknown as Record<string, never>,
+      summary: safeSummary,
     };
   });
