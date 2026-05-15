@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/resume")({
 });
 
 type AnalysisResult = {
-  mode: "ai" | "fallback";
+  mode: "ai" | "fallback" | "ocr";
   score: number;
   detected_skills: string[];
   missing_skills: string[];
@@ -43,15 +43,16 @@ type AnalysisResult = {
   breakdown: { reason: string; points: number }[];
   analysis: any;
   confidence: number;
+  status?: string;
 };
 
 function normalize(r: any): AnalysisResult {
-  if (r.mode === "ai") {
+  if (r.mode === "ai" || r.mode === "ocr") {
     const skills = (r.detected_skills ?? []).map((s: any) =>
       typeof s === "string" ? s : s.name,
     );
     return {
-      mode: "ai",
+      mode: r.mode,
       score: r.analysis?.ats_score ?? 0,
       detected_skills: skills,
       missing_skills: (r.analysis?.gaps ?? []) as string[],
@@ -59,6 +60,7 @@ function normalize(r: any): AnalysisResult {
       breakdown: [],
       analysis: r.analysis,
       confidence: r.confidence ?? 1,
+      status: r.status,
     };
   }
   return {
@@ -70,6 +72,7 @@ function normalize(r: any): AnalysisResult {
     breakdown: r.breakdown ?? [],
     analysis: r.analysis,
     confidence: r.confidence ?? 1,
+    status: r.status,
   };
 }
 
