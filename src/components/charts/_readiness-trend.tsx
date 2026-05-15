@@ -9,6 +9,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { BENCHMARKS, LEVEL_COLOR } from "@/lib/readiness";
+import { AccessibleChart, summarizeSeries } from "./_a11y";
 
 export interface ReadinessTrendPoint {
   date: string;
@@ -17,8 +18,12 @@ export interface ReadinessTrendPoint {
 
 export default function ReadinessTrendChart({ data }: { data: ReadinessTrendPoint[] }) {
   return (
-    <div className="h-48">
-      <ResponsiveContainer>
+    <AccessibleChart
+      label="Readiness trend with benchmark thresholds"
+      summary={summarizeSeries("Readiness", data.map((d) => d.Readiness))}
+    >
+      <div className="h-48 w-full">
+        <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
           <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
@@ -54,7 +59,8 @@ export default function ReadinessTrendChart({ data }: { data: ReadinessTrendPoin
             activeDot={{ r: 5 }}
           />
         </LineChart>
-      </ResponsiveContainer>
-    </div>
+        </ResponsiveContainer>
+      </div>
+    </AccessibleChart>
   );
 }

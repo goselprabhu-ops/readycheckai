@@ -253,7 +253,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6 -mt-10 relative z-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 -mt-10 relative z-10 space-y-6 min-w-0">
         {/* Readiness scoring engine */}
         <motion.div initial="hidden" animate="show" variants={fade}>
           <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
