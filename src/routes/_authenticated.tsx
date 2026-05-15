@@ -78,16 +78,17 @@ function AuthedNotFound() {
 function AuthedLayout() {
   return (
     <SidebarProvider>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-12 flex items-center gap-2 border-b px-2">
-            <SidebarTrigger />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="sticky top-0 z-30 h-12 flex items-center gap-2 border-b bg-background/90 backdrop-blur px-2">
+            <SidebarTrigger aria-label="Toggle navigation sidebar" />
             <Link to="/dashboard" className="font-display text-sm font-semibold">
               ReadyCheck Lab
             </Link>
           </header>
-          <main className="flex-1">
+          <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 focus:outline-none">
             <Outlet />
           </main>
         </div>
