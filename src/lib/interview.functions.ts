@@ -4,6 +4,7 @@ import { generateText } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
 import { chargeAiUsage } from "./ai-guardrails";
+import { enforceCooldown } from "./security";
 
 export const startInterview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -46,6 +47,7 @@ export const interviewTurn = createServerFn({ method: "POST" })
       .single();
 
     // Enforce per-user daily cap before spending AI tokens.
+    await enforceCooldown(supabase, "interview_message", 2);
     await chargeAiUsage(supabase, userId, "interview");
 
     const { data: history } = await supabase
