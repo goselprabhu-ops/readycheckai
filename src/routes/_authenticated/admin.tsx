@@ -119,6 +119,18 @@ function AdminPanel() {
     }
   };
 
+  const loadDiagnostics = async () => {
+    setDiagLoading(true);
+    try {
+      setDiag(await diagnostics());
+    } catch (e: any) {
+      // Surface errors quietly — diagnostics failure shouldn't block the panel.
+      console.warn("diagnostics failed", e);
+    } finally {
+      setDiagLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
     loadEmailHealth();
