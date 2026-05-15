@@ -329,6 +329,89 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_path_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          item_key: string
+          path_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_key: string
+          path_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_key?: string
+          path_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_path_progress_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      learning_paths: {
+        Row: {
+          created_at: string
+          focus: string | null
+          id: string
+          inputs_snapshot: Json
+          projects: Json
+          skill_heatmap: Json
+          status: string
+          target_role: string
+          updated_at: string
+          user_id: string
+          weeks: Json
+        }
+        Insert: {
+          created_at?: string
+          focus?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          projects?: Json
+          skill_heatmap?: Json
+          status?: string
+          target_role: string
+          updated_at?: string
+          user_id: string
+          weeks?: Json
+        }
+        Update: {
+          created_at?: string
+          focus?: string | null
+          id?: string
+          inputs_snapshot?: Json
+          projects?: Json
+          skill_heatmap?: Json
+          status?: string
+          target_role?: string
+          updated_at?: string
+          user_id?: string
+          weeks?: Json
+        }
+        Relationships: []
+      }
       market_demand_seed: {
         Row: {
           demand_score: number
