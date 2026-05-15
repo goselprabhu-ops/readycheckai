@@ -126,7 +126,7 @@ function LearningPathPage() {
           }
           setProgress(map);
           // Open the first incomplete week.
-          const weeks = (r.path.weeks ?? []) as PathWeek[];
+          const weeks = ((r.path.weeks ?? []) as unknown) as PathWeek[];
           const firstOpen = weeks.find((w) =>
             w.items.some((i) => map[i.key] !== "done"),
           );
@@ -198,9 +198,9 @@ function LearningPathPage() {
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
       <PageHeader
-        title="AI Career Coach"
+        eyebrow="AI Career Coach"
+        title="Your adaptive learning path"
         description="Personalised weekly roadmap, skill heatmap and recruiter-ready projects."
-        icon={<Sparkles className="h-5 w-5 text-primary" />}
         actions={
           <div className="flex items-center gap-2">
             <Select value={role} onValueChange={setRole}>
@@ -230,9 +230,9 @@ function LearningPathPage() {
           <Skeleton className="h-64 w-full rounded-2xl" />
         </div>
       ) : !path ? (
-        <SectionCard>
+        <SectionCard title="Get started">
           <EmptyState
-            icon={<Sparkles className="h-8 w-8 text-primary" />}
+            icon={Sparkles}
             title="No active learning path"
             description="Generate an AI roadmap tailored to your assessments, resume and readiness scores."
             action={
