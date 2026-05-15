@@ -80,6 +80,6 @@ export const getSystemDiagnostics = createServerFn({ method: "POST" })
       db,
       resume,
       ai_usage_today,
-      summary: summary as Record<string, unknown>,
+      summary: (summary ?? {}) as unknown as Record<string, never>,
     };
   });
