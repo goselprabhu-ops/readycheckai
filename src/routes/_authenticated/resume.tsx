@@ -369,7 +369,12 @@ function ResumePage() {
         {/* Result card */}
         <Card>
           <CardHeader>
-            <CardTitle>Analysis</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2">
+              <span>Analysis</span>
+              {result ? (
+                <FeedbackWidget surface="resume" feature="resume_analysis" variant="compact" />
+              ) : null}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
