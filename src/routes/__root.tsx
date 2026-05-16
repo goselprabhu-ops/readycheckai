@@ -134,7 +134,9 @@ function RootComponent() {
           Skip to main content
         </a>
         <ErrorBoundary>
-          <Outlet />
+          <main id="main-content" tabIndex={-1} className="outline-none">
+            <Outlet />
+          </main>
         </ErrorBoundary>
         <Toaster />
       </AuthProvider>
