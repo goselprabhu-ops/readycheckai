@@ -99,49 +99,49 @@ function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* 1. HERO */}
-      <div className="relative text-white" style={{ background: "var(--gradient-hero)" }}>
-        <SiteHeader variant="dark" />
+      <div className="relative text-foreground" style={{ background: "linear-gradient(180deg, oklch(0.985 0.02 150) 0%, oklch(0.99 0.012 150) 100%)" }}>
+        <SiteHeader variant="light" />
         <section className="max-w-7xl mx-auto px-6 pt-10 pb-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[oklch(0.55_0.22_260)]/30 border border-[oklch(0.72_0.2_250)]/40 text-[11px] font-semibold tracking-wider text-white">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent text-accent-foreground text-[11px] font-semibold tracking-wider">
                 <Sparkles className="size-3" /> PUBLIC BETA — FREE ACCESS
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/20 bg-white/5 text-[11px] font-semibold tracking-wider text-white/90">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-[11px] font-semibold tracking-wider text-primary">
                 AI-NATIVE
               </span>
             </div>
             <h1 className="mt-6 font-display font-bold tracking-tight text-5xl md:text-6xl lg:text-7xl leading-[1.05]">
-              <span className="text-white">Be career-ready.</span>
+              <span className="text-foreground">Be career-ready.</span>
               <br />
-              <span className="text-[oklch(0.72_0.2_250)]">Provably.</span>
+              <span className="text-primary">Provably.</span>
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-white/80 max-w-xl leading-relaxed">
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
               AI resume intelligence, live mock interviews, and role-by-role readiness scoring —
               built for students, colleges, and recruiters who need real signal, not buzzwords.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/signup">
-                <Button size="lg" className="rounded-md bg-[oklch(0.55_0.22_260)] hover:bg-[oklch(0.6_0.22_260)] text-white gap-2 h-12 px-6 text-base">
+                <Button size="lg" className="rounded-md bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-12 px-6 text-base">
                   Start free <ArrowRight className="size-4" />
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button size="lg" variant="outline" className="rounded-md bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white gap-2 h-12 px-6 text-base">
+                <Button size="lg" variant="outline" className="rounded-md gap-2 h-12 px-6 text-base">
                   <PlayCircle className="size-4" /> See live demo
                 </Button>
               </Link>
             </div>
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-[oklch(0.78_0.18_245)]" /> No credit card</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-[oklch(0.78_0.18_245)]" /> 60-second signup</span>
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-[oklch(0.78_0.18_245)]" /> Google sign-in</span>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-accent" /> No credit card</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-accent" /> 60-second signup</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-accent" /> Google sign-in</span>
             </div>
           </div>
 
           <div className="relative hidden lg:block">
-            <div className="absolute -inset-6 rounded-[2.5rem] blur-3xl" style={{ background: "var(--gradient-hero-glow)" }} />
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-[0_30px_120px_-20px_oklch(0.5_0.22_260/0.6)]">
+            <div className="absolute -inset-6 rounded-[2.5rem] blur-3xl bg-accent/20" />
+            <div className="relative rounded-2xl overflow-hidden border border-border shadow-[0_30px_120px_-20px_oklch(0.5_0.18_200/0.35)]">
               <img
                 src={heroImg}
                 alt="ReadyCheck Lab AI readiness dashboard"
@@ -149,7 +149,6 @@ function Index() {
                 height={1024}
                 className="w-full h-auto block"
               />
-              <div className="absolute inset-0" style={{ background: "var(--gradient-hero-veil-top)" }} />
             </div>
           </div>
         </section>
@@ -324,25 +323,25 @@ function Index() {
       </section>
 
       {/* 7. RECRUITER CTA */}
-      <section className="relative overflow-hidden text-white" style={{ background: "var(--gradient-hero)" }}>
+      <section className="relative overflow-hidden bg-accent/10 border-y border-accent/20">
         <div className="max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-5 gap-12 items-center">
           <div className="lg:col-span-3">
-            <Badge className="mb-3 bg-white/10 text-white border-white/20 hover:bg-white/15"><Briefcase className="size-3 mr-1" /> For Recruiters</Badge>
-            <h2 className="font-display font-bold text-3xl md:text-4xl">Shortlist on verified readiness — not keyword luck.</h2>
-            <p className="mt-4 text-white/75 text-lg leading-relaxed max-w-2xl">
+            <Badge className="mb-3 bg-accent text-accent-foreground hover:bg-accent/90"><Briefcase className="size-3 mr-1" /> For Recruiters</Badge>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-foreground">Shortlist on verified readiness — not keyword luck.</h2>
+            <p className="mt-4 text-muted-foreground text-lg leading-relaxed max-w-2xl">
               Move past keyword-matched resumes. See actual readiness scores, interview transcripts, and skill evidence — for every candidate you consider.
             </p>
             <ul className="mt-6 space-y-3">
               {recruiterValue.map((v) => (
-                <li key={v} className="flex items-start gap-3 text-sm text-white/85">
-                  <CheckCircle2 className="size-5 text-[oklch(0.78_0.18_245)] shrink-0 mt-0.5" />
+                <li key={v} className="flex items-start gap-3 text-sm text-foreground/85">
+                  <CheckCircle2 className="size-5 text-accent shrink-0 mt-0.5" />
                   <span>{v}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/contact"><Button size="lg" className="bg-white text-[oklch(0.18_0.08_265)] hover:bg-white/90 gap-2">Book a recruiter demo <ArrowRight className="size-4" /></Button></Link>
-              <Link to="/demo"><Button size="lg" variant="outline" className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white gap-2"><PlayCircle className="size-4" /> See sample candidates</Button></Link>
+              <Link to="/contact"><Button size="lg" className="gap-2">Book a recruiter demo <ArrowRight className="size-4" /></Button></Link>
+              <Link to="/demo"><Button size="lg" variant="outline" className="gap-2"><PlayCircle className="size-4" /> See sample candidates</Button></Link>
             </div>
           </div>
           <div className="lg:col-span-2 grid gap-3">
@@ -351,9 +350,9 @@ function Index() {
               { v: "Verified", l: "scores, not self-claims" },
               { v: "Private", l: "candidates opt-in to share" },
             ].map((s) => (
-              <div key={s.l} className="rounded-xl bg-white/5 border border-white/10 p-5 backdrop-blur-sm">
-                <div className="font-display font-bold text-2xl text-[oklch(0.78_0.18_245)]">{s.v}</div>
-                <div className="text-sm text-white/70 mt-1">{s.l}</div>
+              <div key={s.l} className="rounded-xl bg-card border border-border p-5 shadow-sm">
+                <div className="font-display font-bold text-2xl text-primary">{s.v}</div>
+                <div className="text-sm text-muted-foreground mt-1">{s.l}</div>
               </div>
             ))}
           </div>
@@ -485,22 +484,21 @@ function Index() {
 
       {/* FINAL CTA */}
       <section className="max-w-7xl mx-auto px-6 py-24">
-        <div className="rounded-3xl p-10 md:p-16 text-white text-center relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
-          <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-hero-glow)" }} />
+        <div className="rounded-3xl p-10 md:p-16 text-center relative overflow-hidden border border-accent/30 bg-accent/10">
           <div className="relative">
-            <Brain className="size-12 mx-auto text-[oklch(0.78_0.18_245)]" />
-            <h2 className="font-display font-bold text-3xl md:text-5xl mt-5">Be the candidate recruiters can verify.</h2>
-            <p className="text-white/80 mt-4 max-w-xl mx-auto text-lg">
+            <Brain className="size-12 mx-auto text-accent" />
+            <h2 className="font-display font-bold text-3xl md:text-5xl mt-5 text-foreground">Be the candidate recruiters can verify.</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-lg">
               Free during public beta. 60 seconds to your first AI-graded readiness score.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link to="/signup">
-                <Button size="lg" className="bg-white text-[oklch(0.18_0.08_265)] hover:bg-white/90 gap-2 h-12 px-6 text-base">
+                <Button size="lg" className="gap-2 h-12 px-6 text-base">
                   Start free <ArrowRight className="size-4" />
                 </Button>
               </Link>
               <Link to="/demo">
-                <Button size="lg" variant="outline" className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white gap-2 h-12 px-6 text-base">
+                <Button size="lg" variant="outline" className="gap-2 h-12 px-6 text-base">
                   <PlayCircle className="size-4" /> Watch the demo
                 </Button>
               </Link>

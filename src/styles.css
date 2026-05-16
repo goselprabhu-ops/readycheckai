@@ -71,7 +71,7 @@
 :root {
   --radius: 0.5rem;
   /* Cool, Linear/Stripe-leaning neutrals */
-  --background: oklch(0.992 0.003 255);
+  --background: oklch(0.99 0.012 150);
   --foreground: oklch(0.18 0.03 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.03 260);
@@ -80,9 +80,9 @@
   --primary: oklch(0.54 0.22 263);
   --primary-foreground: oklch(0.99 0.005 250);
   --primary-glow: oklch(0.7 0.19 255);
-  --secondary: oklch(0.97 0.006 255);
+  --secondary: oklch(0.97 0.018 148);
   --secondary-foreground: oklch(0.24 0.04 265);
-  --muted: oklch(0.968 0.005 255);
+  --muted: oklch(0.965 0.015 148);
   --muted-foreground: oklch(0.52 0.02 257);
   --accent: oklch(0.66 0.19 148);
   --accent-foreground: oklch(0.99 0.005 250);
