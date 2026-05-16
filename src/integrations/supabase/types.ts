@@ -1111,9 +1111,11 @@ export type Database = {
           benchmark_ranges: Json
           created_at: string
           description: string | null
+          dimension_weights: Json
           id: string
           is_active: boolean
           name: string
+          pathway: Json
           skill_weights: Json
           slug: string
         }
@@ -1121,9 +1123,11 @@ export type Database = {
           benchmark_ranges?: Json
           created_at?: string
           description?: string | null
+          dimension_weights?: Json
           id?: string
           is_active?: boolean
           name: string
+          pathway?: Json
           skill_weights?: Json
           slug: string
         }
@@ -1131,9 +1135,11 @@ export type Database = {
           benchmark_ranges?: Json
           created_at?: string
           description?: string | null
+          dimension_weights?: Json
           id?: string
           is_active?: boolean
           name?: string
+          pathway?: Json
           skill_weights?: Json
           slug?: string
         }
