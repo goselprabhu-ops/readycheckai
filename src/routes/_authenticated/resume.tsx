@@ -202,6 +202,7 @@ function ResumePage() {
       setProgress(100);
       setStage("done");
       setResult(r);
+      void track("resume_analyzed", { properties: { score: r.score, mode: r.mode } });
       toast.success(
         r.mode === "fallback"
           ? `AI unavailable — keyword score ${r.score}/100`
