@@ -34,6 +34,7 @@ import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMarketRouteImport } from './routes/_authenticated/market'
 import { Route as AuthenticatedLearningPathRouteImport } from './routes/_authenticated/learning-path'
 import { Route as AuthenticatedInterviewRouteImport } from './routes/_authenticated/interview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -178,6 +179,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMarketRoute = AuthenticatedMarketRouteImport.update({
+  id: '/market',
+  path: '/market',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedLearningPathRoute =
   AuthenticatedLearningPathRouteImport.update({
     id: '/learning-path',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
+  '/market': typeof AuthenticatedMarketRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -334,6 +341,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
+  '/market': typeof AuthenticatedMarketRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/interview': typeof AuthenticatedInterviewRoute
   '/_authenticated/learning-path': typeof AuthenticatedLearningPathRoute
+  '/_authenticated/market': typeof AuthenticatedMarketRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
@@ -424,6 +433,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/interview'
     | '/learning-path'
+    | '/market'
     | '/onboarding'
     | '/profile'
     | '/progress'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/interview'
     | '/learning-path'
+    | '/market'
     | '/onboarding'
     | '/profile'
     | '/progress'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/interview'
     | '/_authenticated/learning-path'
+    | '/_authenticated/market'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
     | '/_authenticated/progress'
@@ -739,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/market': {
+      id: '/_authenticated/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof AuthenticatedMarketRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/learning-path': {
       id: '/_authenticated/learning-path'
       path: '/learning-path'
@@ -869,6 +888,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInterviewRoute: typeof AuthenticatedInterviewRoute
   AuthenticatedLearningPathRoute: typeof AuthenticatedLearningPathRoute
+  AuthenticatedMarketRoute: typeof AuthenticatedMarketRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
@@ -888,6 +908,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInterviewRoute: AuthenticatedInterviewRoute,
   AuthenticatedLearningPathRoute: AuthenticatedLearningPathRoute,
+  AuthenticatedMarketRoute: AuthenticatedMarketRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
