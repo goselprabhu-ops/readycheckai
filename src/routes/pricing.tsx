@@ -9,6 +9,7 @@ import { PLANS, type PlanId } from '@/lib/stripe';
 import { PaymentTestModeBanner } from '@/components/PaymentTestModeBanner';
 import { StripeEmbeddedCheckoutPanel } from '@/components/StripeEmbeddedCheckout';
 import { supabase } from '@/integrations/supabase/client';
+import { track } from '@/lib/analytics';
 
 export const Route = createFileRoute('/pricing')({
   component: PricingPage,
@@ -40,6 +41,7 @@ function PricingPage() {
       void navigate({ to: '/dashboard' });
       return;
     }
+    void track('upgrade_started', { properties: { planId } });
     setOpenPlan(planId);
   };
 
