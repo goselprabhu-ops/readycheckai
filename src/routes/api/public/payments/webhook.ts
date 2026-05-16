@@ -82,6 +82,22 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
 
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
+  const eventId = (event as any).id as string | undefined;
+  if (eventId) {
+    // Idempotency: dedupe by Stripe event id. Insert first, skip if conflict.
+    const { error: dupErr } = await getSupabase()
+      .from('processed_stripe_events')
+      .insert({ event_id: eventId, type: event.type, environment: env });
+    if (dupErr) {
+      const msg = (dupErr as any).message ?? '';
+      const code = (dupErr as any).code ?? '';
+      if (code === '23505' || msg.includes('duplicate key')) {
+        console.log('Duplicate webhook event, skipping:', eventId);
+        return;
+      }
+      throw dupErr;
+    }
+  }
   switch (event.type) {
     case 'customer.subscription.created':
       await handleSubscriptionCreated(event.data.object, env);

@@ -55,11 +55,25 @@ export const createInstitution = createServerFn({ method: "POST" })
 
 export const getInstitutionDashboard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ institution_id: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        institution_id: z.string().uuid(),
+        department: z.string().max(80).optional(),
+        cohort_id: z.string().uuid().optional(),
+        limit: z.number().int().min(1).max(200).optional(),
+        offset: z.number().int().min(0).optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: result, error } = await supabase.rpc("institution_dashboard", {
       _inst: data.institution_id,
+      _department: data.department ?? null,
+      _cohort_id: data.cohort_id ?? null,
+      _limit: data.limit ?? 25,
+      _offset: data.offset ?? 0,
     });
     if (error) throw error;
     const { data: cohorts } = await supabase
