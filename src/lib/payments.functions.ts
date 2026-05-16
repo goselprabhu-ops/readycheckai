@@ -66,9 +66,9 @@ export const createCheckoutSession = createServerFn({ method: 'POST' })
       return_url: data.returnUrl,
       customer: customerId,
       metadata: { userId },
-      managed_payments: { enabled: true },
       ...(isRecurring && { subscription_data: { metadata: { userId } } }),
-    });
+      managed_payments: { enabled: true },
+    } as any);
 
     return { clientSecret: session.client_secret };
   });
