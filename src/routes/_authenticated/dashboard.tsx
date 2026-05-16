@@ -33,6 +33,8 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { track } from "@/lib/analytics";
+import { OnboardingChecklist } from "@/components/onboarding/OnboardingChecklist";
+import { WelcomeWalkthrough } from "@/components/onboarding/WelcomeWalkthrough";
 
 const ReadinessAreaChart = lazy(() =>
   import("@/components/dashboard-charts").then((m) => ({ default: m.ReadinessAreaChart })),
@@ -250,6 +252,9 @@ function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 -mt-10 relative z-10 space-y-6 min-w-0">
+        <WelcomeWalkthrough />
+        <OnboardingChecklist />
+
         {/* Readiness scoring engine */}
         <motion.div initial="hidden" animate="show" variants={fade}>
           <Suspense fallback={<Skeleton className="h-72 w-full rounded-2xl" />}>
