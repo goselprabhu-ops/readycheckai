@@ -31,7 +31,6 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { getMarketIntelligence } from "@/lib/market.functions";
 import {
   TrendingUp,
-  TrendingDown,
   Activity,
   Briefcase,
   IndianRupee,
