@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { regenerateRecommendations } from "@/lib/recommendations.functions";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 
 interface Recommendation {
   id: string;
@@ -239,6 +240,12 @@ export function RecommendationsPanel() {
                           </a>
                         )}
                       </div>
+                      <FeedbackWidget
+                        surface="recommendation"
+                        entityId={r.id}
+                        feature="recommendations_panel"
+                        className="shrink-0"
+                      />
                     </div>
                   </motion.li>
                 );
