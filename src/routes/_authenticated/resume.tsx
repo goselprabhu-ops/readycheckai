@@ -19,6 +19,7 @@ import {
 } from "@/lib/resume.functions";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircle2,
@@ -369,7 +370,12 @@ function ResumePage() {
         {/* Result card */}
         <Card>
           <CardHeader>
-            <CardTitle>Analysis</CardTitle>
+            <CardTitle className="flex items-center justify-between gap-2">
+              <span>Analysis</span>
+              {result ? (
+                <FeedbackWidget surface="resume" feature="resume_analysis" variant="compact" />
+              ) : null}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (

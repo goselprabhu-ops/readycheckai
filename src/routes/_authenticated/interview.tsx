@@ -27,6 +27,7 @@ import {
 } from "@/lib/interview.functions";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import { Clock, Send, Sparkles, Trophy, MessageSquare, Activity, Target } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/interview")({
@@ -238,7 +239,8 @@ function PracticePane() {
           <FeedbackCard title="Next steps" items={finalFeedback?.next_steps ?? []} tone="info" />
         </div>
         <div className="flex justify-end">
-          <Button variant="outline" onClick={onReset}>Run another interview</Button>
+          <FeedbackWidget surface="interview" feature="interview_summary" variant="full" label="Rate this feedback" />
+          <Button variant="outline" onClick={onReset} className="ml-3">Run another interview</Button>
         </div>
       </div>
     );

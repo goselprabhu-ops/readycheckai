@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_feedback: {
+        Row: {
+          comment: string | null
+          context: Json
+          created_at: string
+          entity_id: string | null
+          feature: string | null
+          id: string
+          issue_tag: string | null
+          model: string | null
+          quality_score: number | null
+          rating: number
+          surface: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          context?: Json
+          created_at?: string
+          entity_id?: string | null
+          feature?: string | null
+          id?: string
+          issue_tag?: string | null
+          model?: string | null
+          quality_score?: number | null
+          rating: number
+          surface: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          context?: Json
+          created_at?: string
+          entity_id?: string | null
+          feature?: string | null
+          id?: string
+          issue_tag?: string | null
+          model?: string | null
+          quality_score?: number | null
+          rating?: number
+          surface?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_response_cache: {
         Row: {
           cache_key: string
@@ -1826,6 +1871,7 @@ export type Database = {
       }
     }
     Functions: {
+      ai_feedback_overview: { Args: { _days?: number }; Returns: Json }
       check_action_cooldown: {
         Args: { _action: string; _cooldown_seconds: number }
         Returns: number
@@ -1934,6 +1980,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      recommendation_accuracy: { Args: { _days?: number }; Returns: Json }
       system_health_summary: { Args: never; Returns: Json }
     }
     Enums: {
