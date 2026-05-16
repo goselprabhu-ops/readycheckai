@@ -45,7 +45,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
           </Button>
         </Link>
         <Link to="/signup" aria-label="Create a new account">
-          <Button className="rounded-md bg-[oklch(0.6_0.22_255)] hover:bg-[oklch(0.65_0.22_255)] text-white">
+          <Button className="rounded-md bg-primary hover:bg-primary/90 text-primary-foreground">
             Get Started
           </Button>
         </Link>
