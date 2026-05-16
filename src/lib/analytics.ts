@@ -32,7 +32,7 @@ export async function track(eventName: string, opts: TrackOptions = {}): Promise
       user_id: user?.id ?? null,
       role: opts.role ?? null,
       route,
-      properties: opts.properties ?? {},
+      properties: (opts.properties ?? {}) as never,
       session_id: sessionId(),
     });
   } catch {
