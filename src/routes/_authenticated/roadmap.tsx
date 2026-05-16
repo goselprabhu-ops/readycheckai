@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { generateRoadmap, updateRoadmapItem } from "@/lib/roadmap.functions";
 import { toast } from "sonner";
-import { Circle, CheckCircle2, Loader2 } from "lucide-react";
+import { Circle, CheckCircle2, Loader2, Target, Sparkles, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/roadmap")({
   component: RoadmapPage,
@@ -80,7 +80,30 @@ function RoadmapPage() {
       </Card>
 
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No roadmap yet. Generate one based on your skills and resume gaps.</p>
+        <Card className="rounded-2xl border-dashed">
+          <CardContent className="p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Target className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="font-display text-lg font-semibold tracking-tight">
+                  How your roadmap works
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We analyze your resume, detected skills, and the gaps for your target role —
+                  then generate a sequenced plan of bite-sized tasks. Each task is estimated in
+                  minutes; check them off as you go and your readiness score updates with you.
+                </p>
+                <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 text-xs text-muted-foreground">
+                  <li className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-primary" /> Personalized to your gaps</li>
+                  <li className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-primary" /> Time-boxed micro-tasks</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Tracks toward readiness</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-2">
           {items.map((it, i) => (
