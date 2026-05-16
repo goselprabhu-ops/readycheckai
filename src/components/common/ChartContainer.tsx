@@ -28,7 +28,10 @@ export function ChartContainer({
 }: ChartContainerProps) {
   return (
     <SectionCard title={title} description={description} action={action}>
-      <div style={{ height }} className="w-full">
+      <div
+        style={{ ["--chart-h" as string]: `${height}px` }}
+        className="w-full min-w-0 overflow-hidden h-[220px] sm:h-[var(--chart-h)]"
+      >
         {isLoading ? (
           <LoadingSkeleton variant="chart" />
         ) : isEmpty ? (
