@@ -1920,6 +1920,7 @@ export type Database = {
         }
         Returns: number
       }
+      product_intelligence: { Args: { _days?: number }; Returns: Json }
       prune_ai_response_cache: { Args: never; Returns: number }
       prune_failed_resume_analyses: {
         Args: { _older_than_days?: number }
