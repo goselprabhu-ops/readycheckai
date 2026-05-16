@@ -380,12 +380,13 @@ export const analyzeResumeAuto = createServerFn({ method: "POST" })
     // Try AI path first; fall back to deterministic keyword analyzer on
     // any non-cap error. Cap errors are surfaced verbatim.
     try {
-      const ai = await analyzeResume({ data });
+      const ai = await analyzeResumeInternal(context.supabase, context.userId, data);
       return { mode: "ai" as const, ...ai };
     } catch (e: any) {
       if (e instanceof AiCapError) throw e;
-      const kw = await analyzeResumeKeywords({
-        data: { ...data, method: "fallback" },
+      const kw = await analyzeResumeKeywordsInternal(context.supabase, context.userId, {
+        ...data,
+        method: "fallback",
       });
       return { mode: "fallback" as const, ...kw };
     }
