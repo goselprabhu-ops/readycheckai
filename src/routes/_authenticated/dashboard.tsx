@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { track } from "@/lib/analytics";
 
 const ReadinessAreaChart = lazy(() =>
   import("@/components/dashboard-charts").then((m) => ({ default: m.ReadinessAreaChart })),
