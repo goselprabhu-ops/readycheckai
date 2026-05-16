@@ -70,8 +70,8 @@ export const getInstitutionDashboard = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: result, error } = await supabase.rpc("institution_dashboard", {
       _inst: data.institution_id,
-      _department: data.department ?? null,
-      _cohort_id: data.cohort_id ?? null,
+      _department: data.department ?? undefined,
+      _cohort_id: data.cohort_id ?? undefined,
       _limit: data.limit ?? 25,
       _offset: data.offset ?? 0,
     });
