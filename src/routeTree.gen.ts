@@ -34,7 +34,6 @@ import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLearningPathRouteImport } from './routes/_authenticated/learning-path'
-import { Route as AuthenticatedInterviewRouteImport } from './routes/_authenticated/interview'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCollegeRouteImport } from './routes/_authenticated/college'
 import { Route as AuthenticatedAssessmentRouteImport } from './routes/_authenticated/assessment'
@@ -177,11 +176,6 @@ const AuthenticatedLearningPathRoute =
     path: '/learning-path',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedInterviewRoute = AuthenticatedInterviewRouteImport.update({
-  id: '/interview',
-  path: '/interview',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -282,7 +276,6 @@ export interface FileRoutesByFullPath {
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -324,7 +317,6 @@ export interface FileRoutesByTo {
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -368,7 +360,6 @@ export interface FileRoutesById {
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
   '/_authenticated/college': typeof AuthenticatedCollegeRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/interview': typeof AuthenticatedInterviewRoute
   '/_authenticated/learning-path': typeof AuthenticatedLearningPathRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -412,7 +403,6 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/college'
     | '/dashboard'
-    | '/interview'
     | '/learning-path'
     | '/onboarding'
     | '/profile'
@@ -454,7 +444,6 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/college'
     | '/dashboard'
-    | '/interview'
     | '/learning-path'
     | '/onboarding'
     | '/profile'
@@ -497,7 +486,6 @@ export interface FileRouteTypes {
     | '/_authenticated/assessment'
     | '/_authenticated/college'
     | '/_authenticated/dashboard'
-    | '/_authenticated/interview'
     | '/_authenticated/learning-path'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
@@ -726,13 +714,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLearningPathRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/interview': {
-      id: '/_authenticated/interview'
-      path: '/interview'
-      fullPath: '/interview'
-      preLoaderRoute: typeof AuthenticatedInterviewRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -847,7 +828,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAssessmentRoute: typeof AuthenticatedAssessmentRoute
   AuthenticatedCollegeRoute: typeof AuthenticatedCollegeRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedInterviewRoute: typeof AuthenticatedInterviewRoute
   AuthenticatedLearningPathRoute: typeof AuthenticatedLearningPathRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -865,7 +845,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAssessmentRoute: AuthenticatedAssessmentRoute,
   AuthenticatedCollegeRoute: AuthenticatedCollegeRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedInterviewRoute: AuthenticatedInterviewRoute,
   AuthenticatedLearningPathRoute: AuthenticatedLearningPathRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -912,3 +891,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
