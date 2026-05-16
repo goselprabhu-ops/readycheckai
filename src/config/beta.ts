@@ -8,3 +8,7 @@
 export const BETA_MODE = true;
 
 export const BETA_NOTICE = "Free during beta — all features unlocked while we test with our first users.";
+
+/** Targets for triggering the post-beta paid migration (Razorpay). */
+export const BETA_TARGET_USERS = 500;
+export const BETA_TARGET_RESUMES = 500;

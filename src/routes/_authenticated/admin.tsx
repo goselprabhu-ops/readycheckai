@@ -38,6 +38,7 @@ import { BulkUploadTab } from "@/features/admin/tabs/BulkUploadTab";
 import { MonitoringTab } from "@/features/admin/tabs/MonitoringTab";
 import { ProductIntelligenceTab } from "@/features/admin/tabs/ProductIntelligenceTab";
 import { FeedbackTab } from "@/features/admin/tabs/FeedbackTab";
+import { BetaProgressCard } from "@/features/admin/BetaProgressCard";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -276,6 +277,7 @@ function AdminPanel() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+      <BetaProgressCard />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Card key={s.label}>
