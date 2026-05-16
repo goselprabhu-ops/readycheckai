@@ -259,20 +259,22 @@ const SUGGESTIONS: Record<string, string> = {
   Certifications: "List relevant certifications (Google Data Analytics, Microsoft PL-300, etc.).",
 };
 
-export const analyzeResumeKeywords = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({
+const analyzeResumeKeywordsInputSchema = z.object({
       text: z.string().min(20).max(100000),
       targetRole: z.string().min(1).max(120).default("Data Analyst"),
       resumeId: z.string().uuid().optional(),
       extractionConfidence: z.number().min(0).max(1).optional(),
       parserStatus: z.string().max(40).optional(),
       method: z.enum(["keyword", "fallback"]).default("keyword"),
-    }).parse(input)
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    });
+
+type AnalyzeResumeKeywordsInput = z.infer<typeof analyzeResumeKeywordsInputSchema>;
+
+async function analyzeResumeKeywordsInternal(
+  supabase: any,
+  userId: string,
+  data: AnalyzeResumeKeywordsInput,
+) {
 
     const found = new Set<string>();
     for (const rule of SKILL_RULES) {
@@ -326,6 +328,13 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
       missing_skills: missingSkills,
       suggestions,
     };
+}
+
+export const analyzeResumeKeywords = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => analyzeResumeKeywordsInputSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    return analyzeResumeKeywordsInternal(context.supabase, context.userId, data);
   });
 
 export const registerResumeUpload = createServerFn({ method: "POST" })
