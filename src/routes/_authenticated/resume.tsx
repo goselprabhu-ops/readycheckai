@@ -18,6 +18,7 @@ import {
   runResumePipeline,
 } from "@/lib/resume.functions";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircle2,
@@ -172,6 +173,7 @@ function ResumePage() {
       const { resume } = await registerUpload({
         data: { filePath: path, originalName: file.name },
       });
+      void track("resume_uploaded", { properties: { sizeKb: Math.round(file.size / 1024) } });
 
       // 2. Single canonical pipeline call: extract → analyze → persist.
       setStage("extracting");
@@ -202,6 +204,7 @@ function ResumePage() {
       setProgress(100);
       setStage("done");
       setResult(r);
+      void track("resume_analyzed", { properties: { score: r.score, mode: r.mode } });
       toast.success(
         r.mode === "fallback"
           ? `AI unavailable — keyword score ${r.score}/100`

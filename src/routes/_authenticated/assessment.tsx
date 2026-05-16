@@ -23,6 +23,7 @@ import {
   getAssessmentLeaderboard,
 } from "@/lib/assessment.functions";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { ScorePill } from "@/components/common/ScorePill";
 import {
   Database,
@@ -221,6 +222,7 @@ function AssessmentPage() {
       setExpiresAt(expMs);
       setTimeLeft(Math.max(1, Math.ceil((expMs - Date.now()) / 1000)));
       setActive(def);
+      void track("assessment_started", { properties: { assessmentId: def.id, category: (def as any).category, difficulty } });
     } catch (e: any) {
       toast.error(e?.message ?? "Could not start assessment");
     }
@@ -261,6 +263,15 @@ function AssessmentPage() {
       setAnalytics(null);
       if (auto) toast.message("Time's up — auto-submitted");
       else toast.success("Submitted");
+      void track("assessment_completed", {
+        properties: {
+          attemptId,
+          score: res.score,
+          total: res.total,
+          pct: res.total ? Math.round((res.score / res.total) * 100) : 0,
+          auto,
+        },
+      });
     } catch (e: any) {
       toast.error(e?.message ?? "Submission failed");
     } finally {

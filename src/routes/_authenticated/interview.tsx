@@ -26,6 +26,7 @@ import {
   INTERVIEW_CATEGORIES,
 } from "@/lib/interview.functions";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { Clock, Send, Sparkles, Trophy, MessageSquare, Activity, Target } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/interview")({
@@ -130,6 +131,7 @@ function PracticePane() {
       setSessionId(r.sessionId);
       setPlan(r.plan as PlanItem[]);
       setIndex(0);
+      void track("interview_started", { properties: { category, role, difficulty } });
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to start interview");
     } finally {
@@ -152,6 +154,7 @@ function PracticePane() {
           setFinalFeedback(fin.feedback ?? null);
         }
         setCompleted(true);
+        void track("interview_completed", { properties: { sessionId, scores: fin.scores ?? null } });
       } else {
         setIndex((i) => i + 1);
       }
