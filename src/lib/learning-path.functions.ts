@@ -151,12 +151,29 @@ Return ONLY the JSON object matching the schema.`;
 
     let output: LearningPathPayload;
     try {
-      const res = await withRetry(() => generateText({
-        model,
-        output: Output.object({ schema: PathSchema }),
-        prompt,
-      }));
-      output = res.output;
+      output = await withAiCache(
+        {
+          feature: "learning_path",
+          model: DEFAULT_MODEL,
+          prompt: {
+            role: data.targetRole,
+            weeks: weeksRequested,
+            skills,
+            attempts: attemptStats,
+            resume_ats: resume?.ats_score ?? null,
+            readiness: readiness?.readiness ?? null,
+          },
+          ttlSeconds: 60 * 60 * 24, // 1 day — inputs drift as user progresses
+        },
+        async () => {
+          const res = await withRetry(() => generateText({
+            model,
+            output: Output.object({ schema: PathSchema }),
+            prompt,
+          }));
+          return res.output as LearningPathPayload;
+        },
+      );
     } catch (err: any) {
       const raw = err?.text ?? err?.response?.text ?? "";
       const match = typeof raw === "string" ? raw.match(/\{[\s\S]*\}/) : null;
