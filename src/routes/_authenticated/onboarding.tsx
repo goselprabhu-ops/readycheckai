@@ -14,6 +14,8 @@ import { parseResumeForProfile, updateMyProfile, getMyProfile } from "@/lib/prof
 import { toast } from "sonner";
 import { FileText, UserPlus, Sparkles, Loader2 } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { RoleSelector } from "@/components/onboarding/RoleSelector";
+import { celebrate } from "@/components/onboarding/milestones";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
@@ -28,17 +30,45 @@ function OnboardingPage() {
   const saveProfile = useServerFn(updateMyProfile);
 
   const [stage, setStage] = useState<
-    "choose" | "uploading" | "extracting" | "parsing" | "saving" | "done"
-  >("choose");
+    "role" | "choose" | "uploading" | "extracting" | "parsing" | "saving" | "done"
+  >("role");
   const [progress, setProgress] = useState(0);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [savingRole, setSavingRole] = useState(false);
 
   // Skip onboarding if already done
   useEffect(() => {
     fetchProfile().then(({ profile }) => {
-      if ((profile as any)?.onboarded) nav({ to: "/profile" });
+      const p = profile as any;
+      if (p?.onboarded) {
+        nav({ to: "/profile" });
+        return;
+      }
+      if (p?.target_role) {
+        setSelectedRole(p.target_role);
+        setStage("choose");
+      }
     });
     void track("onboarding_started");
   }, []);
+
+  const handleRoleNext = async () => {
+    if (!selectedRole) {
+      toast.error("Pick a target role to continue");
+      return;
+    }
+    setSavingRole(true);
+    try {
+      await saveProfile({ data: { target_role: selectedRole } });
+      celebrate("role_selected");
+      void track("onboarding_role_selected", { properties: { role: selectedRole } });
+      setStage("choose");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not save role");
+    } finally {
+      setSavingRole(false);
+    }
+  };
 
   const handleResume = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +148,7 @@ function OnboardingPage() {
   };
 
   const stageLabel: Record<typeof stage, string> = {
+    role: "",
     choose: "",
     uploading: "Uploading resume…",
     extracting: "Reading PDF…",
@@ -142,7 +173,35 @@ function OnboardingPage() {
       </div>
 
       <div className="max-w-4xl mx-auto p-6 -mt-10 relative z-10">
-        {stage !== "choose" ? (
+        {stage === "role" ? (
+          <Card className="rounded-2xl">
+            <CardContent className="p-6 sm:p-8 space-y-5">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-muted-foreground">Step 1 of 2</div>
+                <h2 className="font-display text-2xl font-semibold tracking-tight mt-1">
+                  What role are you targeting?
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This shapes every recommendation — assessments, roadmap, mock interviews, and benchmarks.
+                </p>
+              </div>
+              <RoleSelector value={selectedRole} onChange={setSelectedRole} />
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStage("choose")}
+                  className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                >
+                  Skip for now
+                </button>
+                <Button onClick={handleRoleNext} disabled={savingRole} className="rounded-xl">
+                  {savingRole ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                  Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : stage !== "choose" ? (
           <Card className="rounded-2xl">
             <CardContent className="p-8 space-y-4">
               <div className="flex items-center gap-3">
@@ -156,7 +215,17 @@ function OnboardingPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Step 2 of 2</div>
+              <h2 className="font-display text-2xl font-semibold tracking-tight mt-1">
+                How do you want to build your profile?
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload a resume for instant AI parsing — or start from scratch.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
               <Card className="rounded-2xl h-full">
                 <CardContent className="p-6 space-y-4">
@@ -207,6 +276,19 @@ function OnboardingPage() {
                 </CardContent>
               </Card>
             </motion.div>
+            </div>
+            {selectedRole ? (
+              <p className="text-xs text-muted-foreground">
+                Target role: <span className="font-medium text-foreground">{selectedRole}</span> —{" "}
+                <button
+                  type="button"
+                  onClick={() => setStage("role")}
+                  className="underline-offset-4 hover:underline"
+                >
+                  change
+                </button>
+              </p>
+            ) : null}
           </div>
         )}
       </div>
