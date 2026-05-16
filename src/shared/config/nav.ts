@@ -5,6 +5,7 @@ import {
   Mic,
   Map,
   TrendingUp,
+  Target,
   User,
   Shield,
   Building2,
@@ -28,6 +29,7 @@ export interface NavItem {
 export const DASHBOARD_NAV: NavItem[] = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, group: "main" },
   { label: "Analytics", to: "/analytics", icon: BarChart3, group: "main" },
+  { label: "Role Readiness", to: "/role-readiness", icon: Target, group: "main" },
   { label: "Profile", to: "/profile", icon: User, group: "main" },
 
   { label: "Resume", to: "/resume", icon: FileText, group: "career" },
