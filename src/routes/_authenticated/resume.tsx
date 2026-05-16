@@ -173,6 +173,7 @@ function ResumePage() {
       const { resume } = await registerUpload({
         data: { filePath: path, originalName: file.name },
       });
+      void track("resume_uploaded", { properties: { sizeKb: Math.round(file.size / 1024) } });
 
       // 2. Single canonical pipeline call: extract → analyze → persist.
       setStage("extracting");
