@@ -85,9 +85,14 @@ function RoleReadinessPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Role Readiness"
+        eyebrow="Role Engine"
+        title={
+          <span className="flex items-center gap-2">
+            <Target className="h-6 w-6 text-primary" />
+            Role Readiness
+          </span>
+        }
         description="Recruiter-grade readiness across SQL, Python, Statistics, Visualization, Communication and Business — tuned per analytics role."
-        icon={Target}
       />
 
       <Tabs defaultValue="overview" className="mt-6">
