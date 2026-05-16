@@ -59,21 +59,23 @@ async function upsertSkills(
   if (error) throw new Error(error.message);
 }
 
-export const analyzeResume = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({
+const analyzeResumeInputSchema = z.object({
       text: z.string().min(50).max(50000),
       targetRole: z.string().min(1).max(120).default("Software Engineer"),
       resumeId: z.string().uuid().optional(),
       extractionConfidence: z.number().min(0).max(1).optional(),
       parserStatus: z.string().max(40).optional(),
-    }).parse(input)
-  )
-  .handler(async ({ data, context }) => {
+    });
+
+type AnalyzeResumeInput = z.infer<typeof analyzeResumeInputSchema>;
+
+async function analyzeResumeInternal(
+  supabase: any,
+  userId: string,
+  data: AnalyzeResumeInput,
+) {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
-    const { supabase, userId } = context;
 
     // Cost guardrail — atomic increment + hard cap check.
     await chargeAiUsage(supabase, userId, "resume_ai");
@@ -208,6 +210,13 @@ ${data.text}`;
       quality_breakdown: output.quality_breakdown,
       rewrites: output.rewrites,
     };
+}
+
+export const analyzeResume = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => analyzeResumeInputSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    return analyzeResumeInternal(context.supabase, context.userId, data);
   });
 
 // ---------------------------------------------------------------------------
