@@ -4,6 +4,7 @@ import { withRetry } from "@/lib/ai-gateway";
 import { generateText, generateObject } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { withAiCache } from "./ai-cache.server";
 import { chargeAiUsage } from "./ai-guardrails";
 import { enforceCooldown } from "./security";
 
@@ -146,12 +147,28 @@ export const createInterviewV1 = createServerFn({ method: "POST" })
 
     const model = getGateway();
     const count = data.category === "mixed" ? 6 : 5;
-    const { object } = await withRetry(() => generateObject({
-      model,
-      schema: PlanSchema,
-      system: `You are a senior analytics hiring manager designing a realistic mock interview for the role "${data.roleTarget}". Produce ${count} interview questions covering the requested category at "${data.difficulty}" difficulty. For "mixed", include a balanced loop across SQL, Python, Power BI, statistics, a case study, and one behavioral. Each question must be answerable in 1-4 minutes by the candidate via text. For MCQs, include 4 plausible options. For coding, ask for an SQL/Python snippet. For dashboard questions, describe a chart in words and ask for interpretation. Avoid trivia.`,
-      prompt: `Category: ${categoryLabel(data.category)}\nRole: ${data.roleTarget}\nDifficulty: ${data.difficulty}\nReturn a structured JSON plan.`,
-    }));
+    const object = await withAiCache(
+      {
+        feature: "interview_plan",
+        model: DEFAULT_MODEL,
+        prompt: {
+          category: data.category,
+          role: data.roleTarget,
+          difficulty: data.difficulty,
+          count,
+        },
+        ttlSeconds: 60 * 60 * 24 * 7,
+      },
+      async () => {
+        const r = await withRetry(() => generateObject({
+          model,
+          schema: PlanSchema,
+          system: `You are a senior analytics hiring manager designing a realistic mock interview for the role "${data.roleTarget}". Produce ${count} interview questions covering the requested category at "${data.difficulty}" difficulty. For "mixed", include a balanced loop across SQL, Python, Power BI, statistics, a case study, and one behavioral. Each question must be answerable in 1-4 minutes by the candidate via text. For MCQs, include 4 plausible options. For coding, ask for an SQL/Python snippet. For dashboard questions, describe a chart in words and ask for interpretation. Avoid trivia.`,
+          prompt: `Category: ${categoryLabel(data.category)}\nRole: ${data.roleTarget}\nDifficulty: ${data.difficulty}\nReturn a structured JSON plan.`,
+        }));
+        return r.object;
+      },
+    );
 
     // Stamp stable keys + default times
     const plan = object.questions.map((q, i) => ({

@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          completion_tokens: number | null
+          created_at: string
+          expires_at: string
+          feature: string
+          hit_count: number
+          model: string
+          prompt_tokens: number | null
+          response_json: Json | null
+          response_text: string | null
+        }
+        Insert: {
+          cache_key: string
+          completion_tokens?: number | null
+          created_at?: string
+          expires_at: string
+          feature: string
+          hit_count?: number
+          model: string
+          prompt_tokens?: number | null
+          response_json?: Json | null
+          response_text?: string | null
+        }
+        Update: {
+          cache_key?: string
+          completion_tokens?: number | null
+          created_at?: string
+          expires_at?: string
+          feature?: string
+          hit_count?: number
+          model?: string
+          prompt_tokens?: number | null
+          response_json?: Json | null
+          response_text?: string | null
+        }
+        Relationships: []
+      }
       ai_usage_daily: {
         Row: {
           count: number
@@ -1881,6 +1920,7 @@ export type Database = {
         }
         Returns: number
       }
+      prune_ai_response_cache: { Args: never; Returns: number }
       prune_failed_resume_analyses: {
         Args: { _older_than_days?: number }
         Returns: number

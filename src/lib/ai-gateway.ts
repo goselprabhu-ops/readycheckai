@@ -13,6 +13,38 @@ export const createLovableAiGatewayProvider = (lovableApiKey: string) =>
 export const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 /**
+ * Tiered models — pick by workload, not by reflex. All routed through
+ * Lovable AI Gateway so we never expose a provider name to end users.
+ *  - cheap:    classification / short rewrites / batch summaries
+ *  - default:  general chat, evaluation, recommendations
+ *  - reasoning: hard reasoning, long roadmaps, multi-step planning
+ */
+export const MODEL_TIERS = {
+  cheap: "google/gemini-3.1-flash-lite-preview",
+  default: DEFAULT_MODEL,
+  reasoning: "google/gemini-3.1-pro-preview",
+} as const;
+
+export type ModelTier = keyof typeof MODEL_TIERS;
+
+/**
+ * Run an AI call with retry; on terminal failure, return a fallback value.
+ * Keeps user-facing surfaces from crashing on transient gateway issues.
+ */
+export async function withFallback<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+  opts?: { attempts?: number; baseMs?: number; capMs?: number },
+): Promise<T> {
+  try {
+    return await withRetry(fn, opts);
+  } catch (err) {
+    console.error("[ai] withFallback caught after retries:", err);
+    return fallback;
+  }
+}
+
+/**
  * Retry an async AI call with exponential backoff. Retries on transient
  * failures (429, 5xx, network errors); fails fast on 4xx (except 429) and
  * on AiCapError (daily user cap is not transient).
