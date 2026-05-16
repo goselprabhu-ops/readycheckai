@@ -490,6 +490,147 @@ export type Database = {
         }
         Relationships: []
       }
+      market_industry_growth: {
+        Row: {
+          created_at: string
+          growth_pct: number
+          hiring_index: number
+          id: string
+          industry: string
+          month: string
+          top_skill: string | null
+        }
+        Insert: {
+          created_at?: string
+          growth_pct?: number
+          hiring_index?: number
+          id?: string
+          industry: string
+          month: string
+          top_skill?: string | null
+        }
+        Update: {
+          created_at?: string
+          growth_pct?: number
+          hiring_index?: number
+          id?: string
+          industry?: string
+          month?: string
+          top_skill?: string | null
+        }
+        Relationships: []
+      }
+      market_role_demand: {
+        Row: {
+          created_at: string
+          demand_index: number
+          growth_pct: number
+          id: string
+          month: string
+          openings: number
+          region: string
+          role_name: string
+          role_slug: string
+        }
+        Insert: {
+          created_at?: string
+          demand_index?: number
+          growth_pct?: number
+          id?: string
+          month: string
+          openings?: number
+          region?: string
+          role_name: string
+          role_slug: string
+        }
+        Update: {
+          created_at?: string
+          demand_index?: number
+          growth_pct?: number
+          id?: string
+          month?: string
+          openings?: number
+          region?: string
+          role_name?: string
+          role_slug?: string
+        }
+        Relationships: []
+      }
+      market_salary_bands: {
+        Row: {
+          currency: string
+          experience_level: string
+          id: string
+          region: string
+          role_name: string
+          role_slug: string
+          salary_max: number
+          salary_median: number
+          salary_min: number
+          sample_size: number
+          updated_at: string
+        }
+        Insert: {
+          currency?: string
+          experience_level: string
+          id?: string
+          region?: string
+          role_name: string
+          role_slug: string
+          salary_max?: number
+          salary_median?: number
+          salary_min?: number
+          sample_size?: number
+          updated_at?: string
+        }
+        Update: {
+          currency?: string
+          experience_level?: string
+          id?: string
+          region?: string
+          role_name?: string
+          role_slug?: string
+          salary_max?: number
+          salary_median?: number
+          salary_min?: number
+          sample_size?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      market_skills_trend: {
+        Row: {
+          category: string
+          created_at: string
+          demand_index: number
+          growth_pct: number
+          id: string
+          month: string
+          postings: number
+          skill: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          demand_index?: number
+          growth_pct?: number
+          id?: string
+          month: string
+          postings?: number
+          skill: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          demand_index?: number
+          growth_pct?: number
+          id?: string
+          month?: string
+          postings?: number
+          skill?: string
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           attempts: number
