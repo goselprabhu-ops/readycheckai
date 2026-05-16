@@ -27,6 +27,7 @@ import {
 } from "@/lib/interview.functions";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import { Clock, Send, Sparkles, Trophy, MessageSquare, Activity, Target } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/interview")({
