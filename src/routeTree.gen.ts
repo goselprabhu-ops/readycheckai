@@ -24,6 +24,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserSlugRouteImport } from './routes/user.$slug'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedVerifyPhoneRouteImport } from './routes/_authenticated/verify-phone'
 import { Route as AuthenticatedRoleReadinessRouteImport } from './routes/_authenticated/role-readiness'
@@ -126,6 +127,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserSlugRoute = UserSlugRouteImport.update({
+  id: '/user/$slug',
+  path: '/user/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -316,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -361,6 +368,7 @@ export interface FileRoutesByTo {
   '/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -408,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/_authenticated/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/role-readiness'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/role-readiness'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -546,6 +557,7 @@ export interface FileRouteTypes {
     | '/_authenticated/role-readiness'
     | '/_authenticated/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -575,6 +587,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  UserSlugRoute: typeof UserSlugRoute
   ApiPublicClientErrorsRoute: typeof ApiPublicClientErrorsRoute
   ApiPublicWebVitalsRoute: typeof ApiPublicWebVitalsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -692,6 +705,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/$slug': {
+      id: '/user/$slug'
+      path: '/user/$slug'
+      fullPath: '/user/$slug'
+      preLoaderRoute: typeof UserSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -963,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  UserSlugRoute: UserSlugRoute,
   ApiPublicClientErrorsRoute: ApiPublicClientErrorsRoute,
   ApiPublicWebVitalsRoute: ApiPublicWebVitalsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,

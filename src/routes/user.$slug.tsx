@@ -117,7 +117,8 @@ function initialsOf(name?: string | null) {
 }
 
 function PublicProfilePage() {
-  const { profile } = Route.useLoaderData();
+  const data = Route.useLoaderData() as { profile: PublicProfilePayload };
+  const profile = data.profile;
   const p = profile.profile;
   const s = profile.sections;
 
