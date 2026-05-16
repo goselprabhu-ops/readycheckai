@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateRoadmap, updateRoadmapItem } from "@/lib/roadmap.functions";
 import { toast } from "sonner";
 import { Circle, CheckCircle2, Loader2, Target, Sparkles, Clock } from "lucide-react";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 
 export const Route = createFileRoute("/_authenticated/roadmap")({
   component: RoadmapPage,
@@ -128,6 +129,7 @@ function RoadmapPage() {
                   </div>
                   {it.description && <p className="text-sm text-muted-foreground mt-1">{it.description}</p>}
                 </div>
+                <FeedbackWidget surface="roadmap" entityId={it.id} feature="roadmap_item" className="shrink-0" />
               </CardContent>
             </Card>
           ))}
