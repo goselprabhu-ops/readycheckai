@@ -37,7 +37,7 @@ export function RecommendationsTab() {
           <Table>
             <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Source</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>When</TableHead></TableRow></TableHeader>
             <TableBody>
-              {data.recent.map(r => (
+              {data.recent.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="max-w-md truncate">{r.title}</TableCell>
                   <TableCell><Badge variant="outline">{r.source}</Badge></TableCell>
