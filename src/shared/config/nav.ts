@@ -47,8 +47,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "Billing", to: "/billing", icon: CreditCard, group: "growth" },
 
   { label: "Admin", to: "/admin", icon: Shield, group: "manage", roles: ["admin"] },
-  { label: "College", to: "/college", icon: Building2, group: "manage", roles: ["college_admin", "institute_admin", "admin"] },
-  { label: "Institution", to: "/institution", icon: Building2, group: "manage" },
+  { label: "Institution", to: "/institution", icon: Building2, group: "manage", roles: ["college_admin", "institute_admin", "admin"] },
   { label: "Recruiter", to: "/recruiter", icon: Briefcase, group: "manage", roles: ["recruiter", "admin"] },
 ];
 
