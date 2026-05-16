@@ -120,7 +120,6 @@ function InstitutionPage() {
       <PageHeader
         title="Institution Dashboard"
         description="An employability operating system for colleges, bootcamps, and placement centers."
-        icon={Building2}
       />
 
       <div className="flex flex-wrap items-center gap-3 mb-6">

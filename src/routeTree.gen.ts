@@ -39,6 +39,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMarketRouteImport } from './routes/_authenticated/market'
 import { Route as AuthenticatedLearningPathRouteImport } from './routes/_authenticated/learning-path'
 import { Route as AuthenticatedInterviewRouteImport } from './routes/_authenticated/interview'
+import { Route as AuthenticatedInstitutionRouteImport } from './routes/_authenticated/institution'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCollegeRouteImport } from './routes/_authenticated/college'
 import { Route as AuthenticatedAssessmentRouteImport } from './routes/_authenticated/assessment'
@@ -208,6 +209,12 @@ const AuthenticatedInterviewRoute = AuthenticatedInterviewRouteImport.update({
   path: '/interview',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInstitutionRoute =
+  AuthenticatedInstitutionRouteImport.update({
+    id: '/institution',
+    path: '/institution',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/institution': typeof AuthenticatedInstitutionRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
   '/market': typeof AuthenticatedMarketRoute
@@ -354,6 +362,7 @@ export interface FileRoutesByTo {
   '/assessment': typeof AuthenticatedAssessmentRoute
   '/college': typeof AuthenticatedCollegeRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/institution': typeof AuthenticatedInstitutionRoute
   '/interview': typeof AuthenticatedInterviewRoute
   '/learning-path': typeof AuthenticatedLearningPathRoute
   '/market': typeof AuthenticatedMarketRoute
@@ -402,6 +411,7 @@ export interface FileRoutesById {
   '/_authenticated/assessment': typeof AuthenticatedAssessmentRoute
   '/_authenticated/college': typeof AuthenticatedCollegeRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/institution': typeof AuthenticatedInstitutionRoute
   '/_authenticated/interview': typeof AuthenticatedInterviewRoute
   '/_authenticated/learning-path': typeof AuthenticatedLearningPathRoute
   '/_authenticated/market': typeof AuthenticatedMarketRoute
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/college'
     | '/dashboard'
+    | '/institution'
     | '/interview'
     | '/learning-path'
     | '/market'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/assessment'
     | '/college'
     | '/dashboard'
+    | '/institution'
     | '/interview'
     | '/learning-path'
     | '/market'
@@ -543,6 +555,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assessment'
     | '/_authenticated/college'
     | '/_authenticated/dashboard'
+    | '/_authenticated/institution'
     | '/_authenticated/interview'
     | '/_authenticated/learning-path'
     | '/_authenticated/market'
@@ -812,6 +825,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInterviewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/institution': {
+      id: '/_authenticated/institution'
+      path: '/institution'
+      fullPath: '/institution'
+      preLoaderRoute: typeof AuthenticatedInstitutionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -926,6 +946,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAssessmentRoute: typeof AuthenticatedAssessmentRoute
   AuthenticatedCollegeRoute: typeof AuthenticatedCollegeRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedInstitutionRoute: typeof AuthenticatedInstitutionRoute
   AuthenticatedInterviewRoute: typeof AuthenticatedInterviewRoute
   AuthenticatedLearningPathRoute: typeof AuthenticatedLearningPathRoute
   AuthenticatedMarketRoute: typeof AuthenticatedMarketRoute
@@ -947,6 +968,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAssessmentRoute: AuthenticatedAssessmentRoute,
   AuthenticatedCollegeRoute: AuthenticatedCollegeRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedInstitutionRoute: AuthenticatedInstitutionRoute,
   AuthenticatedInterviewRoute: AuthenticatedInterviewRoute,
   AuthenticatedLearningPathRoute: AuthenticatedLearningPathRoute,
   AuthenticatedMarketRoute: AuthenticatedMarketRoute,
