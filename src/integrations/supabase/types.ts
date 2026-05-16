@@ -277,24 +277,36 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          evaluation: Json | null
           id: string
+          question_key: string | null
+          question_type: string | null
           role: string
+          score: number | null
           session_id: string
           user_id: string
         }
         Insert: {
           content: string
           created_at?: string
+          evaluation?: Json | null
           id?: string
+          question_key?: string | null
+          question_type?: string | null
           role: string
+          score?: number | null
           session_id: string
           user_id: string
         }
         Update: {
           content?: string
           created_at?: string
+          evaluation?: Json | null
           id?: string
+          question_key?: string | null
+          question_type?: string | null
           role?: string
+          score?: number | null
           session_id?: string
           user_id?: string
         }
@@ -310,21 +322,63 @@ export type Database = {
       }
       interview_sessions: {
         Row: {
+          category: string
+          communication_score: number | null
+          confidence_score: number | null
           created_at: string
+          current_index: number
+          difficulty: string
+          duration_target_seconds: number
+          ended_at: string | null
+          evaluations: Json
+          feedback: Json
           id: string
+          overall_score: number | null
+          plan: Json
           role_target: string
+          started_at: string
+          status: string
+          technical_score: number | null
           user_id: string
         }
         Insert: {
+          category?: string
+          communication_score?: number | null
+          confidence_score?: number | null
           created_at?: string
+          current_index?: number
+          difficulty?: string
+          duration_target_seconds?: number
+          ended_at?: string | null
+          evaluations?: Json
+          feedback?: Json
           id?: string
+          overall_score?: number | null
+          plan?: Json
           role_target?: string
+          started_at?: string
+          status?: string
+          technical_score?: number | null
           user_id: string
         }
         Update: {
+          category?: string
+          communication_score?: number | null
+          confidence_score?: number | null
           created_at?: string
+          current_index?: number
+          difficulty?: string
+          duration_target_seconds?: number
+          ended_at?: string | null
+          evaluations?: Json
+          feedback?: Json
           id?: string
+          overall_score?: number | null
+          plan?: Json
           role_target?: string
+          started_at?: string
+          status?: string
+          technical_score?: number | null
           user_id?: string
         }
         Relationships: []
