@@ -192,6 +192,44 @@ export type Database = {
         }
         Relationships: []
       }
+      cohorts: {
+        Row: {
+          created_at: string
+          department: string | null
+          end_date: string | null
+          id: string
+          institution_id: string
+          name: string
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          end_date?: string | null
+          id?: string
+          institution_id: string
+          name: string
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          end_date?: string | null
+          id?: string
+          institution_id?: string
+          name?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohorts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_flags: {
         Row: {
           created_at: string
@@ -354,6 +392,128 @@ export type Database = {
           resume_score?: number
           skills_score?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      institution_members: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          role: Database["public"]["Enums"]["institution_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          role?: Database["public"]["Enums"]["institution_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          role?: Database["public"]["Enums"]["institution_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_members_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_students: {
+        Row: {
+          cohort_id: string | null
+          department: string | null
+          enrollment_no: string | null
+          id: string
+          institution_id: string
+          joined_at: string
+          status: string
+          student_email: string | null
+          user_id: string
+        }
+        Insert: {
+          cohort_id?: string | null
+          department?: string | null
+          enrollment_no?: string | null
+          id?: string
+          institution_id: string
+          joined_at?: string
+          status?: string
+          student_email?: string | null
+          user_id: string
+        }
+        Update: {
+          cohort_id?: string | null
+          department?: string | null
+          enrollment_no?: string | null
+          id?: string
+          institution_id?: string
+          joined_at?: string
+          status?: string
+          student_email?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_students_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_students_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutions: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          created_by: string | null
+          domain: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          type: Database["public"]["Enums"]["institution_type"]
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          type?: Database["public"]["Enums"]["institution_type"]
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          created_by?: string | null
+          domain?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          type?: Database["public"]["Enums"]["institution_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1550,6 +1710,14 @@ export type Database = {
         }[]
       }
       get_public_profile: { Args: { _slug: string }; Returns: Json }
+      has_institution_role: {
+        Args: {
+          _inst: string
+          _roles: Database["public"]["Enums"]["institution_role"][]
+          _user: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1560,6 +1728,11 @@ export type Database = {
       increment_ai_usage: {
         Args: { _feature: string; _hard_cap: number; _user_id: string }
         Returns: number
+      }
+      institution_dashboard: { Args: { _inst: string }; Returns: Json }
+      is_institution_member: {
+        Args: { _inst: string; _user: string }
+        Returns: boolean
       }
       log_security_event: {
         Args: {
@@ -1623,6 +1796,8 @@ export type Database = {
         | "tableau"
         | "excel"
         | "statistics"
+      institution_role: "owner" | "admin" | "staff" | "viewer"
+      institution_type: "college" | "bootcamp" | "placement_center" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1767,6 +1942,8 @@ export const Constants = {
         "excel",
         "statistics",
       ],
+      institution_role: ["owner", "admin", "staff", "viewer"],
+      institution_type: ["college", "bootcamp", "placement_center", "other"],
     },
   },
 } as const
