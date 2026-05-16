@@ -19,6 +19,7 @@ import {
 } from "@/lib/resume.functions";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircle2,
