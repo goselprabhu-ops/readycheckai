@@ -259,7 +259,7 @@ function AdminPanel() {
       )}
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="flex flex-wrap h-auto">
+        <TabsList className="flex w-full overflow-x-auto md:flex-wrap h-auto justify-start gap-1 no-scrollbar">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>

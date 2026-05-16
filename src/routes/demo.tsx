@@ -167,7 +167,7 @@ function DemoPage() {
         </div>
 
         <Tabs defaultValue="candidates" className="space-y-6">
-          <TabsList className="flex flex-wrap gap-1 bg-muted/40 p-1">
+          <TabsList className="flex w-full overflow-x-auto md:flex-wrap gap-1 bg-muted/40 p-1 justify-start no-scrollbar">
             <TabsTrigger value="candidates" className="gap-1.5">
               <Users className="h-3.5 w-3.5" /> Candidates
             </TabsTrigger>
