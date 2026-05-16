@@ -46,6 +46,9 @@ function BillingPage() {
   return (
     <div className="min-h-screen">
       <PaymentTestModeBanner />
+      <div className="w-full bg-primary/10 border-b border-primary/20 px-4 py-3 text-center text-sm">
+        <strong>Free during beta</strong> — billing is paused while we test with our first users. You won't be charged.
+      </div>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>

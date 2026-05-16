@@ -50,6 +50,9 @@ function PricingPage() {
   return (
     <div className="min-h-screen bg-background">
       <PaymentTestModeBanner />
+      <div className="w-full bg-primary/10 border-b border-primary/20 px-4 py-3 text-center text-sm">
+        <strong>Free during beta</strong> — all features are unlocked for early users. Paid plans below are a preview of what's coming.
+      </div>
       <div className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <Badge variant="secondary" className="mb-4">Pricing</Badge>

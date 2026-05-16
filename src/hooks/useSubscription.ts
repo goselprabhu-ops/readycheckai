@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getStripeEnvironment } from '@/lib/stripe';
 import { planFromPriceId, type PlanId } from '@/lib/stripe';
+import { BETA_MODE } from '@/config/beta';
 
 export interface SubscriptionRow {
   id: string;
@@ -85,6 +86,18 @@ export function useSubscription(): SubscriptionState {
 
   const isActive = computeIsActive(subscription);
   const plan: PlanId = isActive ? planFromPriceId(subscription?.price_id) : 'free';
+
+  if (BETA_MODE) {
+    return {
+      loading,
+      subscription,
+      plan: 'premium',
+      isActive: true,
+      isPremium: true,
+      isInstitution: true,
+      refetch: load,
+    };
+  }
 
   return {
     loading,
