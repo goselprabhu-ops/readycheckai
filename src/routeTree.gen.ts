@@ -22,6 +22,7 @@ import { Route as ProductsRouteImport } from './routes/products'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as IpNoticeRouteImport } from './routes/ip-notice'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -126,6 +127,11 @@ const PricingRoute = PricingRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IpNoticeRoute = IpNoticeRouteImport.update({
+  id: '/ip-notice',
+  path: '/ip-notice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -345,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/ip-notice': typeof IpNoticeRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/ip-notice': typeof IpNoticeRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -455,6 +463,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/demo': typeof DemoRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/ip-notice': typeof IpNoticeRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -511,6 +520,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/forgot-password'
+    | '/ip-notice'
     | '/login'
     | '/pricing'
     | '/privacy'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/forgot-password'
+    | '/ip-notice'
     | '/login'
     | '/pricing'
     | '/privacy'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/demo'
     | '/forgot-password'
+    | '/ip-notice'
     | '/login'
     | '/pricing'
     | '/privacy'
@@ -676,6 +688,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DemoRoute: typeof DemoRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  IpNoticeRoute: typeof IpNoticeRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -795,6 +808,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ip-notice': {
+      id: '/ip-notice'
+      path: '/ip-notice'
+      fullPath: '/ip-notice'
+      preLoaderRoute: typeof IpNoticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -1138,6 +1158,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DemoRoute: DemoRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  IpNoticeRoute: IpNoticeRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
