@@ -577,7 +577,7 @@ export const runResumePipeline = createServerFn({ method: "POST" })
     };
 
     try {
-      const ai = await analyzeResume({ data: analyzeInput });
+      const ai = await analyzeResumeInternal(supabase, userId, analyzeInput);
       return {
         ok: true as const,
         stage: "done" as const,
@@ -588,8 +588,9 @@ export const runResumePipeline = createServerFn({ method: "POST" })
       };
     } catch (e: any) {
       if (e instanceof AiCapError) throw e;
-      const kw = await analyzeResumeKeywords({
-        data: { ...analyzeInput, method: "fallback" as const },
+      const kw = await analyzeResumeKeywordsInternal(supabase, userId, {
+        ...analyzeInput,
+        method: "fallback" as const,
       });
       return {
         ok: true as const,
