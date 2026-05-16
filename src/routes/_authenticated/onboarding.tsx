@@ -13,6 +13,7 @@ import {
 import { parseResumeForProfile, updateMyProfile, getMyProfile } from "@/lib/profile.functions";
 import { toast } from "sonner";
 import { FileText, UserPlus, Sparkles, Loader2 } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
@@ -36,6 +37,7 @@ function OnboardingPage() {
     fetchProfile().then(({ profile }) => {
       if ((profile as any)?.onboarded) nav({ to: "/profile" });
     });
+    void track("onboarding_started");
   }, []);
 
   const handleResume = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -103,6 +105,8 @@ function OnboardingPage() {
       });
       setProgress(100);
       setStage("done");
+      void track("onboarding_resume_uploaded");
+      void track("onboarding_completed", { properties: { method: "resume" } });
       toast.success("Resume parsed — review and complete your profile");
       nav({ to: "/profile" });
     } catch (err: any) {
