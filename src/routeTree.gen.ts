@@ -31,6 +31,7 @@ import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
+import { Route as AuthenticatedPublicProfileRouteImport } from './routes/_authenticated/public-profile'
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -164,6 +165,12 @@ const AuthenticatedRecruiterRoute = AuthenticatedRecruiterRouteImport.update({
   path: '/recruiter',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPublicProfileRoute =
+  AuthenticatedPublicProfileRouteImport.update({
+    id: '/public-profile',
+    path: '/public-profile',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -301,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
+  '/public-profile': typeof AuthenticatedPublicProfileRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
@@ -345,6 +353,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
+  '/public-profile': typeof AuthenticatedPublicProfileRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
@@ -391,6 +400,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
+  '/_authenticated/public-profile': typeof AuthenticatedPublicProfileRoute
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRoute
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/progress'
+    | '/public-profile'
     | '/recruiter'
     | '/results'
     | '/resume'
@@ -481,6 +492,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/progress'
+    | '/public-profile'
     | '/recruiter'
     | '/results'
     | '/resume'
@@ -526,6 +538,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
     | '/_authenticated/progress'
+    | '/_authenticated/public-profile'
     | '/_authenticated/recruiter'
     | '/_authenticated/results'
     | '/_authenticated/resume'
@@ -730,6 +743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecruiterRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/public-profile': {
+      id: '/_authenticated/public-profile'
+      path: '/public-profile'
+      fullPath: '/public-profile'
+      preLoaderRoute: typeof AuthenticatedPublicProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/progress': {
       id: '/_authenticated/progress'
       path: '/progress'
@@ -892,6 +912,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
+  AuthenticatedPublicProfileRoute: typeof AuthenticatedPublicProfileRoute
   AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRoute
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
@@ -912,6 +933,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
+  AuthenticatedPublicProfileRoute: AuthenticatedPublicProfileRoute,
   AuthenticatedRecruiterRoute: AuthenticatedRecruiterRoute,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
@@ -955,3 +977,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
