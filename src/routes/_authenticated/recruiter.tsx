@@ -76,7 +76,7 @@ function RecruiterWorkspace() {
         </div>
         <div className="mt-4 space-y-2">
           {filtered.map((c) => (
-            <CandidateRow key={c.id} candidate={c} />
+            <CandidateRow key={c.id} c={c} />
           ))}
           {filtered.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
