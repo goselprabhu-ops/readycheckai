@@ -46,6 +46,7 @@ export type Database = {
           assessment_id: string
           completed_at: string | null
           created_at: string
+          difficulty: string
           expires_at: string | null
           id: string
           max_score: number
@@ -58,6 +59,7 @@ export type Database = {
           assessment_id: string
           completed_at?: string | null
           created_at?: string
+          difficulty?: string
           expires_at?: string | null
           id?: string
           max_score?: number
@@ -70,6 +72,7 @@ export type Database = {
           assessment_id?: string
           completed_at?: string | null
           created_at?: string
+          difficulty?: string
           expires_at?: string | null
           id?: string
           max_score?: number
@@ -656,29 +659,35 @@ export type Database = {
         Row: {
           assessment_id: string
           created_at: string
+          difficulty: string
           id: string
           options: Json
           order_index: number
           points: number
           prompt: string
+          topic: string | null
         }
         Insert: {
           assessment_id: string
           created_at?: string
+          difficulty?: string
           id?: string
           options?: Json
           order_index?: number
           points?: number
           prompt: string
+          topic?: string | null
         }
         Update: {
           assessment_id?: string
           created_at?: string
+          difficulty?: string
           id?: string
           options?: Json
           order_index?: number
           points?: number
           prompt?: string
+          topic?: string | null
         }
         Relationships: [
           {
@@ -1156,30 +1165,33 @@ export type Database = {
       questions_public: {
         Row: {
           assessment_id: string | null
-          created_at: string | null
+          difficulty: string | null
           id: string | null
           options: Json | null
           order_index: number | null
           points: number | null
           prompt: string | null
+          topic: string | null
         }
         Insert: {
           assessment_id?: string | null
-          created_at?: string | null
+          difficulty?: string | null
           id?: string | null
           options?: Json | null
           order_index?: number | null
           points?: number | null
           prompt?: string | null
+          topic?: string | null
         }
         Update: {
           assessment_id?: string | null
-          created_at?: string | null
+          difficulty?: string | null
           id?: string | null
           options?: Json | null
           order_index?: number | null
           points?: number | null
           prompt?: string | null
+          topic?: string | null
         }
         Relationships: [
           {
@@ -1204,6 +1216,18 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_assessment_leaderboard: {
+        Args: { _assessment_id: string; _limit?: number }
+        Returns: {
+          attempts_count: number
+          best_max: number
+          best_pct: number
+          best_score: number
+          display_name: string
+          last_attempt_at: string
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {

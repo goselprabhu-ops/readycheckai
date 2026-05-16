@@ -28,7 +28,12 @@ function shuffle<T>(arr: T[]): T[] {
 export const startAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({ assessmentId: z.string().uuid() }).parse(input),
+    z.object({
+      assessmentId: z.string().uuid(),
+      difficulty: z
+        .enum(["easy", "medium", "hard", "mixed", "adaptive"])
+        .default("adaptive"),
+    }).parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -45,7 +50,7 @@ export const startAttempt = createServerFn({ method: "POST" })
     // Pull pool from sanitized public view (no correct_answer / explanation)
     const { data: pool, error: qErr } = await supabase
       .from("questions_public" as any)
-      .select("id, prompt, options, points, order_index")
+      .select("id, prompt, options, points, order_index, difficulty, topic")
       .eq("assessment_id", data.assessmentId);
     if (qErr) throw new Error(qErr.message);
     if (!pool || pool.length === 0) throw new Error("No questions available");
@@ -67,18 +72,48 @@ export const startAttempt = createServerFn({ method: "POST" })
         .in("attempt_id", recentIds);
       seenIds = new Set((seenRows ?? []).map((r: any) => r.question_id as string));
     }
-    const fresh = (pool as any[]).filter((q) => !seenIds.has(q.id));
-    const stale = (pool as any[]).filter((q) => seenIds.has(q.id));
+
+    // Adaptive: derive a difficulty target from the last attempt's percentage.
+    let effectiveDifficulty: "easy" | "medium" | "hard" | "mixed" = "mixed";
+    if (data.difficulty === "adaptive") {
+      const { data: last } = await supabase
+        .from("assessment_attempts")
+        .select("total_score, max_score, completed_at")
+        .eq("user_id", userId)
+        .eq("assessment_id", data.assessmentId)
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const lastPct = last && (last as any).max_score
+        ? ((last as any).total_score / (last as any).max_score) * 100
+        : 0;
+      effectiveDifficulty = !last ? "medium" : lastPct >= 80 ? "hard" : lastPct < 50 ? "easy" : "medium";
+    } else {
+      effectiveDifficulty = data.difficulty as any;
+    }
+
+    const matchesDifficulty = (q: any) =>
+      effectiveDifficulty === "mixed" ? true : q.difficulty === effectiveDifficulty;
     const target = Math.min(QUESTIONS_PER_ATTEMPT, pool.length);
+    const inBand = (pool as any[]).filter(matchesDifficulty);
+    const fallback = (pool as any[]).filter((q) => !matchesDifficulty(q));
+    const orderByFreshness = (rows: any[]) => {
+      const fresh = rows.filter((q) => !seenIds.has(q.id));
+      const stale = rows.filter((q) => seenIds.has(q.id));
+      return [...shuffle(fresh), ...shuffle(stale)];
+    };
     const picked = [
-      ...shuffle(fresh).slice(0, target),
-      ...shuffle(stale).slice(0, Math.max(0, target - fresh.length)),
+      ...orderByFreshness(inBand),
+      ...orderByFreshness(fallback),
     ].slice(0, target);
     const sanitized = picked.map((q: any) => ({
       id: q.id as string,
       prompt: q.prompt as string,
       options: shuffle(Array.isArray(q.options) ? q.options : []) as string[],
       points: (q.points as number) ?? 1,
+      difficulty: (q.difficulty as "easy" | "medium" | "hard") ?? "medium",
+      topic: (q.topic as string | null) ?? null,
     }));
 
     const maxScore = sanitized.reduce((s, q) => s + (q.points || 1), 0);
@@ -95,6 +130,7 @@ export const startAttempt = createServerFn({ method: "POST" })
         total_score: 0,
         expires_at: expiresAt,
         status: "in_progress",
+        difficulty: data.difficulty,
       } as any)
       .select("id, started_at, expires_at")
       .single();
@@ -105,6 +141,8 @@ export const startAttempt = createServerFn({ method: "POST" })
       startedAt: (att as any).started_at as string,
       expiresAt: (att as any).expires_at as string,
       durationSeconds,
+      difficulty: data.difficulty,
+      effectiveDifficulty,
       assessment: {
         id: (def as any).id,
         title: (def as any).title,
@@ -287,7 +325,7 @@ async function buildReview(
 ) {
   const { data: rows } = await supabase
     .from("scores")
-    .select("question_id, selected_answer, is_correct, points_awarded, questions:question_id(id, prompt, options, points)")
+    .select("question_id, selected_answer, is_correct, points_awarded, questions:question_id(id, prompt, options, points, difficulty, topic)")
     .eq("attempt_id", att.id);
 
   const qIds = (rows ?? []).map((r: any) => r.question_id as string);
@@ -315,8 +353,42 @@ async function buildReview(
       options: (Array.isArray(r.questions?.options) ? r.questions.options : []) as string[],
       correctAnswer: sec?.correct_answer ?? "",
       explanation: sec?.explanation ?? null,
+      difficulty: ((r.questions?.difficulty as string) ?? "medium") as "easy" | "medium" | "hard",
+      topic: ((r.questions?.topic as string | null) ?? null),
+      points: (r.questions?.points as number) ?? 1,
     };
   });
+
+  // Topic-wise scoring
+  const topicMap = new Map<string, { earned: number; total: number; correct: number; count: number }>();
+  const diffMap = new Map<string, { earned: number; total: number; correct: number; count: number }>();
+  for (const r of review) {
+    const tk = r.topic && r.topic.trim() ? r.topic : "General";
+    const tt = topicMap.get(tk) ?? { earned: 0, total: 0, correct: 0, count: 0 };
+    tt.total += r.points;
+    tt.earned += r.pointsAwarded;
+    tt.count += 1;
+    if (r.isCorrect) tt.correct += 1;
+    topicMap.set(tk, tt);
+
+    const dk = r.difficulty;
+    const dd = diffMap.get(dk) ?? { earned: 0, total: 0, correct: 0, count: 0 };
+    dd.total += r.points;
+    dd.earned += r.pointsAwarded;
+    dd.count += 1;
+    if (r.isCorrect) dd.correct += 1;
+    diffMap.set(dk, dd);
+  }
+  const topicBreakdown = Array.from(topicMap.entries()).map(([topic, v]) => ({
+    topic,
+    ...v,
+    pct: v.total ? Math.round((v.earned / v.total) * 100) : 0,
+  }));
+  const difficultyBreakdown = Array.from(diffMap.entries()).map(([difficulty, v]) => ({
+    difficulty,
+    ...v,
+    pct: v.total ? Math.round((v.earned / v.total) * 100) : 0,
+  }));
 
   return {
     attemptId: att.id,
@@ -324,6 +396,8 @@ async function buildReview(
     total: att.max_score,
     completedAt: att.completed_at,
     review,
+    topicBreakdown,
+    difficultyBreakdown,
   };
 }
 
@@ -364,4 +438,117 @@ export const generateAssessment = createServerFn({ method: "POST" })
     });
 
     return { questions: output.questions };
+  });
+
+/**
+ * Per-user performance analytics across all assessment attempts.
+ * Aggregates by category (joining definitions) and returns recent attempts.
+ */
+export const getAssessmentAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: attempts, error } = await supabase
+      .from("assessment_attempts")
+      .select(
+        "id, total_score, max_score, completed_at, difficulty, status, assessment:assessment_id(id, title, category)",
+      )
+      .eq("user_id", userId)
+      .not("completed_at", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+
+    const byCategory = new Map<
+      string,
+      { category: string; attempts: number; bestPct: number; avgPct: number; lastPct: number; lastAt: string | null }
+    >();
+    const recent: Array<{
+      id: string;
+      title: string;
+      category: string;
+      pct: number;
+      difficulty: string;
+      completedAt: string;
+    }> = [];
+
+    for (const a of (attempts ?? []) as any[]) {
+      const cat = a.assessment?.category ?? "other";
+      const pct = a.max_score ? Math.round((a.total_score / a.max_score) * 100) : 0;
+      recent.push({
+        id: a.id,
+        title: a.assessment?.title ?? "Assessment",
+        category: cat,
+        pct,
+        difficulty: a.difficulty ?? "adaptive",
+        completedAt: a.completed_at,
+      });
+      const prev = byCategory.get(cat);
+      if (!prev) {
+        byCategory.set(cat, {
+          category: cat,
+          attempts: 1,
+          bestPct: pct,
+          avgPct: pct,
+          lastPct: pct,
+          lastAt: a.completed_at,
+        });
+      } else {
+        prev.attempts += 1;
+        prev.bestPct = Math.max(prev.bestPct, pct);
+        prev.avgPct = Math.round((prev.avgPct * (prev.attempts - 1) + pct) / prev.attempts);
+      }
+    }
+
+    return {
+      byCategory: Array.from(byCategory.values()).sort((a, b) => b.bestPct - a.bestPct),
+      recent: recent.slice(0, 15),
+      totalAttempts: recent.length,
+    };
+  });
+
+/**
+ * Leaderboard for a single assessment — uses a SECURITY DEFINER RPC so
+ * we can show top performers without breaking RLS on attempts/profiles.
+ */
+export const getAssessmentLeaderboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        assessmentId: z.string().uuid(),
+        limit: z.number().min(1).max(50).default(25),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await supabase.rpc("get_assessment_leaderboard", {
+      _assessment_id: data.assessmentId,
+      _limit: data.limit,
+    });
+    if (error) throw new Error(error.message);
+    const list = (rows ?? []) as Array<{
+      user_id: string;
+      display_name: string;
+      best_score: number;
+      best_max: number;
+      best_pct: number;
+      attempts_count: number;
+      last_attempt_at: string;
+    }>;
+    const meIndex = list.findIndex((r) => r.user_id === userId);
+    return {
+      leaderboard: list.map((r, i) => ({
+        rank: i + 1,
+        displayName: r.display_name,
+        bestScore: r.best_score,
+        bestMax: r.best_max,
+        bestPct: Number(r.best_pct),
+        attempts: r.attempts_count,
+        lastAttemptAt: r.last_attempt_at,
+        isMe: r.user_id === userId,
+      })),
+      myRank: meIndex >= 0 ? meIndex + 1 : null,
+    };
   });
