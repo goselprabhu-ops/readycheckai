@@ -192,6 +192,54 @@ export type Database = {
         }
         Relationships: []
       }
+      content_flags: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_ref: string | null
+          entity_type: string
+          id: string
+          notes: string | null
+          reason: string
+          reporter_id: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_ref?: string | null
+          entity_type: string
+          id?: string
+          notes?: string | null
+          reason: string
+          reporter_id: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_ref?: string | null
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          reporter_id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
