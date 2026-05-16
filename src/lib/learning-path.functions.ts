@@ -4,6 +4,7 @@ import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
+import { withAiCache } from "./ai-cache.server";
 import { chargeAiUsage } from "./ai-guardrails";
 import { enforceCooldown } from "./security";
 
