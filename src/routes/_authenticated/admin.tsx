@@ -27,6 +27,14 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QuestionsTab } from "@/features/admin/tabs/QuestionsTab";
+import { AssessmentsTab } from "@/features/admin/tabs/AssessmentsTab";
+import { BenchmarksTab } from "@/features/admin/tabs/BenchmarksTab";
+import { AnalyticsTab } from "@/features/admin/tabs/AnalyticsTab";
+import { ModerationTab } from "@/features/admin/tabs/ModerationTab";
+import { RecommendationsTab } from "@/features/admin/tabs/RecommendationsTab";
+import { BulkUploadTab } from "@/features/admin/tabs/BulkUploadTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
