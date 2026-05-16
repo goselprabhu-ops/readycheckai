@@ -239,7 +239,8 @@ function PracticePane() {
           <FeedbackCard title="Next steps" items={finalFeedback?.next_steps ?? []} tone="info" />
         </div>
         <div className="flex justify-end">
-          <Button variant="outline" onClick={onReset}>Run another interview</Button>
+          <FeedbackWidget surface="interview" feature="interview_summary" variant="full" label="Rate this feedback" />
+          <Button variant="outline" onClick={onReset} className="ml-3">Run another interview</Button>
         </div>
       </div>
     );
