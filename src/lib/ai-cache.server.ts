@@ -42,13 +42,6 @@ export async function withAiCache<T>(
       .eq("cache_key", key)
       .maybeSingle();
     if (data && new Date(data.expires_at).getTime() > Date.now()) {
-      // best-effort hit counter
-      await supabaseAdmin.rpc("noop").then(() => {}, () => {});
-      await supabaseAdmin
-        .from("ai_response_cache")
-        .update({ hit_count: undefined } as never) // skip; use raw update below
-        .eq("cache_key", key)
-        .then(() => {}, () => {});
       return data.response_json as T;
     }
   } catch {
