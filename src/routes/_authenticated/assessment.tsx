@@ -652,7 +652,7 @@ function AnalyticsPanel({
   data,
   loading,
 }: {
-  data: Awaited<ReturnType<typeof getAssessmentAnalytics>> | null;
+  data: Awaited<ReturnType<typeof getAssessmentAnalytics>> extends infer R ? R | null : never;
   loading: boolean;
 }) {
   if (loading) {
