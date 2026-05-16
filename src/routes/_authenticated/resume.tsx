@@ -18,6 +18,7 @@ import {
   runResumePipeline,
 } from "@/lib/resume.functions";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   CheckCircle2,
