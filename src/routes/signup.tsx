@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -35,9 +36,11 @@ function SignupPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!agreed) return toast.error("Please accept the Terms, Privacy Policy, and Beta Agreement.");
     const parsed = schema.safeParse({ name, email, password, phone });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setLoading(true);
@@ -97,7 +100,21 @@ function SignupPage() {
           <Label htmlFor="password">Password</Label>
           <Input id="password" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        <Button type="submit" disabled={loading} className="w-full rounded-xl">
+        <div className="flex items-start gap-2 pt-1">
+          <Checkbox
+            id="agree"
+            checked={agreed}
+            onCheckedChange={(v) => setAgreed(v === true)}
+            className="mt-0.5"
+          />
+          <Label htmlFor="agree" className="text-xs font-normal text-muted-foreground leading-relaxed cursor-pointer">
+            I agree to the{" "}
+            <Link to="/terms" className="text-primary underline underline-offset-2" target="_blank">Terms of Service</Link>,{" "}
+            <Link to="/privacy" className="text-primary underline underline-offset-2" target="_blank">Privacy Policy</Link>, and{" "}
+            <Link to="/beta-agreement" className="text-primary underline underline-offset-2" target="_blank">Beta Agreement</Link>.
+          </Label>
+        </div>
+        <Button type="submit" disabled={loading || !agreed} className="w-full rounded-xl">
           {loading ? (<><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating…</>) : "Create account"}
         </Button>
       </form>
