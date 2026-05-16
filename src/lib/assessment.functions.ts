@@ -439,3 +439,116 @@ export const generateAssessment = createServerFn({ method: "POST" })
 
     return { questions: output.questions };
   });
+
+/**
+ * Per-user performance analytics across all assessment attempts.
+ * Aggregates by category (joining definitions) and returns recent attempts.
+ */
+export const getAssessmentAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: attempts, error } = await supabase
+      .from("assessment_attempts")
+      .select(
+        "id, total_score, max_score, completed_at, difficulty, status, assessment:assessment_id(id, title, category)",
+      )
+      .eq("user_id", userId)
+      .not("completed_at", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+
+    const byCategory = new Map<
+      string,
+      { category: string; attempts: number; bestPct: number; avgPct: number; lastPct: number; lastAt: string | null }
+    >();
+    const recent: Array<{
+      id: string;
+      title: string;
+      category: string;
+      pct: number;
+      difficulty: string;
+      completedAt: string;
+    }> = [];
+
+    for (const a of (attempts ?? []) as any[]) {
+      const cat = a.assessment?.category ?? "other";
+      const pct = a.max_score ? Math.round((a.total_score / a.max_score) * 100) : 0;
+      recent.push({
+        id: a.id,
+        title: a.assessment?.title ?? "Assessment",
+        category: cat,
+        pct,
+        difficulty: a.difficulty ?? "adaptive",
+        completedAt: a.completed_at,
+      });
+      const prev = byCategory.get(cat);
+      if (!prev) {
+        byCategory.set(cat, {
+          category: cat,
+          attempts: 1,
+          bestPct: pct,
+          avgPct: pct,
+          lastPct: pct,
+          lastAt: a.completed_at,
+        });
+      } else {
+        prev.attempts += 1;
+        prev.bestPct = Math.max(prev.bestPct, pct);
+        prev.avgPct = Math.round((prev.avgPct * (prev.attempts - 1) + pct) / prev.attempts);
+      }
+    }
+
+    return {
+      byCategory: Array.from(byCategory.values()).sort((a, b) => b.bestPct - a.bestPct),
+      recent: recent.slice(0, 15),
+      totalAttempts: recent.length,
+    };
+  });
+
+/**
+ * Leaderboard for a single assessment — uses a SECURITY DEFINER RPC so
+ * we can show top performers without breaking RLS on attempts/profiles.
+ */
+export const getAssessmentLeaderboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        assessmentId: z.string().uuid(),
+        limit: z.number().min(1).max(50).default(25),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await supabase.rpc("get_assessment_leaderboard", {
+      _assessment_id: data.assessmentId,
+      _limit: data.limit,
+    });
+    if (error) throw new Error(error.message);
+    const list = (rows ?? []) as Array<{
+      user_id: string;
+      display_name: string;
+      best_score: number;
+      best_max: number;
+      best_pct: number;
+      attempts_count: number;
+      last_attempt_at: string;
+    }>;
+    const meIndex = list.findIndex((r) => r.user_id === userId);
+    return {
+      leaderboard: list.map((r, i) => ({
+        rank: i + 1,
+        displayName: r.display_name,
+        bestScore: r.best_score,
+        bestMax: r.best_max,
+        bestPct: Number(r.best_pct),
+        attempts: r.attempts_count,
+        lastAttemptAt: r.last_attempt_at,
+        isMe: r.user_id === userId,
+      })),
+      myRank: meIndex >= 0 ? meIndex + 1 : null,
+    };
+  });
