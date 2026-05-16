@@ -159,6 +159,39 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_definitions: {
+        Row: {
+          category: string
+          created_at: string
+          criteria: Json
+          description: string
+          icon: string
+          key: string
+          name: string
+          tier: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          criteria?: Json
+          description: string
+          icon?: string
+          key: string
+          name: string
+          tier?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          criteria?: Json
+          description?: string
+          icon?: string
+          key?: string
+          name?: string
+          tier?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -757,6 +790,66 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profile_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_public: boolean
+          show_achievements: boolean
+          show_badges: boolean
+          show_certifications: boolean
+          show_contact: boolean
+          show_education: boolean
+          show_experience: boolean
+          show_projects: boolean
+          show_readiness: boolean
+          show_skills: boolean
+          slug: string | null
+          tagline: string | null
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          show_achievements?: boolean
+          show_badges?: boolean
+          show_certifications?: boolean
+          show_contact?: boolean
+          show_education?: boolean
+          show_experience?: boolean
+          show_projects?: boolean
+          show_readiness?: boolean
+          show_skills?: boolean
+          slug?: string | null
+          tagline?: string | null
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          show_achievements?: boolean
+          show_badges?: boolean
+          show_certifications?: boolean
+          show_contact?: boolean
+          show_education?: boolean
+          show_experience?: boolean
+          show_projects?: boolean
+          show_readiness?: boolean
+          show_skills?: boolean
+          slug?: string | null
+          tagline?: string | null
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       question_secrets: {
         Row: {
           correct_answer: string
@@ -1286,6 +1379,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          badge_key: string
+          evidence: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_key: string
+          evidence?: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_key?: string
+          evidence?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_key_fkey"
+            columns: ["badge_key"]
+            isOneToOne: false
+            referencedRelation: "badge_definitions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1376,6 +1501,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_profile: { Args: { _slug: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

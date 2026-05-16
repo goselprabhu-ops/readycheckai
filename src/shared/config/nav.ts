@@ -13,6 +13,7 @@ import {
   Briefcase,
   BarChart3,
   Sparkles,
+  Share2,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@/shared/types/roles";
@@ -33,6 +34,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "Role Readiness", to: "/role-readiness", icon: Target, group: "main" },
   { label: "Market", to: "/market", icon: Globe, group: "main" },
   { label: "Profile", to: "/profile", icon: User, group: "main" },
+  { label: "Public Profile", to: "/public-profile", icon: Share2, group: "main" },
 
   { label: "Resume", to: "/resume", icon: FileText, group: "career" },
   { label: "Assessments", to: "/assessment", icon: ClipboardList, group: "career" },

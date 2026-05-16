@@ -24,6 +24,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserSlugRouteImport } from './routes/user.$slug'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedVerifyPhoneRouteImport } from './routes/_authenticated/verify-phone'
 import { Route as AuthenticatedRoleReadinessRouteImport } from './routes/_authenticated/role-readiness'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
+import { Route as AuthenticatedPublicProfileRouteImport } from './routes/_authenticated/public-profile'
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -127,6 +129,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserSlugRoute = UserSlugRouteImport.update({
+  id: '/user/$slug',
+  path: '/user/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
@@ -164,6 +171,12 @@ const AuthenticatedRecruiterRoute = AuthenticatedRecruiterRouteImport.update({
   path: '/recruiter',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPublicProfileRoute =
+  AuthenticatedPublicProfileRouteImport.update({
+    id: '/public-profile',
+    path: '/public-profile',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
@@ -301,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
+  '/public-profile': typeof AuthenticatedPublicProfileRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
@@ -308,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -345,6 +360,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/progress': typeof AuthenticatedProgressRoute
+  '/public-profile': typeof AuthenticatedPublicProfileRoute
   '/recruiter': typeof AuthenticatedRecruiterRoute
   '/results': typeof AuthenticatedResultsRoute
   '/resume': typeof AuthenticatedResumeRoute
@@ -352,6 +368,7 @@ export interface FileRoutesByTo {
   '/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -391,6 +408,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
+  '/_authenticated/public-profile': typeof AuthenticatedPublicProfileRoute
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRoute
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
@@ -398,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/role-readiness': typeof AuthenticatedRoleReadinessRoute
   '/_authenticated/verify-phone': typeof AuthenticatedVerifyPhoneRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/user/$slug': typeof UserSlugRoute
   '/api/public/client-errors': typeof ApiPublicClientErrorsRoute
   '/api/public/web-vitals': typeof ApiPublicWebVitalsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -437,6 +456,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/progress'
+    | '/public-profile'
     | '/recruiter'
     | '/results'
     | '/resume'
@@ -444,6 +464,7 @@ export interface FileRouteTypes {
     | '/role-readiness'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -481,6 +502,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/progress'
+    | '/public-profile'
     | '/recruiter'
     | '/results'
     | '/resume'
@@ -488,6 +510,7 @@ export interface FileRouteTypes {
     | '/role-readiness'
     | '/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -526,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
     | '/_authenticated/progress'
+    | '/_authenticated/public-profile'
     | '/_authenticated/recruiter'
     | '/_authenticated/results'
     | '/_authenticated/resume'
@@ -533,6 +557,7 @@ export interface FileRouteTypes {
     | '/_authenticated/role-readiness'
     | '/_authenticated/verify-phone'
     | '/email/unsubscribe'
+    | '/user/$slug'
     | '/api/public/client-errors'
     | '/api/public/web-vitals'
     | '/lovable/email/suppression'
@@ -562,6 +587,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  UserSlugRoute: typeof UserSlugRoute
   ApiPublicClientErrorsRoute: typeof ApiPublicClientErrorsRoute
   ApiPublicWebVitalsRoute: typeof ApiPublicWebVitalsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -681,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/user/$slug': {
+      id: '/user/$slug'
+      path: '/user/$slug'
+      fullPath: '/user/$slug'
+      preLoaderRoute: typeof UserSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
       path: '/email/unsubscribe'
@@ -728,6 +761,13 @@ declare module '@tanstack/react-router' {
       path: '/recruiter'
       fullPath: '/recruiter'
       preLoaderRoute: typeof AuthenticatedRecruiterRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/public-profile': {
+      id: '/_authenticated/public-profile'
+      path: '/public-profile'
+      fullPath: '/public-profile'
+      preLoaderRoute: typeof AuthenticatedPublicProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/progress': {
@@ -892,6 +932,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
+  AuthenticatedPublicProfileRoute: typeof AuthenticatedPublicProfileRoute
   AuthenticatedRecruiterRoute: typeof AuthenticatedRecruiterRoute
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
@@ -912,6 +953,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
+  AuthenticatedPublicProfileRoute: AuthenticatedPublicProfileRoute,
   AuthenticatedRecruiterRoute: AuthenticatedRecruiterRoute,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
@@ -941,6 +983,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  UserSlugRoute: UserSlugRoute,
   ApiPublicClientErrorsRoute: ApiPublicClientErrorsRoute,
   ApiPublicWebVitalsRoute: ApiPublicWebVitalsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
