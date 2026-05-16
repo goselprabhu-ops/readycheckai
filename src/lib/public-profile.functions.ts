@@ -168,7 +168,7 @@ export const recomputeMyBadges = createServerFn({ method: "POST" })
 
     // Upsert (use admin to bypass RLS for this user only — already scoped above)
     if (earned.length > 0) {
-      const rows = earned.map((e) => ({ user_id: userId, badge_key: e.key, evidence: e.evidence }));
+      const rows = earned.map((e) => ({ user_id: userId, badge_key: e.key, evidence: e.evidence as any }));
       const { error } = await supabaseAdmin
         .from("user_badges")
         .upsert(rows, { onConflict: "user_id,badge_key", ignoreDuplicates: true });
@@ -186,5 +186,5 @@ export const getPublicProfile = createServerFn({ method: "POST" })
       _slug: data.slug.toLowerCase(),
     });
     if (error) throw new Error(error.message);
-    return { profile: row as Record<string, unknown> | null };
+    return { profile: (row ?? null) as any };
   });
