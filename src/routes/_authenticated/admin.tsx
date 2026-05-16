@@ -38,6 +38,7 @@ import { BulkUploadTab } from "@/features/admin/tabs/BulkUploadTab";
 import { MonitoringTab } from "@/features/admin/tabs/MonitoringTab";
 import { ProductIntelligenceTab } from "@/features/admin/tabs/ProductIntelligenceTab";
 import { FeedbackTab } from "@/features/admin/tabs/FeedbackTab";
+import { CostTrackingTab } from "@/features/admin/tabs/CostTrackingTab";
 import { BetaProgressCard } from "@/features/admin/BetaProgressCard";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -264,6 +265,7 @@ function AdminPanel() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="costs">Costs</TabsTrigger>
           <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="users">Users & Roles</TabsTrigger>
@@ -387,6 +389,7 @@ function AdminPanel() {
 
         <TabsContent value="analytics"><AnalyticsTab /></TabsContent>
         <TabsContent value="monitoring"><MonitoringTab /></TabsContent>
+        <TabsContent value="costs"><CostTrackingTab /></TabsContent>
         <TabsContent value="intelligence"><ProductIntelligenceTab /></TabsContent>
 
         <TabsContent value="users">
