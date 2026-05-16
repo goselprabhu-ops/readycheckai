@@ -141,10 +141,7 @@ export const analyzeResume = createServerFn({ method: "POST" })
       }).optional().default({}),
     });
 
-    const { output } = await withRetry(() => generateText({
-      model,
-      output: Output.object({ schema }),
-      prompt: `You are a recruiter-grade ATS resume analyzer for analytics careers.
+    const prompt = `You are a recruiter-grade ATS resume analyzer for analytics careers.
 
 Target role: "${data.targetRole}".
 
@@ -159,8 +156,25 @@ Tasks:
 8. rewrites: an improved summary, up to 6 bullet rewrites (original + improved with quantified impact and strong verbs), up to 4 project description rewrites.
 
 RESUME:
-${data.text}`,
-    }));
+${data.text}`;
+
+    // Cache by (text, targetRole) — same resume + role re-analysis is a free hit.
+    const output = await withAiCache(
+      {
+        feature: "resume_analyze",
+        model: DEFAULT_MODEL,
+        prompt: { text: data.text, role: data.targetRole },
+        ttlSeconds: 60 * 60 * 24 * 7,
+      },
+      async () => {
+        const res = await withRetry(() => generateText({
+          model,
+          output: Output.object({ schema }),
+          prompt,
+        }));
+        return res.output;
+      },
+    );
 
     const analysis = await persistCanonicalAnalysis(supabase, {
       user_id: userId,
