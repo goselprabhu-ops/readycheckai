@@ -9,6 +9,7 @@ export interface SubscriptionRow {
   price_id: string;
   product_id: string;
   stripe_customer_id: string;
+  stripe_subscription_id: string;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   environment: string;
