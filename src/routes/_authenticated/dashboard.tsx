@@ -142,6 +142,7 @@ function Dashboard() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { void track("dashboard_viewed"); }, []);
 
   // Load profile separately and bounce to onboarding if not done.
   useEffect(() => {
