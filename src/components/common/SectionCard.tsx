@@ -20,12 +20,19 @@ export function SectionCard({
   contentClassName,
 }: SectionCardProps) {
   return (
-    <Card className={cn("border-border/60", className)}>
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-        <div>
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+    <Card
+      className={cn(
+        "border-border/70 shadow-[var(--shadow-xs)] transition-shadow duration-200 hover:shadow-[var(--shadow-sm)]",
+        className,
+      )}
+    >
+      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-4">
+        <div className="min-w-0 space-y-1">
+          <CardTitle className="font-display text-[15px] font-semibold tracking-tight">
+            {title}
+          </CardTitle>
           {description ? (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
           ) : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
