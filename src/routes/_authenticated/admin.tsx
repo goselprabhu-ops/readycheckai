@@ -37,6 +37,7 @@ import { RecommendationsTab } from "@/features/admin/tabs/RecommendationsTab";
 import { BulkUploadTab } from "@/features/admin/tabs/BulkUploadTab";
 import { MonitoringTab } from "@/features/admin/tabs/MonitoringTab";
 import { ProductIntelligenceTab } from "@/features/admin/tabs/ProductIntelligenceTab";
+import { FeedbackTab } from "@/features/admin/tabs/FeedbackTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -263,6 +264,7 @@ function AdminPanel() {
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="users">Users & Roles</TabsTrigger>
           <TabsTrigger value="assessments">Assessments</TabsTrigger>
           <TabsTrigger value="questions">Questions</TabsTrigger>
@@ -456,6 +458,7 @@ function AdminPanel() {
         <TabsContent value="benchmarks"><BenchmarksTab /></TabsContent>
         <TabsContent value="recs"><RecommendationsTab /></TabsContent>
         <TabsContent value="moderation"><ModerationTab /></TabsContent>
+        <TabsContent value="feedback"><FeedbackTab /></TabsContent>
 
         <TabsContent value="audit">
 
