@@ -27,6 +27,14 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QuestionsTab } from "@/features/admin/tabs/QuestionsTab";
+import { AssessmentsTab } from "@/features/admin/tabs/AssessmentsTab";
+import { BenchmarksTab } from "@/features/admin/tabs/BenchmarksTab";
+import { AnalyticsTab } from "@/features/admin/tabs/AnalyticsTab";
+import { ModerationTab } from "@/features/admin/tabs/ModerationTab";
+import { RecommendationsTab } from "@/features/admin/tabs/RecommendationsTab";
+import { BulkUploadTab } from "@/features/admin/tabs/BulkUploadTab";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -247,6 +255,21 @@ function AdminPanel() {
         </Alert>
       )}
 
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="users">Users & Roles</TabsTrigger>
+          <TabsTrigger value="assessments">Assessments</TabsTrigger>
+          <TabsTrigger value="questions">Questions</TabsTrigger>
+          <TabsTrigger value="bulk">CSV Upload</TabsTrigger>
+          <TabsTrigger value="benchmarks">Role Benchmarks</TabsTrigger>
+          <TabsTrigger value="recs">Recommendations</TabsTrigger>
+          <TabsTrigger value="moderation">Moderation</TabsTrigger>
+          <TabsTrigger value="audit">Audit</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((s) => (
           <Card key={s.label}>
@@ -352,6 +375,11 @@ function AdminPanel() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics"><AnalyticsTab /></TabsContent>
+
+        <TabsContent value="users">
 
       <Card>
         <CardHeader>
@@ -414,6 +442,16 @@ function AdminPanel() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="assessments"><AssessmentsTab /></TabsContent>
+        <TabsContent value="questions"><QuestionsTab /></TabsContent>
+        <TabsContent value="bulk"><BulkUploadTab /></TabsContent>
+        <TabsContent value="benchmarks"><BenchmarksTab /></TabsContent>
+        <TabsContent value="recs"><RecommendationsTab /></TabsContent>
+        <TabsContent value="moderation"><ModerationTab /></TabsContent>
+
+        <TabsContent value="audit">
 
       <Card>
         <CardHeader>
@@ -525,6 +563,8 @@ function AdminPanel() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
