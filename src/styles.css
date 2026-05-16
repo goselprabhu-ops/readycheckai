@@ -84,8 +84,12 @@
   --secondary-foreground: oklch(0.24 0.04 265);
   --muted: oklch(0.968 0.005 255);
   --muted-foreground: oklch(0.52 0.02 257);
-  --accent: oklch(0.7 0.17 252);
+  --accent: oklch(0.66 0.19 148);
   --accent-foreground: oklch(0.99 0.005 250);
+  --brand-navy: oklch(0.25 0.11 265);
+  --brand-blue: oklch(0.55 0.22 258);
+  --brand-green: oklch(0.66 0.19 148);
+  --brand-green-glow: oklch(0.78 0.17 150);
   /* Elevation — soft, layered (Linear/Notion-style) */
   --shadow-xs-val: 0 1px 0 0 oklch(0.18 0.03 260 / 0.04);
   --shadow-sm-val: 0 1px 2px -1px oklch(0.18 0.03 260 / 0.08), 0 1px 1px oklch(0.18 0.03 260 / 0.04);
@@ -94,11 +98,11 @@
   --shadow-elevated-val: 0 24px 60px -16px oklch(0.18 0.05 262 / 0.18), 0 8px 16px -6px oklch(0.18 0.03 260 / 0.08);
   --hero-deep: oklch(0.18 0.08 265);
   --hero-mid: oklch(0.28 0.12 262);
-  --gradient-hero: linear-gradient(160deg, oklch(0.18 0.08 265) 0%, oklch(0.24 0.13 262) 55%, oklch(0.42 0.18 258) 100%);
-  --gradient-brand: linear-gradient(90deg, oklch(0.55 0.22 260), oklch(0.7 0.2 245));
-  --gradient-panel: linear-gradient(135deg, oklch(0.26 0.13 265) 0%, oklch(0.38 0.18 262) 50%, oklch(0.55 0.22 260) 100%);
-  --gradient-panel-soft: linear-gradient(135deg, oklch(0.28 0.13 265) 0%, oklch(0.38 0.18 262) 45%, oklch(0.55 0.22 260) 100%);
-  --gradient-panel-edge: linear-gradient(135deg, oklch(0.28 0.13 265), oklch(0.55 0.22 260));
+  --gradient-hero: linear-gradient(160deg, oklch(0.20 0.10 265) 0%, oklch(0.28 0.14 262) 50%, oklch(0.55 0.20 200) 100%);
+  --gradient-brand: linear-gradient(90deg, oklch(0.25 0.11 265), oklch(0.55 0.22 258) 60%, oklch(0.66 0.19 148));
+  --gradient-panel: linear-gradient(135deg, oklch(0.22 0.11 265) 0%, oklch(0.42 0.20 258) 55%, oklch(0.66 0.19 148) 100%);
+  --gradient-panel-soft: linear-gradient(135deg, oklch(0.24 0.11 265) 0%, oklch(0.42 0.18 260) 50%, oklch(0.66 0.19 148) 100%);
+  --gradient-panel-edge: linear-gradient(135deg, oklch(0.25 0.11 265), oklch(0.66 0.19 148));
   --gradient-header-dark: linear-gradient(180deg, oklch(0.16 0.07 265) 0%, oklch(0.18 0.08 265) 60%, transparent 100%);
   --gradient-hero-veil-top: linear-gradient(to top, oklch(0.18 0.08 265 / 0.6), transparent);
   --gradient-hero-veil-strong: linear-gradient(to top, oklch(0.18 0.08 265 / 0.5), transparent);
@@ -111,8 +115,8 @@
   --ring: oklch(0.6 0.2 263);
   /* Refined chart palette — cohesive, brand-aligned */
   --chart-1: oklch(0.6 0.2 263);
-  --chart-2: oklch(0.7 0.16 195);
-  --chart-3: oklch(0.72 0.17 155);
+  --chart-2: oklch(0.66 0.19 148);
+  --chart-3: oklch(0.7 0.16 195);
   --chart-4: oklch(0.78 0.17 80);
   --chart-5: oklch(0.65 0.22 25);
   --sidebar: oklch(1 0 0);
