@@ -1802,18 +1802,16 @@ export type Database = {
         Args: { _feature: string; _hard_cap: number; _user_id: string }
         Returns: number
       }
-      institution_dashboard:
-        | { Args: { _inst: string }; Returns: Json }
-        | {
-            Args: {
-              _cohort_id?: string
-              _department?: string
-              _inst: string
-              _limit?: number
-              _offset?: number
-            }
-            Returns: Json
-          }
+      institution_dashboard: {
+        Args: {
+          _cohort_id?: string
+          _department?: string
+          _inst: string
+          _limit?: number
+          _offset?: number
+        }
+        Returns: Json
+      }
       is_institution_member: {
         Args: { _inst: string; _user: string }
         Returns: boolean
