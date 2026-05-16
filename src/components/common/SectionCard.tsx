@@ -26,7 +26,7 @@ export function SectionCard({
         className,
       )}
     >
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-4">
+      <CardHeader className="flex flex-col items-start justify-between gap-3 space-y-0 pb-4 sm:flex-row sm:items-start sm:gap-4">
         <div className="min-w-0 space-y-1">
           <CardTitle className="font-display text-[15px] font-semibold tracking-tight">
             {title}
@@ -35,7 +35,11 @@ export function SectionCard({
             <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
           ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? (
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:shrink-0">
+            {action}
+          </div>
+        ) : null}
       </CardHeader>
       <CardContent className={cn("pt-0", contentClassName)}>{children}</CardContent>
     </Card>
