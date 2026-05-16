@@ -14,6 +14,7 @@ import {
   BarChart3,
   Sparkles,
   Share2,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import type { AppRole } from "@/shared/types/roles";
@@ -43,6 +44,7 @@ export const DASHBOARD_NAV: NavItem[] = [
   { label: "Learning Path", to: "/learning-path", icon: Sparkles, group: "growth" },
   { label: "Roadmap", to: "/roadmap", icon: Map, group: "growth" },
   { label: "Progress", to: "/progress", icon: TrendingUp, group: "growth" },
+  { label: "Billing", to: "/billing", icon: CreditCard, group: "growth" },
 
   { label: "Admin", to: "/admin", icon: Shield, group: "manage", roles: ["admin"] },
   { label: "College", to: "/college", icon: Building2, group: "manage", roles: ["college_admin", "institute_admin", "admin"] },
