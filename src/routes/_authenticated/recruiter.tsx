@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowRight, Search, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SectionCard } from "@/components/common/SectionCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,9 +59,9 @@ function RecruiterWorkspace() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <DemoStat icon={Users} label="Candidates in pool" value={String(demoCandidates.length)} trend="+12 this week" />
-        <DemoStat icon={Sparkles} label="Placement ready" value={String(ready)} trend={`${Math.round((ready / demoCandidates.length) * 100)}% of pool`} />
-        <DemoStat icon={ArrowRight} label="Avg readiness" value={`${avgReadiness}`} trend="Composite score" />
+        <DemoStat label="Candidates in pool" value={demoCandidates.length} hint="+12 this week" />
+        <DemoStat label="Placement ready" value={ready} hint={`${Math.round((ready / demoCandidates.length) * 100)}% of pool`} accent="success" />
+        <DemoStat label="Avg readiness" value={avgReadiness} hint="Composite score" accent="primary" />
       </div>
 
       <SectionCard title="Search candidates" description="Match by skill, role, or college">
