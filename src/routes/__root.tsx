@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { startWebVitals } from "@/lib/web-vitals";
 import { startErrorReporter } from "@/lib/error-reporter";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { track } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -122,6 +123,30 @@ function RootComponent() {
   useEffect(() => {
     startWebVitals();
     startErrorReporter();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let lastPath = "";
+    const fire = () => {
+      const p = window.location.pathname;
+      if (p === lastPath) return;
+      lastPath = p;
+      void track("page_view", { route: p });
+    };
+    fire();
+    const onPop = () => fire();
+    window.addEventListener("popstate", onPop);
+    const id = window.setInterval(fire, 1000);
+    const onUnload = () => {
+      void track("session_exit", { route: window.location.pathname });
+    };
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("beforeunload", onUnload);
+      window.clearInterval(id);
+    };
   }, []);
 
   return (
