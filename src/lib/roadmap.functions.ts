@@ -91,7 +91,8 @@ export const updateRoadmapItem = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("roadmap_items")
       .update({ status: data.status })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

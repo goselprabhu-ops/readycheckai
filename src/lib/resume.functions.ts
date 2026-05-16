@@ -59,21 +59,23 @@ async function upsertSkills(
   if (error) throw new Error(error.message);
 }
 
-export const analyzeResume = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({
+const analyzeResumeInputSchema = z.object({
       text: z.string().min(50).max(50000),
       targetRole: z.string().min(1).max(120).default("Software Engineer"),
       resumeId: z.string().uuid().optional(),
       extractionConfidence: z.number().min(0).max(1).optional(),
       parserStatus: z.string().max(40).optional(),
-    }).parse(input)
-  )
-  .handler(async ({ data, context }) => {
+    });
+
+type AnalyzeResumeInput = z.infer<typeof analyzeResumeInputSchema>;
+
+async function analyzeResumeInternal(
+  supabase: any,
+  userId: string,
+  data: AnalyzeResumeInput,
+) {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI gateway not configured");
-    const { supabase, userId } = context;
 
     // Cost guardrail — atomic increment + hard cap check.
     await chargeAiUsage(supabase, userId, "resume_ai");
@@ -208,6 +210,13 @@ ${data.text}`;
       quality_breakdown: output.quality_breakdown,
       rewrites: output.rewrites,
     };
+}
+
+export const analyzeResume = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => analyzeResumeInputSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    return analyzeResumeInternal(context.supabase, context.userId, data);
   });
 
 // ---------------------------------------------------------------------------
@@ -250,20 +259,22 @@ const SUGGESTIONS: Record<string, string> = {
   Certifications: "List relevant certifications (Google Data Analytics, Microsoft PL-300, etc.).",
 };
 
-export const analyzeResumeKeywords = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({
+const analyzeResumeKeywordsInputSchema = z.object({
       text: z.string().min(20).max(100000),
       targetRole: z.string().min(1).max(120).default("Data Analyst"),
       resumeId: z.string().uuid().optional(),
       extractionConfidence: z.number().min(0).max(1).optional(),
       parserStatus: z.string().max(40).optional(),
       method: z.enum(["keyword", "fallback"]).default("keyword"),
-    }).parse(input)
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    });
+
+type AnalyzeResumeKeywordsInput = z.infer<typeof analyzeResumeKeywordsInputSchema>;
+
+async function analyzeResumeKeywordsInternal(
+  supabase: any,
+  userId: string,
+  data: AnalyzeResumeKeywordsInput,
+) {
 
     const found = new Set<string>();
     for (const rule of SKILL_RULES) {
@@ -317,6 +328,13 @@ export const analyzeResumeKeywords = createServerFn({ method: "POST" })
       missing_skills: missingSkills,
       suggestions,
     };
+}
+
+export const analyzeResumeKeywords = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => analyzeResumeKeywordsInputSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    return analyzeResumeKeywordsInternal(context.supabase, context.userId, data);
   });
 
 export const registerResumeUpload = createServerFn({ method: "POST" })
@@ -362,12 +380,13 @@ export const analyzeResumeAuto = createServerFn({ method: "POST" })
     // Try AI path first; fall back to deterministic keyword analyzer on
     // any non-cap error. Cap errors are surfaced verbatim.
     try {
-      const ai = await analyzeResume({ data });
+      const ai = await analyzeResumeInternal(context.supabase, context.userId, data);
       return { mode: "ai" as const, ...ai };
     } catch (e: any) {
       if (e instanceof AiCapError) throw e;
-      const kw = await analyzeResumeKeywords({
-        data: { ...data, method: "fallback" },
+      const kw = await analyzeResumeKeywordsInternal(context.supabase, context.userId, {
+        ...data,
+        method: "fallback",
       });
       return { mode: "fallback" as const, ...kw };
     }
@@ -558,7 +577,7 @@ export const runResumePipeline = createServerFn({ method: "POST" })
     };
 
     try {
-      const ai = await analyzeResume({ data: analyzeInput });
+      const ai = await analyzeResumeInternal(supabase, userId, analyzeInput);
       return {
         ok: true as const,
         stage: "done" as const,
@@ -569,8 +588,9 @@ export const runResumePipeline = createServerFn({ method: "POST" })
       };
     } catch (e: any) {
       if (e instanceof AiCapError) throw e;
-      const kw = await analyzeResumeKeywords({
-        data: { ...analyzeInput, method: "fallback" as const },
+      const kw = await analyzeResumeKeywordsInternal(supabase, userId, {
+        ...analyzeInput,
+        method: "fallback" as const,
       });
       return {
         ok: true as const,
