@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
@@ -139,7 +140,7 @@ export const analyzeResume = createServerFn({ method: "POST" })
       }).optional().default({}),
     });
 
-    const { output } = await generateText({
+    const { output } = await withRetry(() => generateText({
       model,
       output: Output.object({ schema }),
       prompt: `You are a recruiter-grade ATS resume analyzer for analytics careers.
@@ -158,7 +159,7 @@ Tasks:
 
 RESUME:
 ${data.text}`,
-    });
+    }));
 
     const analysis = await persistCanonicalAnalysis(supabase, {
       user_id: userId,

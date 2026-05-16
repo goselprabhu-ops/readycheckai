@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, generateObject } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
@@ -73,11 +74,11 @@ export const interviewTurn = createServerFn({ method: "POST" })
       { role: "user" as const, content: data.userMessage },
     ];
 
-    const { text } = await generateText({
+    const { text } = await withRetry(() => generateText({
       model,
       system: `You are a professional, friendly interviewer for the role "${session?.role_target ?? "Software Engineer"}". Ask one question at a time. Probe for specifics (STAR format). Keep replies under 80 words. After 6 exchanges, give brief feedback and end.`,
       messages,
-    });
+    }));
 
     await supabase.from("interview_messages").insert({
       session_id: data.sessionId,
@@ -145,12 +146,12 @@ export const createInterviewV1 = createServerFn({ method: "POST" })
 
     const model = getGateway();
     const count = data.category === "mixed" ? 6 : 5;
-    const { object } = await generateObject({
+    const { object } = await withRetry(() => generateObject({
       model,
       schema: PlanSchema,
       system: `You are a senior analytics hiring manager designing a realistic mock interview for the role "${data.roleTarget}". Produce ${count} interview questions covering the requested category at "${data.difficulty}" difficulty. For "mixed", include a balanced loop across SQL, Python, Power BI, statistics, a case study, and one behavioral. Each question must be answerable in 1-4 minutes by the candidate via text. For MCQs, include 4 plausible options. For coding, ask for an SQL/Python snippet. For dashboard questions, describe a chart in words and ask for interpretation. Avoid trivia.`,
       prompt: `Category: ${categoryLabel(data.category)}\nRole: ${data.roleTarget}\nDifficulty: ${data.difficulty}\nReturn a structured JSON plan.`,
-    });
+    }));
 
     // Stamp stable keys + default times
     const plan = object.questions.map((q, i) => ({
@@ -230,12 +231,12 @@ export const submitInterviewAnswer = createServerFn({ method: "POST" })
     await chargeAiUsage(supabase, userId, "interview");
 
     const model = getGateway();
-    const { object: evaluation } = await generateObject({
+    const { object: evaluation } = await withRetry(() => generateObject({
       model,
       schema: EvalSchema,
       system: `You are an expert analytics interviewer evaluating a candidate's spoken-in-text answer. Be fair and grounded. Score 0–100 across the rubric. "confidence" infers from hedging language, decisiveness, and ownership words. "communication" reflects clarity + structure for a non-technical listener.`,
       prompt: `Role: ${(session as any).role_target}\nCategory: ${categoryLabel((session as any).category)}\nQuestion type: ${current.type}\nQuestion: ${current.prompt}${current.options?.length ? `\nOptions: ${current.options.join(" | ")}` : ""}\nExpected topics: ${current.expected_topics.join(", ") || "n/a"}\n\nCandidate answer:\n${data.answer}`,
-    });
+    }));
 
     // Persist user message + evaluation
     await supabase.from("interview_messages").insert({
@@ -330,12 +331,12 @@ export const finalizeInterview = createServerFn({ method: "POST" })
     try {
       await chargeAiUsage(supabase, userId, "interview");
       const model = getGateway();
-      const { object } = await generateObject({
+      const { object } = await withRetry(() => generateObject({
         model,
         schema: FinalFeedbackSchema,
         system: "You are an analytics career coach summarizing a mock interview. Be specific, actionable, and kind. Reference concrete patterns visible in per-question scores.",
         prompt: `Role: ${(session as any).role_target}\nCategory: ${categoryLabel((session as any).category)}\nPer-question evaluations (JSON):\n${JSON.stringify(evals, null, 2)}\nAggregate — technical:${technical} communication:${communication} confidence:${confidence} overall:${overall}.`,
-      });
+      }));
       feedback = object;
     } catch (e) {
       // Non-fatal — keep numeric scores even if summary fails.

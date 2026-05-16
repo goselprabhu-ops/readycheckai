@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
@@ -135,11 +136,11 @@ export const parseResumeForProfile = createServerFn({ method: "POST" })
       interests: z.array(z.string()).default([]),
     });
 
-    const { output } = await generateText({
+    const { output } = await withRetry(() => generateText({
       model,
       output: Output.object({ schema }),
       prompt: `Extract a structured profile from the following resume text. For any field that is not present, return an empty string or empty array. Dates should stay as written (e.g. "Aug 2023", "2024"). Do not invent information.\n\nRESUME:\n${data.text}`,
-    });
+    }));
 
     return { extracted: output };
   });

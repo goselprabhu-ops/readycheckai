@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
@@ -41,11 +42,11 @@ export const generateRoadmap = createServerFn({ method: "POST" })
 
     let output: z.infer<typeof schema>;
     try {
-      const res = await generateText({
+      const res = await withRetry(() => generateText({
         model,
         output: Output.object({ schema }),
         prompt: `Build a 5-10 step adaptive learning roadmap for someone targeting "${data.targetRole}".\n\nCurrent skills (name:level): ${JSON.stringify(skills ?? [])}\nGaps from latest resume: ${JSON.stringify(latest?.[0]?.gaps ?? [])}\nSuggestions: ${JSON.stringify(latest?.[0]?.suggestions ?? [])}\n\nReturn ONLY a JSON object: { "items": [ { "title": string, "description": string, "est_minutes": number between 15 and 600 } ] } with 5 to 10 items. Each step concrete and time-boxed. Earlier steps unblock later ones.`,
-      });
+      }));
       output = res.output;
     } catch (err: any) {
       // Fallback: parse raw text if structured output failed validation

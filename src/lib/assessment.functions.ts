@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -431,11 +432,11 @@ export const generateAssessment = createServerFn({ method: "POST" })
       })).min(3).max(10),
     });
 
-    const { output } = await generateText({
+    const { output } = await withRetry(() => generateText({
       model,
       output: Output.object({ schema }),
       prompt: `Generate exactly ${data.count} multiple-choice questions on "${data.topic}" for a job-readiness assessment. Mix difficulty: 2 easy, 2 medium, rest hard. Each question has 4 options and exactly one correct answer_index. Use realistic interview-style questions.`,
-    });
+    }));
 
     return { questions: output.questions };
   });

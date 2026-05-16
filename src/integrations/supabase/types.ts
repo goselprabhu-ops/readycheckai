@@ -905,6 +905,27 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_stripe_events: {
+        Row: {
+          environment: string
+          event_id: string
+          processed_at: string
+          type: string
+        }
+        Insert: {
+          environment: string
+          event_id: string
+          processed_at?: string
+          type: string
+        }
+        Update: {
+          environment?: string
+          event_id?: string
+          processed_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           achievements: Json
@@ -1781,7 +1802,16 @@ export type Database = {
         Args: { _feature: string; _hard_cap: number; _user_id: string }
         Returns: number
       }
-      institution_dashboard: { Args: { _inst: string }; Returns: Json }
+      institution_dashboard: {
+        Args: {
+          _cohort_id?: string
+          _department?: string
+          _inst: string
+          _limit?: number
+          _offset?: number
+        }
+        Returns: Json
+      }
       is_institution_member: {
         Args: { _inst: string; _user: string }
         Returns: boolean

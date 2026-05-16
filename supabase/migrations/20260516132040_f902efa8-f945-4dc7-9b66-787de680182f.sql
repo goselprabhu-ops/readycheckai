@@ -1,0 +1,1 @@
+drop function if exists public.institution_dashboard(uuid);

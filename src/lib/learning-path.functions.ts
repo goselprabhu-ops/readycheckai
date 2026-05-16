@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { withRetry } from "@/lib/ai-gateway";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider, DEFAULT_MODEL } from "./ai-gateway";
@@ -149,11 +150,11 @@ Return ONLY the JSON object matching the schema.`;
 
     let output: LearningPathPayload;
     try {
-      const res = await generateText({
+      const res = await withRetry(() => generateText({
         model,
         output: Output.object({ schema: PathSchema }),
         prompt,
-      });
+      }));
       output = res.output;
     } catch (err: any) {
       const raw = err?.text ?? err?.response?.text ?? "";
