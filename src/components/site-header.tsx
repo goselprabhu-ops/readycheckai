@@ -12,10 +12,14 @@ const nav = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" }) {
+export function SiteHeader({ variant = "dark", logoSize = "default" }: { variant?: "dark" | "light"; logoSize?: "default" | "lg" }) {
   const isDark = variant === "dark";
   const linkBase = isDark ? "text-white/80 hover:text-white" : "text-foreground/70 hover:text-foreground";
   const activeBase = isDark ? "text-white border-white/80" : "text-foreground border-primary";
+  const logoClass =
+    logoSize === "lg"
+      ? "h-24 sm:h-30 md:h-[10.2375rem] w-auto"
+      : "h-16 sm:h-20 md:h-[6.825rem] w-auto";
 
   return (
     <header
@@ -23,7 +27,7 @@ export function SiteHeader({ variant = "dark" }: { variant?: "dark" | "light" })
       style={isDark ? { background: "var(--gradient-header-dark)" } : undefined}
     >
       <Link to="/" className="flex items-center gap-3 shrink-0" aria-label="ReadyCheck Lab — Home">
-        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className="h-16 sm:h-20 md:h-[6.825rem] w-auto" />
+        <img src={logo} alt="ReadyCheck Lab — Measure. Learn. Improve." className={logoClass} />
       </Link>
       <nav aria-label="Primary" className="hidden md:flex items-center gap-7 text-sm">
         {nav.map((n) => (

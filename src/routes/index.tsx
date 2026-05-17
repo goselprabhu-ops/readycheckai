@@ -100,7 +100,7 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       {/* 1. HERO */}
       <div className="relative text-foreground" style={{ background: "linear-gradient(180deg, oklch(0.985 0.02 150) 0%, oklch(0.99 0.012 150) 100%)" }}>
-        <SiteHeader variant="light" />
+        <SiteHeader variant="light" logoSize="lg" />
         <section className="max-w-7xl mx-auto px-6 pt-10 pb-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-6">
