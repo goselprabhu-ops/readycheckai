@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -37,7 +38,7 @@ function LoginPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
-    window.location.assign("/dashboard");
+    await navigate({ to: "/dashboard", replace: true });
   };
 
   return (
