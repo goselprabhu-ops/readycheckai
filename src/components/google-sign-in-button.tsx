@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { lovable } from "@/integrations/lovable/index";
+import { useNavigate } from "@tanstack/react-router";
 
 export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const onClick = async () => {
     setLoading(true);
@@ -19,7 +21,7 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
         return;
       }
       if (result.redirected) return;
-      window.location.assign("/dashboard");
+      await navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed");
       setLoading(false);
