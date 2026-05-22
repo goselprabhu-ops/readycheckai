@@ -9,17 +9,7 @@ export const Route = createFileRoute("/_authenticated")({
     if (!data.user) {
       throw redirect({ to: "/login" });
     }
-    // Gate everything behind phone OTP verification.
-    if (location.pathname !== "/verify-phone") {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("phone_verified")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      if (!profile?.phone_verified) {
-        throw redirect({ to: "/verify-phone" });
-      }
-    }
+    // Phone OTP verification temporarily disabled while MSG91 is being fixed.
   },
   component: AuthedLayout,
   errorComponent: AuthedErrorBoundary,
